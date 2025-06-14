@@ -15,13 +15,12 @@ export async function middleware(request: NextRequest) {
     }
 		return NextResponse.redirect(new URL("/login", request.url));
 	}
-	console.log("hallo")
 	return NextResponse.next();
 }
  
 export const config = {
 	matcher: [
 		"/dashboard/:path*",
-		"/api/:path*"
+		//"/api/:path*"
 	], // Specify the routes the middleware applies to
 };

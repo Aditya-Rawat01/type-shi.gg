@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../lib/generated/prisma"
@@ -19,6 +18,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  tests         Test[]
 
   @@unique([email])
   @@map("user")
@@ -67,4 +67,16 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Test {
+  id          String   @id @default(uuid())
+  duration    DateTime
+  charSets    Int[] // correct/incorrect/extra/missed
+  mode        String // this is testType
+  totalChars  Int
+  consistency Float
+  accuracy    Float
+  userId String
+  user User @relation(fields: [userId], references: [id])
 }
