@@ -1,0 +1,24 @@
+.char {
+  font-family: monospace;
+  padding: 2px;
+}
+
+.char.correct {
+  color: green;
+}
+.char.incorrect {
+  color: red;
+}
+.char.active {
+  border-bottom: 2px solid black;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s steps(1) infinite;
+}
