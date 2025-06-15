@@ -53,7 +53,7 @@ const [blinking, setBlinking] = useState(true);
   },[language])
   const specialKeys = [
     'Tab','Enter','Shift','Ctrl','Alt','Meta','CapsLock','Esc','PageUp','PageDown','End','Home','Left','Up',
-    'Right','Down','Delete','Insert','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+    'Right','Down','Delete','Insert','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'
   ];
   let blinkTimeout: ReturnType<typeof setTimeout>;
   function handleKeyDown(e:KeyboardEvent<HTMLSpanElement>) {
@@ -64,9 +64,15 @@ const [blinking, setBlinking] = useState(true);
     //reason key is backspace but the pointer index is zero so else condition will run and mark the first letter as the incorrect! 
     else if (key === "Backspace" ) {
       if (pointerIndex>0) {
-       setWords((prev) =>{
-        const data = [...prev]
-        data[pointerIndex-1].status = "pending"
+        
+        setWords((prev) =>{
+          const data = [...prev]
+          console.log({"data":data[pointerIndex-1].char})
+         if (data[pointerIndex-1].status==="extra") {
+          data.splice(pointerIndex-1,1)
+         } else {
+           data[pointerIndex-1].status = "pending"
+         }
         return data
       })
       setPointerIndex((prev)=>prev-1) 
@@ -78,12 +84,27 @@ const [blinking, setBlinking] = useState(true);
         if (key === data[pointerIndex].char) {
           data[pointerIndex].status = "correct"
         } else {
-          data[pointerIndex].status = "incorrect"
+          if (data[pointerIndex].char===' '){
+            if (data[pointerIndex-1].status!="extra") {
+
+              data.splice(pointerIndex,0,{
+                char:key,
+                status:"extra"
+              })
+            }
+          } else {
+            data[pointerIndex].status = "incorrect"
+          }
+
 
         }
         return data
       })
-      setPointerIndex((prev)=>prev+1)
+      if (pointerIndex>0) {
+        words[pointerIndex-1].status!="extra" || key==' '?setPointerIndex((prev)=>prev+1):null
+      } else {
+        setPointerIndex((prev)=>prev+1)
+      }
 
     }
     clearTimeout(blinkTimeout);
@@ -94,19 +115,19 @@ const [blinking, setBlinking] = useState(true);
   return (
     <div
   ref={containerRef}
-  className="h-screen w-screen relative"
+  className="h-screen w-screen relative focus:bg-gray-200"
   tabIndex={0}
   onKeyDownCapture={handleKeyDown}
 > 
  <div className="">
       {words.map((value, index)=>{
         return (
-          <>
+          <span key={index}>
           
-          <span ref={index === pointerIndex ? cursorRef : null} className={`text-3xl ${value.status==="pending"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} key={index}>
+          <span ref={index === pointerIndex ? cursorRef : null} className={`text-3xl ${value.status==="pending"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} >
             {value.char}
             </span>
-          </>
+          </span>
         )
       })}</div>
       <div

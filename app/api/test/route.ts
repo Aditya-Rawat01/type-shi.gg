@@ -7,4 +7,5 @@ export async function POST(req:NextRequest) {
             "msg": "Invalid request. seed or hash is missing"
         })
     }
+    
 }
