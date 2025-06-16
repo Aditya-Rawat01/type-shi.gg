@@ -58,6 +58,7 @@ const [blinking, setBlinking] = useState(true);
   let blinkTimeout: ReturnType<typeof setTimeout>;
   function handleKeyDown(e:KeyboardEvent<HTMLSpanElement>) {
     const key = e.key
+    let charsSkipped = 1;
     if (specialKeys.includes(key)) return
 
     //nested if is required here , if i put both the conditions on same level then first letter will get red mark due to first backspace, kinda glitch
@@ -79,11 +80,29 @@ const [blinking, setBlinking] = useState(true);
       }
     }
     else {
+      // add the missed keys as well and check the cursor and its irregularity
       setWords((prev) =>{
         const data = [...prev]
         if (key === data[pointerIndex].char) {
           data[pointerIndex].status = "correct"
-        } else {
+
+        } else if (key===' ' && data[pointerIndex].char!=' ') {
+
+          if (pointerIndex!=0) {
+            console.log("yes here")
+            if (data[pointerIndex-1].char!=' ') {
+              console.log("here as well")
+              let iterator = pointerIndex 
+              while (data[iterator].char!=' ') {
+                data[iterator].status='missed'
+                iterator++;
+              }
+              charsSkipped=iterator+1-pointerIndex
+              console.log({charsSkipped})
+            }
+          }
+        }
+        else {
           if (data[pointerIndex].char===' '){
             if (data[pointerIndex-1].status!="extra") {
 
@@ -101,11 +120,20 @@ const [blinking, setBlinking] = useState(true);
         return data
       })
       if (pointerIndex>0) {
-        words[pointerIndex-1].status!="extra" || key==' '?setPointerIndex((prev)=>prev+1):null
+        console.log("here??");
+        // two conditions colliding
+        // first is to check if the previous char status is extra then increase the pointer only when the current key is gap
+        // second is to check if the previous char is gap then the pointer should not increase.
+        if ( words[pointerIndex-1].char==' ' && key==' ') {
+          return
+        } else if (words[pointerIndex-1].status!="extra" || key==' '){
+          setPointerIndex((prev)=>prev+charsSkipped)
+        }
+        
       } else {
-        setPointerIndex((prev)=>prev+1)
+        key!=' '?setPointerIndex((prev)=>prev+charsSkipped):null
       }
-
+      charsSkipped=1
     }
     clearTimeout(blinkTimeout);
   setBlinking(false);
@@ -124,7 +152,7 @@ const [blinking, setBlinking] = useState(true);
         return (
           <span key={index}>
           
-          <span ref={index === pointerIndex ? cursorRef : null} className={`text-3xl ${value.status==="pending"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} >
+          <span ref={index === pointerIndex ? cursorRef : null} className={`text-3xl ${value.status==="pending"|| value.status ==="missed"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} >
             {value.char}
             </span>
           </span>
