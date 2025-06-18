@@ -1,6 +1,6 @@
 'use client'
 
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import axios from 'axios'
 import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
@@ -13,6 +13,7 @@ export default function TypingArea() {
     char: string;
     status: string;
 }[]>([])
+  const [wordList,setWordList] = useState<string[]>([])
   const mode = 'words' // have to be set by maybe cookies or something else like localstorage.
   const wordsLen:number|null = 50
   const time:number|null = null
@@ -38,7 +39,13 @@ const [focus, SetFocus] = useState(false)
     };
   }, []);
   // took help from gemini for the cursor irregularities.
-  useEffect(() => {
+  
+
+    // Cursor positioning
+ useEffect(() => {
+  if (!focus) return;
+
+  requestAnimationFrame(() => {
     const containerEl = containerRef.current;
     const cursorEl = cursorElementRef.current;
 
@@ -46,46 +53,54 @@ const [focus, SetFocus] = useState(false)
 
     let targetLeft = 0;
     let targetTop = 0;
-    // Estimate default height from text size, or use cursor's own CSS if fixed
-    let targetHeight = parseFloat(getComputedStyle(containerEl).fontSize) * 1.5 || 28; // Approx line height
+    let targetHeight = 28;
 
     const charElements = containerEl.querySelectorAll<HTMLSpanElement>(`.${CHAR_SPAN_CLASS}`);
 
-    if (words.length === 0 || charElements.length === 0) {
-      // No text or elements not rendered yet, position at start of container based on padding
-      const computedStyle = getComputedStyle(containerEl);
-      targetLeft = parseFloat(computedStyle.paddingLeft) || 0;
-      targetTop = parseFloat(computedStyle.paddingTop) || 0;
-      const firstCharLikeElement = containerEl.querySelector('span'); // Try to get height from any span
-      if (firstCharLikeElement) targetHeight = firstCharLikeElement.getBoundingClientRect().height;
-
-    } else if (pointerIndex < words.length && charElements[pointerIndex]) {
+    if (pointerIndex < words.length && charElements[pointerIndex]) {
       const charEl = charElements[pointerIndex];
       const charRect = charEl.getBoundingClientRect();
       const containerRect = containerEl.getBoundingClientRect();
+
+      // Position cursor BEFORE the character (for a typing app)
       targetLeft = charRect.left - containerRect.left;
       targetTop = charRect.top - containerRect.top;
       targetHeight = charRect.height;
-    } else if (pointerIndex >= words.length && charElements.length > 0) {
-      // Cursor at the end of the text
+    } else if (charElements.length > 0) {
       const lastCharEl = charElements[charElements.length - 1];
       const charRect = lastCharEl.getBoundingClientRect();
       const containerRect = containerEl.getBoundingClientRect();
-      targetLeft = charRect.right - containerRect.left; // Position *after* the last char
+      targetLeft = charRect.right - containerRect.left;
       targetTop = charRect.top - containerRect.top;
       targetHeight = charRect.height;
     }
-    // Else: pointerIndex might be 0 and words.length > 0 but charElements not ready (rare)
-    // or some other edge case, cursor stays at initial 0,0 relative to container or last good pos.
 
     cursorEl.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
-    cursorEl.style.height = `${targetHeight}px`; // Adjust cursor height
+    cursorEl.style.height = `${targetHeight}px`;
+  });
+}, [pointerIndex, words, focus]);
+ // words identity changes, so this will run. `focus` to update on focus change.
 
-    // Optional: Smooth scroll into view
-    // const activeElement = charElements[pointerIndex] || charElements[charElements.length - 1];
-    // activeElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  useEffect(() => {
+    if (!focus) return;
+    const textFlowArea = containerRef.current?.querySelector<HTMLDivElement>('.text-flow-area');
+    if (!textFlowArea || words.length === 0) return;
 
-  }, [pointerIndex, words, language]);
+    const charElements = textFlowArea.querySelectorAll<HTMLSpanElement>(`.${CHAR_SPAN_CLASS}`);
+    let activeElement: HTMLSpanElement | null = null;
+
+    if (pointerIndex < words.length && charElements[pointerIndex]) {
+      activeElement = charElements[pointerIndex];
+    } else if (pointerIndex >= words.length && charElements.length > 0) {
+      activeElement = charElements[Math.min(pointerIndex, charElements.length - 1)];
+    }
+    
+    activeElement?.scrollIntoView({
+      behavior: 'auto', // 'smooth' can feel laggy if called too often
+      block: 'center',
+      inline: 'nearest'
+    });
+  }, [pointerIndex, words.length, focus]);
 
   useEffect(()=>{
     async function getWords() {
@@ -100,6 +115,7 @@ const [focus, SetFocus] = useState(false)
         return <div> Error occurred.</div>
       }
       setWords(response)
+      setWordList(res.data.msg.words)
     }
     getWords()
   },[language])
@@ -108,6 +124,20 @@ const [focus, SetFocus] = useState(false)
     'Right','Down','Delete','Insert','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
     'Control'
   ];
+  // const getTest=useMemo(()=> {
+  //   const response=generateTest({mode:mode, wordList, wordsLen:wordsLen, time:time })
+  //     // the error is not being toasted. see the error why
+  //     // after that send this uuid and its hash to the backend to generate and compare the strings.
+
+  //     // the error is not being toasted when the words are undefined because of the type of property here.
+  //     if (typeof response === "string") {
+  //       toast.error(response)
+  //       return <div> Error occurred.</div>
+  //     }
+  //     setWords(response)
+  //   },[wordsLen,time,mode])
+ 
+
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   function handleKeyDown(e:KeyboardEvent<HTMLSpanElement>) {
     // if (!timeRef) {
@@ -136,8 +166,6 @@ const [focus, SetFocus] = useState(false)
       }
     }
     else {
-      //if (pointerIndex===words.length) {}
-      // add the missed keys as well and check the cursor and its irregularity
       setWords((prev) =>{
         const data = [...prev]
         if (key === data[pointerIndex].char) {
@@ -204,26 +232,57 @@ const [focus, SetFocus] = useState(false)
     console.log(e.key)
   }
 
+  // very expensive operation but useMemo will not benefit as the words are getting new reference with each render.
+  const wordGroups: { char: string; status: string }[][] = [];
+    let currentWord: { char: string; status: string }[] = [];
+    
+    words.forEach((char, index) => {
+      currentWord.push(char);
+      if (char.char === " ") {
+        wordGroups.push(currentWord);
+        currentWord = [];
+      }
+    });
+    if (currentWord.length) wordGroups.push(currentWord); // because last character will not have the gap after that
   return (
     <div
   ref={containerRef}
-  className="h-fit w-full p-5 relative focus:bg-gray-200"
+  className="h-fit w-[85%] p-5 relative focus:bg-gray-200 flex items-center justify-center"
   onFocus={()=>SetFocus(true)}
   onBlur={()=>SetFocus(false)}
   tabIndex={0}
   onKeyDown={handleKeyDown}
 > 
- <div className="flex flex-wrap relative">
-    <div className={` ${!focus?"absolute":"hidden"} w-full h-full backdrop-blur-md transition-all duration-1000 ease-in`} onClick={()=>SetFocus(true)}>Click to focus ^_^</div>
-      {words.map((value, index)=>{
-        return (
-          
-          <span key={index} className={`text-3xl ${CHAR_SPAN_CLASS} ${value.status==="pending"|| value.status ==="missed"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} >
-            {value.char === " " ? "\u00A0" : value.char}
-            </span>
-        )
-      })}</div>
+ <div className="text-flow-area flex flex-wrap gap-0.5 leading-14 text-[33px] bg-black relative h-44 overflow-y-auto">
+    <div className={` ${!focus?"absolute":"hidden"} w-full h-full backdrop-blur-xs bg-transparent transition-all duration-1000 ease-in`} onClick={()=>SetFocus(true)} onWheel={(e) => e.preventDefault()}
+  onTouchMove={(e) => e.preventDefault()}
+  onScroll={(e) => e.preventDefault()}>
+      Click to focus ^_^
+    </div>
+      {wordGroups.map((word, wordIndex) => (
+  <span key={`${word}-${wordIndex}`} className="inline-block">
+    {word.map((value, charIndex) => {
+      // Get actual index in flat array
+
+      return (
+        <span
+          key={`${word}-${wordIndex}-${value}-${charIndex}`}
+          className={`${CHAR_SPAN_CLASS} ${
+            value.status === "pending" || value.status === "missed"
+              ? "text-gray-400"
+              : value.status === "correct"
+              ? "text-green-400"
+              : "text-red-400 underline"
+          }`}
+        >
+          {value.char === " " ? "\u2002" : value.char}
+        </span>
+      );
+    })}
+  </span>
+))}</div>
       <div
+      
         ref={cursorElementRef}
         id="cursor" // ID can still be useful for debugging or specific CSS
         className={`absolute rounded-sm bg-amber-500 
@@ -240,3 +299,9 @@ const [focus, SetFocus] = useState(false)
   );
 }
             //<span className={`h-10 w-1 bg-black ${index===pointerIndex?"absolute":"invisible"}`}></span>
+// return (
+          
+//         //   <span key={index} className={`${CHAR_SPAN_CLASS} ${value.status==="pending"|| value.status ==="missed"?"text-gray-400":value.status==="correct"?"text-green-400":"text-red-400 underline-offset-1 underline"}`} >
+//         //     {value.char === " " ? "\u2002" : value.char}
+//         //     </span>
+//         // )
