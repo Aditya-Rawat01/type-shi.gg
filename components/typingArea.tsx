@@ -11,7 +11,7 @@ export default function TypingArea() {
   const [language,setLanguage] = useState('English')
   const [words,setWords] = useState<{
     char: string;
-    status: string;
+    status: string
 }[]>([])
   const [wordList,setWordList] = useState<string[]>([])
   const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
@@ -184,23 +184,62 @@ useEffect(() => {
     e.preventDefault()
     const key = e.key
     let charsSkipped = 1;
-    if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) return
+    if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
+      if (e.key!='Backspace' || pointerIndex<=0) return
+      
+    }
     //nested if is required here , if i put both the conditions on same level then first letter will get red mark due to first backspace, kinda glitch
     //reason key is backspace but the pointer index is zero so else condition will run and mark the first letter as the incorrect! 
     else if (key === "Backspace" ) {
-      if (pointerIndex>0) {
+
+        if (pointerIndex===0) return
+      
+        if (words[pointerIndex-1].char===' ') {
+          let isWordCorrect=true
+          let prevWordPtr = pointerIndex-2
+          while (words[prevWordPtr].char!=' ' && prevWordPtr>0) {
+            if (words[prevWordPtr].status!='correct') {
+              isWordCorrect=false
+              break
+            }
+            prevWordPtr--;
+          }
+          if (isWordCorrect) {
+            return
+          }
+
+        }
         
+        if (words[pointerIndex-1].status==="missed") {
+        let backMove = 0;
+          console.log({words:words[pointerIndex-1], pointerIndex})
+          console.log("here ")
+          backMove=pointerIndex-1
+           while (backMove>0 && words[backMove].status==="missed") {
+            console.log('reaching here?')
+            console.log({statusInsideloop:words[backMove]})
+            backMove--;
+           }
+            console.log({statusOutsideloop:words[backMove]})
+
+           backMove++;
+           setPointerIndex(backMove)
+           return;
+         }
+         
         setWords((prev) =>{
           const data = [...prev]
          if (data[pointerIndex-1].status==="extra") {
           data.splice(pointerIndex-1,1)
-         } else {
+          
+         }
+          else {
            data[pointerIndex-1].status = "pending"
          }
         return data
       })
       setPointerIndex((prev)=>prev-1) 
-      }
+      
     }
     else {
       setWords((prev) =>{
@@ -217,6 +256,7 @@ useEffect(() => {
                 data[iterator].status='missed'
                 iterator++;
               }
+                data[iterator].status='missed'
               charsSkipped=iterator+1-pointerIndex
             }
           }
@@ -345,7 +385,7 @@ useEffect(() => {
     >
       <div
         ref={textFlowAreaRef}
-        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-36 overflow-hidden w-full"
+        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-36 overflow-hidden w-full outline outline-gray-400"
         onClick={() => containerRef.current?.focus()}
       >
         {!focus && (
