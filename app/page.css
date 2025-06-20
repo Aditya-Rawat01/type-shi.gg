@@ -1,24 +1,10 @@
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
+.cursor {
+  opacity: 1;
+  animation: animate-blink 1s infinite;
 }
 
-.animate-blink {
-  animation: blink 1s steps(1) infinite;
-}
-@layer utilities {
-  .animate-blink {
-    animation: blink-animation 1s step-end infinite;
-  }
-}
 
-@keyframes blink-animation {
-  from, to {
-    opacity: 1; 
-  }
-  50% {
-    opacity: 0;
-  }
+@keyframes animate-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }

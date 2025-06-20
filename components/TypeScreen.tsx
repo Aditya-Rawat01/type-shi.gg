@@ -22,7 +22,7 @@ export default function TypeScreen() {
         }
     }
     return (
-    <div className="flex justify-center p-5 h-full flex-col items-center gap-10 bg-red-500 cursor-pointer relative">
+    <div className="flex justify-center p-5 h-full flex-col items-center gap-10 bg-black cursor-pointer relative">
     <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
         <p className="relative left-5">Test Settings</p>
         <Settings2Icon onClick={()=>setShowPanel((prev)=>!prev)} className="relative left-14"/>
