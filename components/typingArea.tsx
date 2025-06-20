@@ -187,11 +187,73 @@ useEffect(() => {
     if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
       if (e.key!='Backspace' || pointerIndex<=0) return
       
+        if (words[pointerIndex-1].char===' ') {
+          console.log("the least")
+          let isWordCorrect=true
+          let prevWordPtr = pointerIndex-2
+          while (prevWordPtr>=0) {
+              console.log("sdf")
+
+            if (words[prevWordPtr].status!='correct' || words[prevWordPtr].char==' ') {
+              console.log("wtf")
+              isWordCorrect=false
+              break
+            }
+            prevWordPtr--;
+          }
+          if (isWordCorrect) {
+            return
+          }
+
+        }
+        // ya toh pointerIndex 0 ho jaye ya phir wapas se gap aa jaye
+        //char gap ho skta hai agar woman| hello ho toh
+        // char-1 bhi gap ho skta hai agar woman |hello ho toh
+        // edge case here is that if first letter is one only a| woman
+
+        // if the pointer index is in between of words hel|lo
+
+        // while backing up if the last char is 'extra' then that case should be also handled.
+        console.log("here")
+        let pointerCorrection = 0
+        if ( words[pointerIndex].char===' ') {
+          pointerCorrection=1
+        } else if (words[pointerIndex-1].char===' ') {
+          pointerCorrection=2
+        }
+        let backIterator = pointerIndex - pointerCorrection
+        console.log(backIterator)
+        console.log({char:words[backIterator].char})
+        while (backIterator>0) {
+          if (words[backIterator].char==' ') {
+            console.log("breaking point")
+            backIterator++
+            break
+          }
+          backIterator--
+          console.log("here")
+        }
+        setWords((prev)=>{
+          const data = [...prev]
+          let pointerIndexCopy = pointerIndex
+          while (pointerIndexCopy!=backIterator) {
+            if (data[pointerIndexCopy].status!=='extra') {
+              data[pointerIndexCopy].status='pending'
+              console.log(data[pointerIndexCopy].char)
+            } else {
+              data.splice(pointerIndexCopy,1)
+            }
+            pointerIndexCopy--
+          }
+           data[pointerIndexCopy].status='pending' // specifically for the first char of the word.
+          return data
+    })
+        setPointerIndex(backIterator)
     }
     //nested if is required here , if i put both the conditions on same level then first letter will get red mark due to first backspace, kinda glitch
     //reason key is backspace but the pointer index is zero so else condition will run and mark the first letter as the incorrect! 
     else if (key === "Backspace" ) {
-
+      // this is to check if the back movement is available?
         if (pointerIndex===0) return
       
         if (words[pointerIndex-1].char===' ') {
@@ -211,16 +273,14 @@ useEffect(() => {
         }
         
         if (words[pointerIndex-1].status==="missed") {
+          // this is to move back to the last typed character if the back movement is available
         let backMove = 0;
-          console.log({words:words[pointerIndex-1], pointerIndex})
-          console.log("here ")
+          
           backMove=pointerIndex-1
            while (backMove>0 && words[backMove].status==="missed") {
-            console.log('reaching here?')
-            console.log({statusInsideloop:words[backMove]})
+           
             backMove--;
            }
-            console.log({statusOutsideloop:words[backMove]})
 
            backMove++;
            setPointerIndex(backMove)
