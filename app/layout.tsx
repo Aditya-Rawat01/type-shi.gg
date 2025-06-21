@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat, Roboto } from "next/font/google";
 import "./globals.css";
-
 import { Toaster } from "sonner";
+import JotaiProvider from "@/lib/JotaiContextProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,11 +28,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    
     <html lang="en">
       <body
         className={`${roboto.className} antialiased`}
       >
-        {children}
+      <JotaiProvider> {/* Use the Jotai provider */}
+          {children}
+        </JotaiProvider>
         <Toaster/>
       </body>
     </html>

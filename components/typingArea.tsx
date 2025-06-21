@@ -6,6 +6,8 @@ import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import '../app/page.css'
+import { modeAtom } from "@/app/store/atoms/mode";
+import { useAtomValue } from "jotai";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea() {
   const [language,setLanguage] = useState('English')
@@ -14,7 +16,8 @@ export default function TypingArea() {
     status: string
 }[]>([])
   const [wordList,setWordList] = useState<string[]>([])
-  const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
+  //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
+  const selection = useAtomValue(modeAtom)
   const testWordlength:number|null = 50
   const time:number|null = null
   const blinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,7 +143,7 @@ useEffect(() => {
   useEffect(()=>{
     async function getWords() {
       const res = await axios.get(`${URI}/api/language/${language}`)
-      const response=generateTest({mode:mode, wordList:res.data.msg.words as string[], testWordlength })
+      const response=generateTest({mode:selection.mode, wordList:res.data.msg.words as string[], testWordlength })
       // the error is not being toasted. see the error why
       // after that send this uuid and its hash to the backend to generate and compare the strings.
 
@@ -162,18 +165,18 @@ useEffect(() => {
     'Right','Down','Delete','Insert','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
     'Control'
   ];
-  // const getTest=useMemo(()=> {
-  //   const response=generateTest({mode:mode, wordList, testWordlength:testWordlength, time:time })
-  //     // the error is not being toasted. see the error why
-  //     // after that send this uuid and its hash to the backend to generate and compare the strings.
+  const getTest=useMemo(()=> {
+    const response=generateTest({mode:selection.mode, wordList, testWordlength:selection.words })
+      // the error is not being toasted. see the error why
+      // after that send this uuid and its hash to the backend to generate and compare the strings.
 
-  //     // the error is not being toasted when the words are undefined because of the type of property here.
-  //     if (typeof response === "string") {
-  //       toast.error(response)
-  //       return <div> Error occurred.</div>
-  //     }
-  //     setWords(response)
-  //   },[testWordlength,time,mode])
+      // the error is not being toasted when the words are undefined because of the type of property here.
+      if (typeof response === "string") {
+        toast.error(response)
+        return <div> Error occurred.</div>
+      }
+      setWords(response)
+    },[testWordlength,time,selection.mode])
  
 
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -391,7 +394,7 @@ useEffect(() => {
   }, [visibleChars]);
 
 
-    if (mode==="time" && pointerIndex>0.7*words.length) {
+    if (selection.mode==="time" && pointerIndex>0.7*words.length) {
       console.log("pta chl jayega")
       const response=generateTest({mode:'time',testWordlength:null, wordList})
       if (typeof response ==='string') {
