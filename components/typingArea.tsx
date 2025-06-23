@@ -41,13 +41,11 @@ export default function TypingArea() {
   const secondLineTopRef = useRef<{ top: number; index: number } | null>(null); // for the second Line
   // the top tells us the second line top position, index tells us if the first ever scroll happened or not.
   //index tells us the current first character of second line
-  const currentWordRef = useRef<HTMLSpanElement | null>(null);
-
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
 
   useEffect(() => {
-    //containerRef.current?.focus();
+    containerRef.current?.focus();
     // as soon as the page mounts (duplicate will be applied/run only once)
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false);
@@ -161,22 +159,25 @@ export default function TypingArea() {
       clearTimeout(handleDebounce);
       handleDebounce = setTimeout(() => {
         secondLineTopRef.current = null;
-        console.log("reached here");
-        if (textFlowAreaRef.current) {
-          // crazy thing here is that the firstVisibleChar ref contains the stale value when resized but that doesnt matter as
-          // we are using the scrollIntoView and as soon as we type a word then the firstVisible char will get updated as well.
-          // good thing due to stale value is that when we resize the window back to its original size then the cursor also gets 
-          // back to its original position as the non touched resized window.
-          currentWordRef.current?.scrollIntoView(
-            {
-              behavior: "auto",
-              block: "center",
-              inline: "nearest",
-            } 
-          );
-        }
+          requestAnimationFrame(() => {
+          // better approach as it fixes any resize problems but the tradeoff is that as we resize the current char becomes the first char.
+            let newFirstVisibleCharIndex = pointerIndex; // Start by assuming pointerIndex is now first
+            if (pointerIndex < words.length && pointerIndex >= 0) {
+                let wordStart = pointerIndex;
+                if (words[wordStart]?.char === ' ' && wordStart > 0) wordStart--; // If on space, look at char before
+                while (wordStart > 0 && words[wordStart - 1]?.char !== ' ') {
+                    wordStart--;
+                }
+                newFirstVisibleCharIndex = wordStart;
+            }
+            newFirstVisibleCharIndex = Math.max(0, Math.min(newFirstVisibleCharIndex, words.length - 1));
+            if (Math.abs(newFirstVisibleCharIndex - firstVisibleCharIndex) > 0) {
+                setFirstVisibleCharIndex(newFirstVisibleCharIndex);
+               return; 
+            } })
+
         CachedFnToHandleMouseMovement();
-      }, 1500);
+      }, 500);
     };
     window.addEventListener("resize", resizeFn);
     return () => window.removeEventListener("resize", resizeFn);
@@ -535,7 +536,6 @@ export default function TypingArea() {
                 const char = value.char;
                 return (
                   <span
-                    ref={pointerIndex === globalIndex ? currentWordRef : null}
                     key={`char-${globalIndex}`}
                     className={`${CHAR_SPAN_CLASS} ${
                       status === "pending"
