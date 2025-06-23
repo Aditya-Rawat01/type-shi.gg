@@ -197,7 +197,7 @@ export default function TypingArea() {
       // the error is not being toasted when the words are undefined because of the type of property here.
       if (typeof response === "string") {
         toast.error(response);
-        return <div> Error occurred.</div>;
+        return
       }
       setWords(response);
       setwordListFromBackend(res.data.msg.words);
@@ -493,7 +493,7 @@ export default function TypingArea() {
     const response = refreshTest()
     if (typeof response === "string") {
       toast.error(response);
-      return <div> Error occurred.</div>;
+      return; 
     }
     setWords(response)
     setFirstVisibleCharIndex(0)
