@@ -7,7 +7,7 @@ import SelectionPanel from "./ui/selectionPanel";
 
 export default function TypeScreen() {
     return (
-        <div>
+        <div className="w-screen h-screen bg-[#343639]">
             <SelectionPanel/>
             <TypingArea/>
         </div>

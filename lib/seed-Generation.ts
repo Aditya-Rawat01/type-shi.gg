@@ -42,7 +42,7 @@ function generateWords({uuid, wordList,mode, hasSeed}:{uuid:string, wordList:str
   const rng = seedrandom(uuid);
   const returnList = (mode==="time" && hasSeed)?[""]:[];
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 100; i++) {
       const index = Math.floor(rng() * wordList.length);
       returnList.push(wordList[index]);}
 

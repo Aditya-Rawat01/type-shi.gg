@@ -20,13 +20,13 @@ export default function TypingArea() {
   const selection = useAtomValue(modeAtom)
   const testWordlength:number|null = 50
   const time:number|null = null
-  const blinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pointerIndex,setPointerIndex] = useState(0)
   const cursorElementRef = useRef<HTMLDivElement>(null);
-const containerRef = useRef<HTMLDivElement>(null);
-const [blinking, setBlinking] = useState(true);
-const [focus, SetFocus] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [blinking, setBlinking] = useState(true);
+  const blinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [focus, SetFocus] = useState(true) // initially it should be true
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 const numberOfGenerations = useRef(1)
 const [firstVisibleCharIndex, setFirstVisibleCharIndex] = useState(0); // this helps in remembering the first char that is visible on screen
 const secondLineTopRef = useRef<{ top: number; index: number } | null>(null); // for the second Line
@@ -34,11 +34,14 @@ const secondLineTopRef = useRef<{ top: number; index: number } | null>(null); //
 //index tells us the current first character of second line
 
 const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
-const cursorAnimationRef = useRef(0);
+const cursorAnimationRef = useRef<number|null>(0);
 
   useEffect(() => {
-    containerRef.current?.focus();
-
+    //containerRef.current?.focus();
+    // as soon as the page mounts (duplicate will be applied/run only once)
+    focusTimeoutRef.current = setTimeout(() => {
+      SetFocus(false)
+    }, 10000); // initially it is more 
         
     return () => {
       if (blinkTimeoutRef.current) {
@@ -54,7 +57,8 @@ const cursorAnimationRef = useRef(0);
 
 useEffect(() => {
      if (!focus) {
-        // If we lose focus, we should cancel any pending animation.
+        // If we lose focus, we should cancel any pending animation.  
+          setBlinking(false)
         if (cursorAnimationRef.current) {
             cancelAnimationFrame(cursorAnimationRef.current);
         }
@@ -136,7 +140,7 @@ useEffect(() => {
       cursorEl.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
       cursorEl.style.height = `${targetHeight}px`;
     });
-
+    
   }, [pointerIndex, focus, firstVisibleCharIndex, words])
 
 
@@ -185,22 +189,25 @@ useEffect(() => {
     //   //timeRef = 
     // }
     e.preventDefault()
+    if (!focus) {
+      return
+    } // will see what better i can do here
     const key = e.key
     let charsSkipped = 1;
     if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
       if (e.key!='Backspace' || pointerIndex<=0) return
       
         if (words[pointerIndex-1].char===' ') {
-          console.log("the least")
           let isWordCorrect=true
           let prevWordPtr = pointerIndex-2
           while (prevWordPtr>=0) {
-              console.log("sdf")
 
-            if (words[prevWordPtr].status!='correct' || words[prevWordPtr].char==' ') {
-              console.log("wtf")
+            if (words[prevWordPtr].status!='correct') {
               isWordCorrect=false
               break
+            }
+            if (words[prevWordPtr].char==' ') {
+              break;
             }
             prevWordPtr--;
           }
@@ -217,7 +224,6 @@ useEffect(() => {
         // if the pointer index is in between of words hel|lo
 
         // while backing up if the last char is 'extra' then that case should be also handled.
-        console.log("here")
         let pointerCorrection = 0
         if ( words[pointerIndex].char===' ') {
           pointerCorrection=1
@@ -225,16 +231,12 @@ useEffect(() => {
           pointerCorrection=2
         }
         let backIterator = pointerIndex - pointerCorrection
-        console.log(backIterator)
-        console.log({char:words[backIterator].char})
         while (backIterator>0) {
           if (words[backIterator].char==' ') {
-            console.log("breaking point")
             backIterator++
             break
           }
           backIterator--
-          console.log("here")
         }
         setWords((prev)=>{
           const data = [...prev]
@@ -242,7 +244,6 @@ useEffect(() => {
           while (pointerIndexCopy!=backIterator) {
             if (data[pointerIndexCopy].status!=='extra') {
               data[pointerIndexCopy].status='pending'
-              console.log(data[pointerIndexCopy].char)
             } else {
               data.splice(pointerIndexCopy,1)
             }
@@ -286,6 +287,16 @@ useEffect(() => {
            }
 
            backMove++;
+           setWords((prev)=>{
+            const data = [...prev]
+            let pointerIndexCopy = pointerIndex
+            while (backMove!=pointerIndexCopy) {
+              data[pointerIndexCopy].status='pending'
+              pointerIndexCopy--
+            }
+              data[pointerIndexCopy].status='pending'
+            return data
+           })
            setPointerIndex(backMove)
            return;
          }
@@ -363,15 +374,15 @@ useEffect(() => {
     
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false)
-    }, 5000);
+    }, 10000); // set this to 10000
     blinkTimeoutRef.current = setTimeout(() => {
       setBlinking(true);
     }, 500);
   }
 
   // this is the sliced part of the original flat index array.
-  const visibleChars = useMemo(() =>
-    words.slice(firstVisibleCharIndex),
+  const visibleChars = useMemo(() =>{
+    return words.slice(firstVisibleCharIndex)},
     [words, firstVisibleCharIndex]
   );
   
@@ -380,7 +391,7 @@ useEffect(() => {
   const wordGroups = useMemo(() => {
     const groups: { char: string; status: string }[][] = [];
     if (visibleChars.length === 0) return groups;
-
+    
     let currentWord: { char: string; status: string }[] = [];
     visibleChars.forEach((charObj) => {
       currentWord.push(charObj);
@@ -393,9 +404,8 @@ useEffect(() => {
     return groups;
   }, [visibleChars]);
 
-
-    if (selection.mode==="time" && pointerIndex>0.7*words.length) {
-      console.log("pta chl jayega")
+    if (selection.mode==="time" && pointerIndex>words.length-100) { // this is good because 0.7*words.length will increase exponentially.
+      
       const response=generateTest({mode:'time',testWordlength:null, wordList})
       if (typeof response ==='string') {
         toast.error("Something went wrong.")
@@ -437,26 +447,38 @@ useEffect(() => {
 //         clearInterval(intervalId);
 //     };
 // }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
-  return (
+  function ClickToFocus() {
+     
+    if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+    }
+    focusTimeoutRef.current = setTimeout(() => {
+      setBlinking(false)
+      SetFocus(false)
+    }, 10000); // set this to 10000
+    
+    SetFocus(true)
+    setBlinking(true)
+  }
+return (
     <div
       ref={containerRef}
       className="h-fit w-[85%] p-5 relative focus:outline-none flex items-center justify-center"
-      onFocus={() => SetFocus(true)}
-      onBlur={() => SetFocus(false)}
+      onBlur={() => {
+        SetFocus(false)}}
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      onClick={ClickToFocus} // moved from line 457 to here
     >
       <div
         ref={textFlowAreaRef}
-        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-36 overflow-hidden w-full outline outline-gray-400"
-        onClick={() => containerRef.current?.focus()}
+        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 px-2 overflow-hidden w-full outline outline-gray-400"
       >
-        {!focus && (
-          <div className="absolute w-full h-full backdrop-blur-xs flex items-center justify-center text-gray-500 z-10">
-            Click to focus
+        
+          <div className={`absolute w-full h-full backdrop-blur-xs ${!focus?"opacity-100":"opacity-0 pointer-events-none"} origin-center flex transition-all duration-300 ease-out items-center justify-center text-gray-500 z-10`}>
+            Click here to focus ^_^
           </div>
-        )}
-
+        
         {wordGroups.map((word, wordIndex) => {
           let charOffset = 0;
           for (let i = 0; i < wordIndex; i++) {
@@ -469,18 +491,18 @@ useEffect(() => {
                 const localIndex = charOffset + charIndex;
                 const globalIndex = firstVisibleCharIndex + localIndex;
                 const status = value.status;
-
+                const char = value.char
                 return (
                   <span
                     key={`char-${globalIndex}`}
                     className={`${CHAR_SPAN_CLASS} ${
-                      status === "pending" || status === "missed"
+                      status === "pending"
                         ? "text-gray-400"
                         : status === "correct"
                         ? "text-green-400"
-                        : status === "extra"
-                        ? "text-red-600"
-                        : "text-red-400 underline" // incorrect
+                        : status === "missed"
+                        ? char!==' '?"text-gray-400 border-b-2  border-red-500":null
+                        : "text-red-500 border-b-2  border-red-500" // incorrect and extra
                     }`}
                   >
                     {value.char}
@@ -494,11 +516,12 @@ useEffect(() => {
       <div
         ref={cursorElementRef}
         id="cursor"
-        className={` absolute rounded-sm bg-amber-500
-                      transition-all duration-300 ease-out 
-                    ${blinking ? "cursor animate-blink" : ""}
+        className={` absolute top-0 left-0 w-0.5 bg-amber-500
+            
+                    ${blinking ? "cursor animate-blink" : "transition-transform duration-150 ease-out "}
+                    ${!focus && "bg-transparent"}
                     w-0.5 z-0`}
-        style={{ left: 0, top: 0 }} // Initial position is handled by transform
+        style={{transform: 'translateX(0px)', }} // Initial position is handled by transform
       />
     </div>
   
