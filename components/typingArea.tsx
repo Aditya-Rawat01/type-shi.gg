@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtomValue } from "jotai";
+import { RefreshCw } from "lucide-react";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea() {
   const [language, setLanguage] = useState("English");
@@ -24,7 +25,7 @@ export default function TypingArea() {
       status: string;
     }[]
   >([]);
-  const [wordList, setWordList] = useState<string[]>([]);
+  const [wordListFromBackend, setwordListFromBackend] = useState<string[]>([]);
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
   const testWordlength: number | null = 50;
@@ -43,10 +44,9 @@ export default function TypingArea() {
   //index tells us the current first character of second line
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
-
   useEffect(() => {
     containerRef.current?.focus();
-    // as soon as the page mounts (duplicate will be applied/run only once)
+    // as soon as the page mounts (code duplication here,  will be applied/run only once)
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false);
     }, 10000); // initially it is more
@@ -200,7 +200,7 @@ export default function TypingArea() {
         return <div> Error occurred.</div>;
       }
       setWords(response);
-      setWordList(res.data.msg.words);
+      setwordListFromBackend(res.data.msg.words);
       setPointerIndex(0);
       setFirstVisibleCharIndex(0);
       secondLineTopRef.current = null;
@@ -212,22 +212,14 @@ export default function TypingArea() {
     "Down","Delete","Insert","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","ArrowLeft","ArrowRight",
     "ArrowUp","ArrowDown","Control",
   ];
-  const getTest = useMemo(() => {
+  const refreshTest = () => {
     const response = generateTest({
       mode: selection.mode,
-      wordList,
+      wordList:wordListFromBackend,
       testWordlength: selection.words,
     });
-    // the error is not being toasted. see the error why
-    // after that send this uuid and its hash to the backend to generate and compare the strings.
-
-    // the error is not being toasted when the words are undefined because of the type of property here.
-    if (typeof response === "string") {
-      toast.error(response);
-      return <div> Error occurred.</div>;
-    }
-    setWords(response);
-  }, [testWordlength, time, selection.mode]);
+    return response
+  }
 
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   function handleKeyDown(e: KeyboardEvent<HTMLSpanElement>) {
@@ -440,7 +432,7 @@ export default function TypingArea() {
     const response = generateTest({
       mode: "time",
       testWordlength: null,
-      wordList,
+      wordList:wordListFromBackend,
     });
     if (typeof response === "string") {
       toast.error("Something went wrong.");
@@ -494,10 +486,25 @@ export default function TypingArea() {
     SetFocus(true);
     setBlinking(true);
   }
+
+  function handleRefresh() {
+    // refresh tes runs again
+    // see what refreshTest returns and then work with it.
+    const response = refreshTest()
+    if (typeof response === "string") {
+      toast.error(response);
+      return <div> Error occurred.</div>;
+    }
+    setWords(response)
+    setFirstVisibleCharIndex(0)
+    secondLineTopRef.current = null
+    numberOfGenerations.current=1
+    setPointerIndex(0)
+  }
   return (
     <div
       ref={containerRef}
-      className="h-fit w-[85%] p-5 relative focus:outline-none flex items-center justify-center overflow-hidden"
+      className="h-fit w-[85%] p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden"
       onBlur={() => {
         SetFocus(false);
       }}
@@ -572,6 +579,7 @@ export default function TypingArea() {
                     w-0.5 z-0`}
         style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
       />
+      <RefreshCw className="cursor-pointer" onClick={handleRefresh}/>
     </div>
   );
 }
