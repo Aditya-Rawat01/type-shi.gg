@@ -16,6 +16,8 @@ import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtomValue } from "jotai";
 import { RefreshCw } from "lucide-react";
+import { Tooltip, TooltipContent } from "./ui/tooltip";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea() {
   const [language, setLanguage] = useState("English");
@@ -44,6 +46,9 @@ export default function TypingArea() {
   //index tells us the current first character of second line
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
+  const [isRefreshed, setIsRefreshed] = useState<number>(Date.now())
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [refresh, setRefreshed] = useState(false)
   useEffect(() => {
     containerRef.current?.focus();
     // as soon as the page mounts (code duplication here,  will be applied/run only once)
@@ -189,7 +194,7 @@ export default function TypingArea() {
       const response = generateTest({
         mode: selection.mode,
         wordList: res.data.msg.words as string[],
-        testWordlength,
+        testWordlength:selection.words,
       });
       // the error is not being toasted. see the error why
       // after that send this uuid and its hash to the backend to generate and compare the strings.
@@ -206,21 +211,42 @@ export default function TypingArea() {
       secondLineTopRef.current = null;
     }
     getWords();
-  }, [language]);
+  }, [selection.language]);
+  // code repetition here
+useEffect(()=>{
+    // refresh tes runs again
+    // see what refreshTest returns and then work with it.
+    if (refreshTimeout.current) {
+      clearTimeout(refreshTimeout.current)
+    }
+    setRefreshed(true)
+    refreshTimeout.current = setTimeout(()=>{
+      console.log("occuring?")
+      const response = generateTest({
+      mode: selection.mode,
+      wordList:wordListFromBackend,
+      testWordlength: selection.words,
+    });
+
+    if (typeof response === "string") {
+      toast.error(response);
+      return; 
+    }
+    setWords(response)
+    setFirstVisibleCharIndex(0)
+    secondLineTopRef.current = null
+    numberOfGenerations.current=1
+    setPointerIndex(0)
+    setRefreshed(false)
+    },400)
+    
+  },[selection, isRefreshed])
   const specialKeys = [
     "Tab","Enter","Shift","Ctrl","Alt","Meta","CapsLock","Esc","PageUp","PageDown","End","Home","Left","Up","Right",
     "Down","Delete","Insert","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","ArrowLeft","ArrowRight",
     "ArrowUp","ArrowDown","Control",
   ];
-  const refreshTest = () => {
-    const response = generateTest({
-      mode: selection.mode,
-      wordList:wordListFromBackend,
-      testWordlength: selection.words,
-    });
-    return response
-  }
-
+  
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   function handleKeyDown(e: KeyboardEvent<HTMLSpanElement>) {
     // if (!timeRef) {
@@ -487,20 +513,7 @@ export default function TypingArea() {
     setBlinking(true);
   }
 
-  function handleRefresh() {
-    // refresh tes runs again
-    // see what refreshTest returns and then work with it.
-    const response = refreshTest()
-    if (typeof response === "string") {
-      toast.error(response);
-      return; 
-    }
-    setWords(response)
-    setFirstVisibleCharIndex(0)
-    secondLineTopRef.current = null
-    numberOfGenerations.current=1
-    setPointerIndex(0)
-  }
+
   return (
     <div
       ref={containerRef}
@@ -524,7 +537,7 @@ export default function TypingArea() {
           Click here to focus ^_^
         </div>
           <div
-      className="h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px]">
+      className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms] ${refresh?"opacity-0":"opacity-100"}`}>
         {wordGroups.map((word, wordIndex) => {
           let charOffset = 0;
           for (let i = 0; i < wordIndex; i++) {
@@ -565,21 +578,32 @@ export default function TypingArea() {
         })}
         </div>
       </div>
-      <div
+      {words.length>0 && <div
         ref={cursorElementRef}
         id="cursor"
         className={` absolute top-0 left-0 w-0.5 bg-amber-500
             
-                    ${
+                    ${!refresh ? 
+                      
                       blinking
                         ? "cursor animate-blink"
                         : "transition-transform duration-150 ease-out "
-                    }
+                    
+                    :"cursor-invisible"}
                     ${!focus && "bg-transparent"}
                     w-0.5 z-0`}
         style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
-      />
-      <RefreshCw className="cursor-pointer" onClick={handleRefresh}/>
+      />}
+
+      <Tooltip>
+        <TooltipTrigger>
+          <RefreshCw className={`cursor-pointer transition-all ease-out duration-[400ms] ${refresh?"opacity-0 pointer-events-none":"opacity-100"}`} onClick={()=>{
+        setIsRefreshed(Date.now())
+        }}/></TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p className="p-2">Restart Test</p>
+        </TooltipContent>
+        </Tooltip>
     </div>
   );
 }

@@ -43,7 +43,7 @@ export default function SelectionPanel() {
   }
 
   return (
-    <div className="flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer relative">
+    <div className="flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer">
       <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
         <p className="relative left-5">Test Settings</p>
         <Settings2Icon
@@ -213,7 +213,7 @@ export default function SelectionPanel() {
                     key={index}
               onClick={() => changeValues(index)}
               className={`hover:text-white ${
-                selection.time === index && "text-white"
+                selection.words === index && "text-white"
               }`}
             >
               {index}

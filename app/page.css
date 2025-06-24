@@ -2,7 +2,9 @@
   opacity: 1;
   animation: animate-blink 1s infinite;
 }
-
+.cursor-invisible {
+  opacity: 0 !important;
+}
 
 @keyframes animate-blink {
   0%, 50% { opacity: 1; }
