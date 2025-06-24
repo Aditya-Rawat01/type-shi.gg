@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtomValue } from "jotai";
-import { RefreshCw } from "lucide-react";
+import { Lock, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 const CHAR_SPAN_CLASS = "char-element";
@@ -46,6 +46,7 @@ export default function TypingArea() {
   const [isRefreshed, setIsRefreshed] = useState<number>(Date.now())
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refresh, setRefreshed] = useState(false)
+  const [capsKey ,setCapsKey] = useState(false)
   const isMounted = useRef(false)
   useEffect(() => {
     containerRef.current?.focus();
@@ -265,8 +266,19 @@ useEffect(()=>{
     if (!focus) {
       return;
     } // will see what better i can do here
-    const key = e.key;
     let charsSkipped = 1;
+    const key = e.key;
+    const isActive=e.getModifierState("CapsLock")
+    console.log({isActive})
+    if ((isActive || capsKey) && key === "CapsLock") {
+      console.log("active")
+      setCapsKey(isActive)
+    }
+    if (capsKey && key>="a" && key<="z" && key!="Backspace" && !specialKeys.includes(key)) {
+      setCapsKey(false)
+    } else if (!capsKey && key>="A" && key<="Z"  && key!="Backspace"  && !specialKeys.includes(key)) {
+      setCapsKey(true)
+    }
     if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
       if (e.key != "Backspace" || pointerIndex <= 0) return;
 
@@ -381,9 +393,9 @@ useEffect(()=>{
       });
       setPointerIndex((prev) => prev - 1);
     } else {
-      setWords((prev) => {
-        const data = [...prev];
-        if (key === data[pointerIndex].char) {
+
+      const data = [...words]
+      if (key === data[pointerIndex].char) {
           data[pointerIndex].status = "correct";
         } else if (key === " " && data[pointerIndex].char != " ") {
           if (pointerIndex != 0) {
@@ -409,13 +421,13 @@ useEffect(()=>{
             data[pointerIndex].status = "incorrect";
           }
         }
-        return data;
-      });
+
+      setWords(data);
       if (pointerIndex > 0) {
         if (words[pointerIndex - 1].char == " " && key == " ") {
           return;
         } else if (words[pointerIndex - 1].status != "extra" || key == " ") {
-          setPointerIndex((prev) => prev + charsSkipped);
+          setPointerIndex(pointerIndex + charsSkipped);
         }
       } else {
         key != " " ? setPointerIndex((prev) => prev + charsSkipped) : null;
@@ -526,7 +538,7 @@ useEffect(()=>{
   return (
     <div
       ref={containerRef}
-      className="h-fit w-[85%] p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden"
+      className="h-fit w-full p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden bg-pink-500"
       onBlur={() => {
         SetFocus(false);
       }}
@@ -534,9 +546,13 @@ useEffect(()=>{
       onKeyDown={handleKeyDown}
       onClick={ClickToFocus} // moved from line 457 to here
     >
+      <div className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl ${capsKey?"flex":"hidden"}`}>
+        <Lock/>
+        <p>Caps Lock On</p>
+        </div>
       <div
         ref={textFlowAreaRef}
-        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 px-2 w-full outline outline-gray-400"
+        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-12 px-2 w-[85%] outline outline-gray-400"
       >
         <div
           className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
