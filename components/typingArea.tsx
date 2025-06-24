@@ -274,9 +274,9 @@ useEffect(()=>{
       console.log("active")
       setCapsKey(isActive)
     }
-    if (capsKey && key>="a" && key<="z" && key!="Backspace" && !specialKeys.includes(key)) {
+    if (capsKey && key>="a" && key<="z" && key!="Backspace" && !specialKeys.includes(key) && !e.shiftKey) {
       setCapsKey(false)
-    } else if (!capsKey && key>="A" && key<="Z"  && key!="Backspace"  && !specialKeys.includes(key)) {
+    } else if (!capsKey && key>="A" && key<="Z"  && key!="Backspace"  && !specialKeys.includes(key)  && !e.shiftKey) {
       setCapsKey(true)
     }
     if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
