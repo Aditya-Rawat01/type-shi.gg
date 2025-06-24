@@ -13,7 +13,7 @@ export default function generateTest({
   if (mode === "words") {
     const uuid = crypto.randomUUID();
     const testLength = testWordlength as number;
-    if (testLength <= 0) {
+    if (testLength <= 0 || wordList.length===0) {
       return "Error occurred, the list is not of valid size";
     }
     
@@ -54,7 +54,7 @@ function generateWords({uuid, wordList,mode, testLength, hasSeed}:{uuid:string, 
         char,
         status: "pending", // 'correct', 'incorrect', 'extra'
       }));
-    
+      console.log({characters,wordList})
       return characters
 }
 

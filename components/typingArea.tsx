@@ -20,7 +20,6 @@ import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea() {
-  const [language, setLanguage] = useState("English");
   const [words, setWords] = useState<
     {
       char: string;
@@ -30,8 +29,6 @@ export default function TypingArea() {
   const [wordListFromBackend, setwordListFromBackend] = useState<string[]>([]);
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
-  const testWordlength: number | null = 50;
-  const time: number | null = null;
   const [pointerIndex, setPointerIndex] = useState(0);
   const cursorElementRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,6 +46,7 @@ export default function TypingArea() {
   const [isRefreshed, setIsRefreshed] = useState<number>(Date.now())
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refresh, setRefreshed] = useState(false)
+  const isMounted = useRef(false)
   useEffect(() => {
     containerRef.current?.focus();
     // as soon as the page mounts (code duplication here,  will be applied/run only once)
@@ -188,35 +186,42 @@ export default function TypingArea() {
     return () => window.removeEventListener("resize", resizeFn);
   }, [CachedFnToHandleMouseMovement]);
 
+
+  // responsible only to get the langauge from the backend
   useEffect(() => {
     async function getWords() {
-      const res = await axios.get(`${URI}/api/language/${language}`);
-      const response = generateTest({
-        mode: selection.mode,
-        wordList: res.data.msg.words as string[],
-        testWordlength:selection.words,
-      });
+      const res = await axios.get(`${URI}/api/language/${selection.language}`);
+      // const response = generateTest({
+      //   mode: selection.mode,
+      //   wordList: res.data.msg.words as string[],
+      //   testWordlength:selection.words,
+      // });
       // the error is not being toasted. see the error why
       // after that send this uuid and its hash to the backend to generate and compare the strings.
 
       // the error is not being toasted when the words are undefined because of the type of property here.
-      if (typeof response === "string") {
-        toast.error(response);
-        return
-      }
-      setWords(response);
+      // if (typeof response === "string") {
+      //   toast.error(response);
+      //   return
+      // }
+      // setWords(response);
       setwordListFromBackend(res.data.msg.words);
-      setPointerIndex(0);
-      setFirstVisibleCharIndex(0);
-      secondLineTopRef.current = null;
+      //setPointerIndex(0);
+      //setFirstVisibleCharIndex(0);
+      //secondLineTopRef.current = null;
     }
     getWords();
   }, [selection.language]);
-  // code repetition here
+  
+  // responsible to set the states when the backend sends the language on mounting 
 useEffect(()=>{
     // refresh tes runs again
-    // see what refreshTest returns and then work with it.
-    if (refreshTimeout.current) {
+      
+      if (!isMounted.current) {
+        isMounted.current=true
+        return
+      }
+      if (refreshTimeout.current) {
       clearTimeout(refreshTimeout.current)
     }
     setRefreshed(true)
@@ -224,7 +229,8 @@ useEffect(()=>{
       console.log("occuring?")
       const response = generateTest({
       mode: selection.mode,
-      wordList:wordListFromBackend,
+      wordList:wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
+      // so this line contains no words just an empty array which returns empty strings.
       testWordlength: selection.words,
     });
 
@@ -233,6 +239,7 @@ useEffect(()=>{
       return; 
     }
     setWords(response)
+    console.log(response)
     setFirstVisibleCharIndex(0)
     secondLineTopRef.current = null
     numberOfGenerations.current=1
@@ -240,7 +247,9 @@ useEffect(()=>{
     setRefreshed(false)
     },400)
     
-  },[selection, isRefreshed])
+    
+    
+  },[selection, isRefreshed, wordListFromBackend])
   const specialKeys = [
     "Tab","Enter","Shift","Ctrl","Alt","Meta","CapsLock","Esc","PageUp","PageDown","End","Home","Left","Up","Right",
     "Down","Delete","Insert","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","ArrowLeft","ArrowRight",
