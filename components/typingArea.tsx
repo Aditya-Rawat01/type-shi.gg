@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  Dispatch,
   KeyboardEvent,
+  SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -19,7 +21,11 @@ import { Lock, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 const CHAR_SPAN_CLASS = "char-element";
-export default function TypingArea() {
+export default function TypingArea( {setShowResultPage, setCharArray, LoadingConfig}:{
+  setShowResultPage:Dispatch<SetStateAction<boolean>>,
+  setCharArray:Dispatch<SetStateAction<number[]>>,
+  LoadingConfig:boolean
+}) {
   const [words, setWords] = useState<
     {
       char: string;
@@ -48,6 +54,44 @@ export default function TypingArea() {
   const [refresh, setRefreshed] = useState(false)
   const [capsKey ,setCapsKey] = useState(false)
   const isMounted = useRef(false)
+  const wordsTypedInSec = useRef(0)
+  const timeCountdownForTimeMode = useRef(selection.time)
+  const [showResultLoading, setShowResultLoading] = useState(false)
+  const correctCharsRef = useRef(0)
+  const totalCharsRef = useRef(0)
+  const ArrayOnIntervals = useRef<{wpm:number, rawWpm: number, interval: number}[]>([])
+  const [isTestActive, setIsTestActive] = useState(false)
+  const intervalForSec = useRef<number | null>(null);
+  const pointerIndexCopyRef = useRef(0); // clever workaround so that useEffect dont run again and again.
+  const testStartTiming = useRef(Date.now())
+  const accumulatorTimeRef = useRef(Date.now())
+  const [timeMode, setTimeMode] = useState(0)
+  const timeShadowRef = useRef(0)
+  const totalTimePassed = useRef(0)
+  useEffect(()=>{
+    if (!isTestActive) {              // stop timer
+    if (intervalForSec.current !== null) {
+      cancelAnimationFrame(intervalForSec.current);
+      intervalForSec.current = null;
+    }
+    return;
+  }
+
+      correctCharsRef.current=0
+      totalCharsRef.current=0
+      ArrayOnIntervals.current=[]
+      wordsTypedInSec.current = 0
+      testStartTiming.current = performance.now()
+      intervalForSec.current=requestAnimationFrame(callBackRequestAnimationFrame)
+     
+    return ()=>{
+       if (intervalForSec.current) {
+    cancelAnimationFrame(intervalForSec.current)
+  }
+    }
+  },[isTestActive]) // due to pointerIndexCopyRef being a ref which means this is object, checked by reference so useEffect closure will contain
+  // the latest value despite of not being given in the dep array.
+  // i want to use the updated pointerIndex value but giving it inside the state will cause useEffect reruns again and again
   useEffect(() => {
     containerRef.current?.focus();
     // as soon as the page mounts (code duplication here,  will be applied/run only once)
@@ -192,24 +236,7 @@ export default function TypingArea() {
   useEffect(() => {
     async function getWords() {
       const res = await axios.get(`${URI}/api/language/${selection.language}`);
-      // const response = generateTest({
-      //   mode: selection.mode,
-      //   wordList: res.data.msg.words as string[],
-      //   testWordlength:selection.words,
-      // });
-      // the error is not being toasted. see the error why
-      // after that send this uuid and its hash to the backend to generate and compare the strings.
-
-      // the error is not being toasted when the words are undefined because of the type of property here.
-      // if (typeof response === "string") {
-      //   toast.error(response);
-      //   return
-      // }
-      // setWords(response);
       setwordListFromBackend(res.data.msg.words);
-      //setPointerIndex(0);
-      //setFirstVisibleCharIndex(0);
-      //secondLineTopRef.current = null;
     }
     getWords();
   }, [selection.language]);
@@ -217,9 +244,11 @@ export default function TypingArea() {
   // responsible to set the states when the backend sends the language on mounting 
 useEffect(()=>{
     // refresh tes runs again
-      
       if (!isMounted.current) {
         isMounted.current=true
+        return
+      }
+      if (isTestActive) {
         return
       }
       if (refreshTimeout.current) {
@@ -227,7 +256,6 @@ useEffect(()=>{
     }
     setRefreshed(true)
     refreshTimeout.current = setTimeout(()=>{
-      console.log("occuring?")
       const response = generateTest({
       mode: selection.mode,
       wordList:wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
@@ -240,44 +268,158 @@ useEffect(()=>{
       return; 
     }
     setWords(response)
-    console.log(response)
     setFirstVisibleCharIndex(0)
     secondLineTopRef.current = null
+    
     numberOfGenerations.current=1
     setPointerIndex(0)
+    setIsTestActive(false)
     setRefreshed(false)
     },400)
     
     
     
   },[selection, isRefreshed, wordListFromBackend])
+
+  function callBackRequestAnimationFrame() {
+    
+        const currentTime = performance.now()
+        const elapsedMilliseconds = currentTime - testStartTiming.current;
+      const currentTotalFullSecond = Math.floor(elapsedMilliseconds / 1000); 
+
+      // to check if 1 sec has passed from when previous setInterval fired off
+      if (selection.mode==="time" && timeShadowRef.current === selection.time) {
+    calculateResult("") // just give random key , will not matter as the mode is time.
+  }
+      if (currentTotalFullSecond >=1 && currentTotalFullSecond > totalTimePassed.current) {
+        const charArrayForSec = [0,0,0,0]
+  for (let i = wordsTypedInSec.current;i<pointerIndexCopyRef.current;i++) {
+        let currentindex=words[i]
+        if (currentindex.char!=" ") {
+          if (currentindex.status==="correct") {
+            charArrayForSec[0]++
+          } else if (currentindex.status==="incorrect") {
+            charArrayForSec[1]++
+          } else if (currentindex.status==="missed") {
+            charArrayForSec[2]++
+          } else {
+            charArrayForSec[3]++
+          } }
+  }
+  const totalWordsInSec = charArrayForSec.reduce((prevValue, currentValue)=> prevValue + currentValue) // as 60/5 = 12 // divided by 5 because chars to words and 5 is mere approximation
+  const correctWordsInSec = charArrayForSec[0]
+  totalCharsRef.current+=totalWordsInSec
+  correctCharsRef.current+=correctWordsInSec
+  const interval = Math.round((currentTime-testStartTiming.current)/1000)
+  if (!interval) return // if interval is 0
+  const cumulatedRawWpm = Math.round((totalCharsRef.current *12)/interval) // to convert the interval from ms to seconds.
+  const cumulatedWpm = Math.round((correctCharsRef.current *12)/interval)
+  totalTimePassed.current = interval
+  ArrayOnIntervals.current.push({
+    rawWpm:cumulatedRawWpm,
+    wpm:cumulatedWpm,
+    interval:interval
+  })
+  wordsTypedInSec.current = pointerIndexCopyRef.current
+  
+  if (selection.mode==="time") {
+    timeShadowRef.current++
+    setTimeMode(timeShadowRef.current)
+  }     
+    }
+    intervalForSec.current = requestAnimationFrame(callBackRequestAnimationFrame) // recursion.
+  }
   const specialKeys = [
     "Tab","Enter","Shift","Ctrl","Alt","Meta","CapsLock","Esc","PageUp","PageDown","End","Home","Left","Up","Right",
     "Down","Delete","Insert","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","ArrowLeft","ArrowRight",
     "ArrowUp","ArrowDown","Control",
   ];
-  
+    // this is the sliced part of the original flat index array.
+  const visibleChars = useMemo(() => {
+    return words.slice(firstVisibleCharIndex);
+  }, [words, firstVisibleCharIndex]);
+
+  // Memoize grouping of characters into words to prevent words from breaking across lines
+  //this is nested array.
+  const wordGroups = useMemo(() => {
+    const groups: { char: string; status: string }[][] = [];
+    if (visibleChars.length === 0) return groups;
+
+    let currentWord: { char: string; status: string }[] = [];
+    visibleChars.forEach((charObj) => {
+      currentWord.push(charObj);
+      if (charObj.char === " ") {
+        groups.push(currentWord);
+        currentWord = [];
+      }
+    });
+    if (currentWord.length > 0) groups.push(currentWord);
+    return groups;
+  }, [visibleChars]);
+
+
+
+  if (showResultLoading) {
+    return <ResultLoadingPlaceholder/>
+  }
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function calculateResult(key:string) {
+    setShowResultLoading(true)
+      const charArray= [0,0,0,0] // correct, incorrect, missed, extra
+      for (let i = 0; i<words.length;i++) {
+        let currentindex=words[i]
+        if (currentindex.status==="pending" && selection.mode==="time") {
+          break
+        }
+        if (currentindex.char!=" ") {
+          if (currentindex.status==="correct") {
+            charArray[0]++
+          } else if (currentindex.status==="incorrect") {
+            charArray[1]++
+          } else if (currentindex.status==="missed") {
+            charArray[2]++
+          } else if (currentindex.status==="extra") {
+            charArray[3]++
+          } else {
+          // run when the pointerIndex reaches to the last char.
+            if (key=== words[words.length-1].char) {
+              charArray[0]++
+            }  else {
+              charArray[2]++
+            }}
+        }
+      }
+      console.log(ArrayOnIntervals)
+      console.log({time:totalTimePassed.current})
+      setCharArray(charArray)
+      setShowResultPage(true)
+  }
+
   function handleKeyDown(e: KeyboardEvent<HTMLSpanElement>) {
     // if (!timeRef) {
     //   //timeRef =
     // }
+    if (!LoadingConfig) return
     e.preventDefault();
     if (!focus) {
       return;
     } // will see what better i can do here
+    
     let charsSkipped = 1;
     const key = e.key;
     const isActive=e.getModifierState("CapsLock")
-    console.log({isActive})
     if ((isActive || capsKey) && key === "CapsLock") {
-      console.log("active")
       setCapsKey(isActive)
     }
     if (capsKey && key>="a" && key<="z" && key!="Backspace" && !specialKeys.includes(key) && !e.shiftKey) {
       setCapsKey(false)
     } else if (!capsKey && key>="A" && key<="Z"  && key!="Backspace"  && !specialKeys.includes(key)  && !e.shiftKey) {
       setCapsKey(true)
+    }
+    if (pointerIndex === words.length-1 && !specialKeys.includes(key) && key!="Backspace") {
+      calculateResult(key)
+      return
     }
     if (specialKeys.includes(key) || e.ctrlKey || e.metaKey) {
       if (e.key != "Backspace" || pointerIndex <= 0) return;
@@ -336,6 +478,7 @@ useEffect(()=>{
         return data;
       });
       setPointerIndex(backIterator);
+      pointerIndexCopyRef.current = backIterator
     }
     //nested if is required here , if i put both the conditions on same level then first letter will get red mark due to first backspace, kinda glitch
     //reason key is backspace but the pointer index is zero so else condition will run and mark the first letter as the incorrect!
@@ -379,6 +522,7 @@ useEffect(()=>{
           return data;
         });
         setPointerIndex(backMove);
+        pointerIndexCopyRef.current = backMove
         return;
       }
 
@@ -392,6 +536,7 @@ useEffect(()=>{
         return data;
       });
       setPointerIndex((prev) => prev - 1);
+      pointerIndexCopyRef.current-=1
     } else {
 
       const data = [...words]
@@ -404,6 +549,11 @@ useEffect(()=>{
               while (data[iterator].char != " ") {
                 data[iterator].status = "missed";
                 iterator++;
+                if (iterator===words.length) {
+                  calculateResult(key)// as the last key typed in this scenario will be this =" "
+                  console.log("gotcha")
+                  return
+                }
               }
               data[iterator].status = "missed";
               charsSkipped = iterator + 1 - pointerIndex;
@@ -428,12 +578,23 @@ useEffect(()=>{
           return;
         } else if (words[pointerIndex - 1].status != "extra" || key == " ") {
           setPointerIndex(pointerIndex + charsSkipped);
+          pointerIndexCopyRef.current=pointerIndex + charsSkipped
         }
       } else {
-        key != " " ? setPointerIndex((prev) => prev + charsSkipped) : null;
+        if (key != " "){
+          setPointerIndex((prev) => prev + charsSkipped)
+          pointerIndexCopyRef.current=pointerIndex + charsSkipped
+        } ; // this is for normal typing
+          
       }
       charsSkipped = 1;
     }
+    console.log(pointerIndexCopyRef.current)
+    if (!isTestActive && pointerIndexCopyRef.current>0) {
+      console.log("here")
+      setIsTestActive(true)
+    }
+
     if (blinkTimeoutRef.current) {
       clearTimeout(blinkTimeoutRef.current);
     }
@@ -449,29 +610,13 @@ useEffect(()=>{
       setBlinking(true);
     }, 500);
   }
-
-  // this is the sliced part of the original flat index array.
-  const visibleChars = useMemo(() => {
-    return words.slice(firstVisibleCharIndex);
-  }, [words, firstVisibleCharIndex]);
-
-  // Memoize grouping of characters into words to prevent words from breaking across lines
-  //this is nested array.
-  const wordGroups = useMemo(() => {
-    const groups: { char: string; status: string }[][] = [];
-    if (visibleChars.length === 0) return groups;
-
-    let currentWord: { char: string; status: string }[] = [];
-    visibleChars.forEach((charObj) => {
-      currentWord.push(charObj);
-      if (charObj.char === " ") {
-        groups.push(currentWord);
-        currentWord = [];
-      }
-    });
-    if (currentWord.length > 0) groups.push(currentWord);
-    return groups;
-  }, [visibleChars]);
+//// when the pointerIndex becomes greater than 0 then start the clock thats it.
+/// later on detect the afk here as well.
+// firstly i will calculate that for each sec what is the current wpm is for the user that will be used for the line chart then after on.
+function startTheClock() {
+  // this will be inside a setInterval to run on each sec. 
+  
+}
 
   if (selection.mode === "time" && pointerIndex > words.length - 100) {
     // this is good because 0.7*words.length will increase exponentially.
@@ -550,6 +695,9 @@ useEffect(()=>{
         <Lock/>
         <p>Caps Lock On</p>
         </div>
+        <div className="absolute top-0">
+        {timeMode.toString()}
+        </div>  {/* will show the total words typed or the time passing */}
       <div
         ref={textFlowAreaRef}
         className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-12 px-2 w-[85%] outline outline-gray-400"
@@ -561,6 +709,7 @@ useEffect(()=>{
         >
           Click here to focus ^_^
         </div>
+        
           <div
       className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms] ${refresh?"opacity-0":"opacity-100"}`}>
         {wordGroups.map((word, wordIndex) => {
@@ -631,4 +780,9 @@ useEffect(()=>{
         </Tooltip>
     </div>
   );
+}
+
+
+function ResultLoadingPlaceholder() {
+  return <div className="bg-white"> Loading results, please wait...</div>
 }
