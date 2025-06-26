@@ -16,10 +16,12 @@ import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Lock, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { persistWordListAtom, restartSameTestAtom, shadowTestAtom } from "@/app/store/atoms/restartSameTest";
+import { shouldFetchLanguageAtom } from "@/app/store/atoms/shouldFetchLang";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -36,9 +38,12 @@ export default function TypingArea({
       status: string;
     }[]
   >([]);
-  const [wordListFromBackend, setwordListFromBackend] = useState<string[]>([]);
+  const [wordListFromBackend, setwordListFromBackend] = useAtom(persistWordListAtom)
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
+  const [restartSameTest, setRestartSameTest] = useAtom(restartSameTestAtom)
+  const [shadowTest, setShadowTest] = useAtom(shadowTestAtom)
+  const [shouldFetchLang, setShouldFetchLang] = useAtom(shouldFetchLanguageAtom)
   const [pointerIndex, setPointerIndex] = useState(0);
   const cursorElementRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +58,7 @@ export default function TypingArea({
   //index tells us the current first character of second line
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
-  const [isRefreshed, setIsRefreshed] = useState<number>(Date.now());
+  const [isRefreshed, setIsRefreshed] = useState<number>(0);
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refresh, setRefreshed] = useState(false);
   const [capsKey, setCapsKey] = useState(false);
@@ -257,12 +262,27 @@ export default function TypingArea({
 
   // responsible only to get the langauge from the backend
   useEffect(() => {
-    async function getWords() {
+    if (restartSameTest) {
+      console.log("dhould not be here")
+      const newRef=shadowTest.map((prev)=>({...prev}))
+      setWords(newRef)
+      setRestartSameTest(false) // redundant tho.  
+      return
+    }
+    if (!shouldFetchLang) {
+      setIsRefreshed(performance.now())// so that the below useEffect run and generate the words array. running that function here means increment in dep array.
+      // is refreshed is not in the dep array so this value exists for this closure only
+      return}
+    async function getWords() { // problem here is that this is also runniing on mount, 
+      // on first point we want it to run when the selection.language doesnt change.
+      // but when the language is same then this should not run
+      // on mount run only for first time, then selection.language dekh ke run kro.
       const res = await axios.get(`${URI}/api/language/${selection.language}`);
       setwordListFromBackend(res.data.msg.words);
+      setShouldFetchLang(false)
     }
     getWords();
-  }, [selection.language]);
+  }, [selection.language, shouldFetchLang]);
 
   // responsible to set the states when the backend sends the language on mounting
   useEffect(() => {
@@ -275,10 +295,10 @@ export default function TypingArea({
       clearTimeout(refreshTimeout.current);
     }
     if (wordListFromBackend.length == 0) {
+      console.log("why 3 times");
       return;
     }
     //setRefreshed(true)
-    console.log("why 3 times");
     refreshTimeout.current = setTimeout(() => {
       const response = generateTest({
         mode: selection.mode,
@@ -292,6 +312,9 @@ export default function TypingArea({
         return;
       }
       setWords(response);
+      console.log({response})
+      const newRef=response.map((prev)=>({...prev})) // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
+      setShadowTest(newRef)
       setFirstVisibleCharIndex(0);
       secondLineTopRef.current = null;
 
@@ -300,7 +323,7 @@ export default function TypingArea({
       setPointerIndex(0);
       setIsTestActive(false);
       //setRefreshed(false)
-    }, 400);
+    }, isRefreshed? 80:400);
   }, [selection, isRefreshed, wordListFromBackend]);
 
   function callBackRequestAnimationFrame() {
@@ -471,7 +494,7 @@ export default function TypingArea({
     console.log({ time: totalTimePassed.current });
     let i = 0;
     let j = 0;
-    while (i < errorsInterval.current.length) {
+    while (i < errorsInterval.current.length && j < ArrayOnIntervals.current.length) {
       if (
         errorsInterval.current[i].timer > ArrayOnIntervals.current[j].interval
       ) {
@@ -765,6 +788,9 @@ export default function TypingArea({
     }
     numberOfGenerations.current++;
     setWords((prev) => [...prev, ...response]);
+    console.log(shadowTest)
+    const newRef=response.map((prev)=>({...prev}))
+    setShadowTest((prev) => [...prev, ...newRef])
   }
   // // Add this state to your component
   // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
