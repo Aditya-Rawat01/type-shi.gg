@@ -32,7 +32,7 @@ export default function TypeScreen() {
           transition={{
             type: "tween", // or "spring"
             ease: "easeInOut",
-            duration: 0.3,
+            duration: 0.2,
           }}
         >
           
@@ -51,7 +51,7 @@ export default function TypeScreen() {
           transition={{
             type: "tween", // or "spring"
             ease: "easeInOut",
-            duration: 0.3,
+            duration: 0.2,
           }}
         > 
         <ResultPage setShowResultPage={setShowResultPage} charArray={charArray} setCharArray={setCharArray}/>
