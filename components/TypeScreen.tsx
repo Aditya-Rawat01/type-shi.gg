@@ -23,7 +23,7 @@ export default function TypeScreen() {
         <div className="w-screen h-screen bg-[#343639] relative">
             
            <AnimatePresence mode="wait">
-      {showResultPage ? (
+      {!showResultPage ? (
         <motion.div
           key={"first"}
           initial={{ opacity: 0 }}

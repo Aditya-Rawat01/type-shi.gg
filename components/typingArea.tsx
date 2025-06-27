@@ -16,12 +16,13 @@ import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
-import { useAtom, useAtomValue } from "jotai";
-import { Lock, RefreshCw } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { LanguagesIcon, Lock, RefreshCw, RotateCcw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { persistWordListAtom, restartSameTestAtom, shadowTestAtom } from "@/app/store/atoms/restartSameTest";
 import { shouldFetchLanguageAtom } from "@/app/store/atoms/shouldFetchLang";
+import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -41,7 +42,7 @@ export default function TypingArea({
   const [wordListFromBackend, setwordListFromBackend] = useAtom(persistWordListAtom)
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
-  const [restartSameTest, setRestartSameTest] = useAtom(restartSameTestAtom)
+  const [repeatTest, setRepeatTest] = useAtom(restartSameTestAtom)
   const [shadowTest, setShadowTest] = useAtom(shadowTestAtom)
   const [shouldFetchLang, setShouldFetchLang] = useAtom(shouldFetchLanguageAtom)
   const [pointerIndex, setPointerIndex] = useState(0);
@@ -71,6 +72,7 @@ export default function TypingArea({
   const ArrayOnIntervals = useRef<
     { wpm: number; rawWpm: number; interval: number; errors: number }[]
   >([]);
+  const setCumulativeIntervaltom = useSetAtom(cumulativeIntervalAtom)
   const [isTestActive, setIsTestActive] = useState(false);
   const intervalForSec = useRef<number | null>(null);
   const pointerIndexCopyRef = useRef(0); // clever workaround so that useEffect dont run again and again.
@@ -81,11 +83,12 @@ export default function TypingArea({
   const totalTimePassed = useRef(0);
   const isAlreadyCalculatingResult = useRef(false);
   const errorsInterval = useRef<{ errors: number; timer: number }[]>([]);
-    const currentWordRef = useRef(0)
+    const currentWordRef = useRef(0) // not setting this to zero, lets see what happens
   useEffect(() => {
     if (!isTestActive) {
       // stop timer
       setTimer(0);
+      setCumulativeIntervaltom([])
       timeShadowRef.current = 0;
       totalTimePassed.current = 0;
       errorsInterval.current=[]
@@ -262,11 +265,11 @@ export default function TypingArea({
 
   // responsible only to get the langauge from the backend
   useEffect(() => {
-    if (restartSameTest) {
+    if (repeatTest) {
       console.log("dhould not be here")
       const newRef=shadowTest.map((prev)=>({...prev}))
       setWords(newRef)
-      setRestartSameTest(false) // redundant tho.  
+      //setRestartSameTest(false) // redundant tho.  , keep it true so that repeated flag could be shown.
       return
     }
     if (!shouldFetchLang) {
@@ -317,7 +320,7 @@ export default function TypingArea({
       setShadowTest(newRef)
       setFirstVisibleCharIndex(0);
       secondLineTopRef.current = null;
-
+      setRepeatTest(false)
       numberOfGenerations.current = 1;
       currentWordRef.current=0
       setPointerIndex(0);
@@ -504,6 +507,7 @@ export default function TypingArea({
         i++;
       }
     }
+    setCumulativeIntervaltom(ArrayOnIntervals.current)
     console.log({ errorsInterval });
     setCharArray(charArray);
     setShowResultPage(true);
@@ -767,9 +771,6 @@ export default function TypingArea({
   //// when the pointerIndex becomes greater than 0 then start the clock thats it.
   /// later on detect the afk here as well.
   // firstly i will calculate that for each sec what is the current wpm is for the user that will be used for the line chart then after on.
-  function startTheClock() {
-    // this will be inside a setInterval to run on each sec.
-  }
 
   if (
     selection.mode === "time" &&
@@ -855,12 +856,22 @@ export default function TypingArea({
       onClick={ClickToFocus} // moved from line 457 to here
     >
       <div
-        className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl ${
+        className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl z-20 ${
           capsKey ? "flex" : "hidden"
         }`}
       >
         <Lock />
         <p>Caps Lock On</p>
+      </div>
+      <div
+        className={`p-3 w-full flex items-center justify-center relative gap-3 h-28 bg-red-400 rounded-2xl`}
+      >
+        <div className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${repeatTest?"opacity-100":"opacity-0 pointer-events-none"} absolute mr-80`}>
+        <RotateCcw />
+        <p className="text-red-500">Repeated</p></div>
+        <div className="flex gap-2 p-2 rounded-xl">
+        <LanguagesIcon />
+        <p className="">Languages</p></div>
       </div>
       <div className="absolute top-0">
         {selection.mode === "time" ? (
@@ -868,11 +879,11 @@ export default function TypingArea({
         ) : (
           <p>{currentWordRef.current.toString()+"/" + selection.words.toString()}</p>
         )}
-      </div>{" "}
+      </div>
       {/* will show the total words typed or the time passing */}
       <div
         ref={textFlowAreaRef}
-        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-12 px-2 w-[85%] outline outline-gray-400"
+        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-6 px-2 w-[85%] outline outline-gray-400"
       >
         <div
           className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
