@@ -23,6 +23,7 @@ import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { persistWordListAtom, restartSameTestAtom, shadowTestAtom } from "@/app/store/atoms/restartSameTest";
 import { shouldFetchLanguageAtom } from "@/app/store/atoms/shouldFetchLang";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
+import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -83,11 +84,17 @@ export default function TypingArea({
   const totalTimePassed = useRef(0);
   const isAlreadyCalculatingResult = useRef(false);
   const errorsInterval = useRef<{ errors: number; timer: number }[]>([]);
-    const currentWordRef = useRef(0) // not setting this to zero, lets see what happens
+  const currentWordRef = useRef(0) // not setting this to zero, lets see what happens
+  const afkTimeoutRef =  useRef<ReturnType<typeof setTimeout> | null>(null);
+  const  setAfkMode = useSetAtom(afkAtom)
   useEffect(() => {
     if (!isTestActive) {
       // stop timer
       setTimer(0);
+      if (afkTimeoutRef.current) {
+      clearTimeout(afkTimeoutRef.current)
+    }
+      setAfkMode(false)
       setCumulativeIntervaltom([])
       timeShadowRef.current = 0;
       totalTimePassed.current = 0;
@@ -759,11 +766,18 @@ export default function TypingArea({
     if (focusTimeoutRef.current) {
       clearTimeout(focusTimeoutRef.current);
     }
+    if (afkTimeoutRef.current) {
+      clearTimeout(afkTimeoutRef.current)
+    }
     setBlinking(false);
 
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false);
     }, 10000); // set this to 10000
+    afkTimeoutRef.current = setTimeout(() => {
+      setAfkMode(true);
+      setShowResultPage(true);
+    }, 30000);
     blinkTimeoutRef.current = setTimeout(() => {
       setBlinking(true);
     }, 500);
