@@ -3,6 +3,7 @@
 import {
   Dispatch,
   KeyboardEvent,
+  memo,
   SetStateAction,
   useCallback,
   useEffect,
@@ -10,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
 import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
@@ -24,6 +26,9 @@ import { persistWordListAtom, restartSameTestAtom, shadowTestAtom } from "@/app/
 import { shouldFetchLanguageAtom } from "@/app/store/atoms/shouldFetchLang";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 import { afkAtom } from "@/app/store/atoms/afkModeAtom";
+import LanguageSelector from "./languageSelector";
+import { hashAtom } from "@/app/store/atoms/generatedHash";
+import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -46,6 +51,7 @@ export default function TypingArea({
   const [repeatTest, setRepeatTest] = useAtom(restartSameTestAtom)
   const [shadowTest, setShadowTest] = useAtom(shadowTestAtom)
   const [shouldFetchLang, setShouldFetchLang] = useAtom(shouldFetchLanguageAtom)
+  const [hash, setHash] = useAtom(hashAtom)
   const [pointerIndex, setPointerIndex] = useState(0);
   const cursorElementRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,6 +93,7 @@ export default function TypingArea({
   const currentWordRef = useRef(0) // not setting this to zero, lets see what happens
   const afkTimeoutRef =  useRef<ReturnType<typeof setTimeout> | null>(null);
   const  setAfkMode = useSetAtom(afkAtom)
+  const [selectionPanelVisible,setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom)
   useEffect(() => {
     if (!isTestActive) {
       // stop timer
@@ -96,6 +103,7 @@ export default function TypingArea({
     }
       setAfkMode(false)
       setCumulativeIntervaltom([])
+      setHash({GeneratedAmt:0, hash:"", originalSeed:""}) // just to be safe.(redundant)
       timeShadowRef.current = 0;
       totalTimePassed.current = 0;
       errorsInterval.current=[]
@@ -141,6 +149,9 @@ export default function TypingArea({
       if (focusTimeoutRef.current) {
         clearTimeout(focusTimeoutRef.current);
       }
+      if (afkTimeoutRef.current) {
+      clearTimeout(afkTimeoutRef.current)
+    }
     };
   }, []);
   // took help from gemini for the cursor irregularities.
@@ -272,6 +283,9 @@ export default function TypingArea({
 
   // responsible only to get the langauge from the backend
   useEffect(() => {
+    if (!selectionPanelVisible) {
+      setSelectionPanelVisible(true)
+    }
     if (repeatTest) {
       console.log("dhould not be here")
       const newRef=shadowTest.map((prev)=>({...prev}))
@@ -287,8 +301,18 @@ export default function TypingArea({
       // on first point we want it to run when the selection.language doesnt change.
       // but when the language is same then this should not run
       // on mount run only for first time, then selection.language dekh ke run kro.
-      const res = await axios.get(`${URI}/api/language/${selection.language}`);
-      setwordListFromBackend(res.data.msg.words);
+      try {
+        const res = await axios.get(`${URI}/api/language/${selection.language}`);
+        setwordListFromBackend(res.data.msg.words);
+        if (wordListFromBackend.length!==0) {
+          toast.success("Language updated (👉ﾟヮﾟ)👉")
+         }
+        
+      } catch (error) {
+        setwordListFromBackend([]);
+        toast.error("Error while fetching languages.")
+        console.log(error)
+      }
       setShouldFetchLang(false)
     }
     getWords();
@@ -321,9 +345,10 @@ export default function TypingArea({
         toast.error(response);
         return;
       }
-      setWords(response);
+      setWords(response.characters);
+      setHash({hash:response.generatedHash, GeneratedAmt: 1, originalSeed:response.originalSeed!}) //this is the only place where original seed should be updated.
       console.log({response})
-      const newRef=response.map((prev)=>({...prev})) // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
+      const newRef=response.characters.map((prev)=>({...prev})) // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
       setShadowTest(newRef)
       setFirstVisibleCharIndex(0);
       secondLineTopRef.current = null;
@@ -332,6 +357,7 @@ export default function TypingArea({
       currentWordRef.current=0
       setPointerIndex(0);
       setIsTestActive(false);
+      containerRef.current?.focus();
       //setRefreshed(false)
     }, isRefreshed? 80:400);
   }, [selection, isRefreshed, wordListFromBackend]);
@@ -515,7 +541,6 @@ export default function TypingArea({
       }
     }
     setCumulativeIntervaltom(ArrayOnIntervals.current)
-    console.log({ errorsInterval });
     setCharArray(charArray);
     setShowResultPage(true);
   }
@@ -533,6 +558,10 @@ export default function TypingArea({
     let charsSkipped = 1;
     const key = e.key;
     const isActive = e.getModifierState("CapsLock");
+    if (selectionPanelVisible && key!="CapsLock") {
+      console.log("how the hell is this even possible now????")
+      setSelectionPanelVisible(false)
+    }
     if ((isActive || capsKey) && key === "CapsLock") {
       setCapsKey(isActive);
     }
@@ -777,7 +806,7 @@ export default function TypingArea({
     afkTimeoutRef.current = setTimeout(() => {
       setAfkMode(true);
       setShowResultPage(true);
-    }, 30000);
+    }, 20000);
     blinkTimeoutRef.current = setTimeout(() => {
       setBlinking(true);
     }, 500);
@@ -796,15 +825,17 @@ export default function TypingArea({
       mode: "time",
       testWordlength: null,
       wordList: wordListFromBackend,
+      seed:hash.hash
     });
     if (typeof response === "string") {
       toast.error("Something went wrong.");
       return;
     }
     numberOfGenerations.current++;
-    setWords((prev) => [...prev, ...response]);
+    setWords((prev) => [...prev, ...response.characters]);
     console.log(shadowTest)
-    const newRef=response.map((prev)=>({...prev}))
+    setHash({GeneratedAmt:hash.GeneratedAmt++, originalSeed: hash.originalSeed, hash:response.generatedHash})
+    const newRef=response.characters.map((prev)=>({...prev}))
     setShadowTest((prev) => [...prev, ...newRef])
   }
   // // Add this state to your component
@@ -861,6 +892,24 @@ export default function TypingArea({
   };
 
   return (
+    <motion.div
+     variants={{
+      animate: { opacity: 0.8 },
+      default:   { opacity: 1 },
+    }}
+          key={selection.language + selection.mode + isRefreshed}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: {delay:0.1} }}
+          
+          transition={{
+            ease: "easeIn",
+            type: "spring",
+          damping: 50,                       // ↓ damping → bouncier
+          stiffness: 20,                    // ↑ stiffness → faster
+          mass: 1.5, 
+            duration: 0.7,
+          }}
+        >
     <div
       ref={containerRef}
       className="h-fit w-full p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden bg-pink-500"
@@ -868,6 +917,7 @@ export default function TypingArea({
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={ClickToFocus} // moved from line 457 to here
+      onMouseMove={()=>{!selectionPanelVisible?setSelectionPanelVisible(true):null}}
     >
       <div
         className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl z-20 ${
@@ -884,8 +934,8 @@ export default function TypingArea({
         <RotateCcw />
         <p className="text-red-500">Repeated</p></div>
         <div className="flex gap-2 p-2 rounded-xl">
-        <LanguagesIcon />
-        <p className="">Languages</p></div>
+        <LanguageSelector/>
+        </div>
       </div>
       <div className="absolute top-0">
         {selection.mode === "time" ? (
@@ -970,7 +1020,27 @@ export default function TypingArea({
           style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
         />
       )}
-      <Tooltip>
+    <RefreshIcon refresh={refresh} setIsRefreshed={setIsRefreshed}/>  
+    </div>
+  </motion.div>
+  )
+}
+
+function ResultLoadingPlaceholder() {
+  return <div className="bg-white"> Loading results, please wait...</div>;
+}
+
+
+
+//memoizing icons to reduce their re-renders
+const RefreshIcon = memo(({refresh, setIsRefreshed}:{
+  refresh: boolean,
+  setIsRefreshed: Dispatch<SetStateAction<number>>
+})=>{
+  console.log("here")
+  return (
+  
+  <Tooltip>
         <TooltipTrigger>
           <RefreshCw
             className={`cursor-pointer transition-all ease-out duration-[400ms] ${
@@ -985,10 +1055,5 @@ export default function TypingArea({
           <p className="p-2">Restart Test</p>
         </TooltipContent>
       </Tooltip>
-    </div>
-  );
-}
-
-function ResultLoadingPlaceholder() {
-  return <div className="bg-white"> Loading results, please wait...</div>;
-}
+  )
+})

@@ -4,7 +4,7 @@ import {
 } from "@/app/store/atoms/restartSameTest";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import {
   Chart as ChartJS,
@@ -24,6 +24,8 @@ import { Chart } from "react-chartjs-2";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { afkAtom } from "@/app/store/atoms/afkModeAtom";
+import { toast } from "sonner";
+import { hashAtom } from "@/app/store/atoms/generatedHash";
 
 export default function ResultPage({
   setShowResultPage,
@@ -37,7 +39,13 @@ export default function ResultPage({
   const setRestartSameTest = useSetAtom(restartSameTestAtom);
   const shadowTest = useAtom(shadowTestAtom);
   const selection = useAtomValue(modeAtom);
-  const isAfk = useAtomValue(afkAtom)
+  const isAfk = useAtomValue(afkAtom);
+  const hash = useAtomValue(hashAtom)
+
+  useEffect(() => {
+  if (isAfk) toast.warning("Afk mode detected.");
+}, []);
+
   const titleText = [
     selection.mode +
       " " +

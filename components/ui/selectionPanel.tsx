@@ -1,13 +1,14 @@
 'use client'
 import { modeAtom } from "@/app/store/atoms/mode";
+import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
 import { localStorageConfig } from "@/lib/localStorageConfig";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Settings2Icon } from "lucide-react";
 import { useState } from "react";
 
 export default function SelectionPanel() {
   const [selection, setSelection] = useAtom(modeAtom); // from cookies or localstorage mode or time for now.
-
+  const visibility = useAtomValue(selectionPanelVisibleAtom)
   const [showPanel, setShowPanel] = useState(false);
   const time = [15,30,60,120]
   const words = [10,25,50,100]
@@ -43,7 +44,7 @@ export default function SelectionPanel() {
   }
 
   return (
-    <div className="flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer">
+    <div className={`flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
       <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
         <p className="relative left-5">Test Settings</p>
         <Settings2Icon

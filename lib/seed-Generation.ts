@@ -1,15 +1,17 @@
 import seedrandom from "seedrandom";
+import { createHash } from "crypto";
 export default function generateTest({
   mode,
   testWordlength,
   wordList,
-  hasSeed
+  seed
 }: {
   mode: string;
   testWordlength: number | null;
   wordList: string[];
-  hasSeed?:string
+  seed?:string
 }) {
+  console.log("thats what i am talking")
   if (mode === "words") {
     const uuid = crypto.randomUUID();
     const testLength = testWordlength as number;
@@ -17,24 +19,18 @@ export default function generateTest({
       return "Error occurred, the list is not of valid size";
     }
     
-    const characters = generateWords({wordList,uuid, mode, testLength, hasSeed:false}) // also return the numberOf generations to know that the hash is generated only once.
+    const {characters, generatedHash, originalSeed} = generateWords({wordList,uuid, mode, testLength, hasSeed:false}) // also return the numberOf generations to know that the hash is generated only once.
       
-    return characters;
+    return {characters, generatedHash, originalSeed};
   } else {
     // for time based test.
-    console.log("thats what i am talking")
-    if (typeof hasSeed==="string") {
-      
-      const characters = generateWords({wordList, uuid:hasSeed, mode, testLength:null, hasSeed: true})
-      return characters;
+    let uuid = seed
+    if (typeof uuid !=="string") {
+      uuid = crypto.randomUUID();
     }
-
-     else {
-      const uuid = crypto.randomUUID();
-
-      const characters = generateWords({wordList, uuid, mode, testLength:null, hasSeed:false})
-      return characters;
-    }
+    const {characters, generatedHash, originalSeed} = generateWords({wordList, uuid, mode, testLength:null, hasSeed: seed?true:false})
+    return {characters, generatedHash, originalSeed};
+   
 }
 }
 
@@ -42,19 +38,24 @@ export default function generateTest({
 function generateWords({uuid, wordList,mode, testLength, hasSeed}:{uuid:string, wordList:string[],mode:string, testLength:number|null, hasSeed:boolean}) {
   const rng = seedrandom(uuid);
   const returnList = (mode==="time" && hasSeed)?[""]:[];
-  const endValue = mode === "words" ? testLength! : 100 
+  const endValue = mode === "words" ? testLength! : 100
+  const hash = createHash('sha256') 
   for (let i = 0; i < endValue; i++) {
       const index = Math.floor(rng() * wordList.length);
       returnList.push(wordList[index]);}
 
-      const characters = returnList // also return the numberOf generations to know that the hash is generated only once.
+      const finalString  = returnList // also return the numberOf generations to know that the hash is generated only once.
       .join(" ")
-      .split("")
+
+      const generatedHash = hash.update(finalString,'utf-8').digest('hex')
+      
+      const characters = finalString.split("")
       .map((char) => ({
         char,
         status: "pending", // 'correct', 'incorrect', 'extra'
       }));
-      console.log({characters,wordList})
-      return characters
+      console.log({finalString})
+      console.log({uuid, generatedHash})
+      return {characters, generatedHash, originalSeed: !hasSeed?uuid:null}
 }
 
