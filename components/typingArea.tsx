@@ -45,6 +45,10 @@ export default function TypingArea({
       status: string;
     }[]
   >([]);
+  const wordsRef = useRef<{
+      char: string;
+      status: string;
+    }[]>([])  // just because request animation frame closure gets stale in time mode so ref keep that in sync
   const [wordListFromBackend, setwordListFromBackend] = useAtom(persistWordListAtom)
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
@@ -68,7 +72,7 @@ export default function TypingArea({
   const cursorAnimationRef = useRef<number | null>(0);
   const [isRefreshed, setIsRefreshed] = useState<number>(0);
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [refresh, setRefreshed] = useState(false);
+  //const [refresh, setRefreshed] = useState(false);
   const [capsKey, setCapsKey] = useState(false);
   const isMounted = useRef(false);
   const wordsTypedInSec = useRef(0);
@@ -94,6 +98,11 @@ export default function TypingArea({
   const afkTimeoutRef =  useRef<ReturnType<typeof setTimeout> | null>(null);
   const  setAfkMode = useSetAtom(afkAtom)
   const [selectionPanelVisible,setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom)
+
+    useEffect(()=>{
+      wordsRef.current = words // to keep ref in syn for request animation frame
+    },[words])
+
   useEffect(() => {
     if (!isTestActive) {
       // stop timer
@@ -386,7 +395,7 @@ export default function TypingArea({
         i < pointerIndexCopyRef.current;
         i++
       ) {
-        let currentindex = words[i];
+        let currentindex = wordsRef.current[i];
         if (currentindex.char != " ") {
           if (currentindex.status === "correct") {
             charArrayForSec[0]++;
@@ -558,7 +567,7 @@ export default function TypingArea({
     let charsSkipped = 1;
     const key = e.key;
     const isActive = e.getModifierState("CapsLock");
-    if (selectionPanelVisible && key!="CapsLock") {
+    if (selectionPanelVisible && !specialKeys.includes(key)) {
       console.log("how the hell is this even possible now????")
       setSelectionPanelVisible(false)
     }
@@ -832,9 +841,11 @@ export default function TypingArea({
       return;
     }
     numberOfGenerations.current++;
+    console.log({words, newArr: response.characters})
     setWords((prev) => [...prev, ...response.characters]);
     console.log(shadowTest)
-    setHash({GeneratedAmt:hash.GeneratedAmt++, originalSeed: hash.originalSeed, hash:response.generatedHash})
+    setHash({GeneratedAmt:hash.GeneratedAmt+1, originalSeed: hash.originalSeed, hash:response.generatedHash})
+    console.log({amt: hash.GeneratedAmt+1})
     const newRef=response.characters.map((prev)=>({...prev}))
     setShadowTest((prev) => [...prev, ...newRef])
   }
@@ -958,9 +969,7 @@ export default function TypingArea({
         </div>
 
         <div
-          className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms] ${
-            refresh ? "opacity-0" : "opacity-100"
-          }`}
+          className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
         >
           {wordGroups.map((word, wordIndex) => {
             let charOffset = 0;
@@ -1009,18 +1018,16 @@ export default function TypingArea({
           className={` absolute top-0 left-0 w-0.5 bg-amber-500
             
                     ${
-                      !refresh
-                        ? blinking
+                         blinking
                           ? "cursor animate-blink"
                           : "transition-transform duration-150 ease-out "
-                        : "cursor-invisible"
                     }
                     ${!focus && "bg-transparent"}
                     w-0.5 z-0`}
           style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
         />
       )}
-    <RefreshIcon refresh={refresh} setIsRefreshed={setIsRefreshed}/>  
+    <RefreshIcon setIsRefreshed={setIsRefreshed}/>  
     </div>
   </motion.div>
   )
@@ -1033,8 +1040,8 @@ function ResultLoadingPlaceholder() {
 
 
 //memoizing icons to reduce their re-renders
-const RefreshIcon = memo(({refresh, setIsRefreshed}:{
-  refresh: boolean,
+const RefreshIcon = memo(({setIsRefreshed}:{
+
   setIsRefreshed: Dispatch<SetStateAction<number>>
 })=>{
   console.log("here")
@@ -1043,9 +1050,7 @@ const RefreshIcon = memo(({refresh, setIsRefreshed}:{
   <Tooltip>
         <TooltipTrigger>
           <RefreshCw
-            className={`cursor-pointer transition-all ease-out duration-[400ms] ${
-              refresh ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
+            className={`cursor-pointer transition-all ease-out duration-[400ms]`}
             onClick={() => {
               setIsRefreshed(Date.now());
             }}

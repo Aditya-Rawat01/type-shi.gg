@@ -71,11 +71,9 @@ model Verification {
 
 model Test {
   id          String   @id @default(uuid())
-  duration    DateTime
   charSets    Int[] // correct/incorrect/extra/missed
   mode        String // this is testType
-  totalChars  Int
-  consistency Float
+  flameGraph  Json @db.JsonB
   accuracy    Float
   userId String
   user User @relation(fields: [userId], references: [id])

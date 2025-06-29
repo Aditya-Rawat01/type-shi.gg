@@ -4,7 +4,7 @@ import {
 } from "@/app/store/atoms/restartSameTest";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import {
   Chart as ChartJS,
@@ -26,6 +26,8 @@ import { modeAtom } from "@/app/store/atoms/mode";
 import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 import { toast } from "sonner";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
+import axios from "axios";
+import { URI } from "@/lib/URI";
 
 export default function ResultPage({
   setShowResultPage,
@@ -36,16 +38,54 @@ export default function ResultPage({
   charArray: number[];
   setCharArray: Dispatch<SetStateAction<number[]>>;
 }) {
-  const setRestartSameTest = useSetAtom(restartSameTestAtom);
+  const [repeatedTest,setRestartSameTest] = useAtom(restartSameTestAtom);
+  const shadowRepeatedRef = useRef(repeatedTest) // this helps in removing the flicker of change in flag of repeated test.
+  console.log({shadowRepeatedRef, repeatedTest})
   const shadowTest = useAtom(shadowTestAtom);
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
   const hash = useAtomValue(hashAtom)
+  const cumulativeInterval = useAtomValue(cumulativeIntervalAtom);
+  // send the data to backend.
+  // send the [correct, incorrect, missed, extra]
+  // send the accuracy (once done)
+  // send the raw and avg wpm
+  // send the {generatedHash, initialseed, generationAmt}
+  // send some particular identifier to know the person.
+  // user table id or userId is going to be the identifier.
+  useEffect(()=>{
+    if (isAfk || repeatedTest) {
+      toast.warning("Test will not be stored.");
+      return
+    }
+    async function dataSender() {
+      const mode2 = selection.mode==="words"?selection.words:selection.time
+      const body = {
+        charSets : charArray, // correct, incorrect, extra, missed
+        mode: selection.mode,
+        mode2: mode2,
+        flameGraph: cumulativeInterval,
+        accuracy : 98.01, // hardcoded for a while.
+        rawWpm:70,
+        avgWpm:65,
+        language: selection.language,
+        // these will not be saved.
+        initialSeed: hash.originalSeed,
+        generatedAmt: hash.GeneratedAmt,
+        finalHash: hash.hash
+      }
+      try {
+        
+        const res = await axios.post(`${URI}/api/test`, body)
+        toast.success(res.data.msg)
+      } catch (error) {
+        toast.warning("some fields are missing/tampered")  
+      }
+      
+    }
 
-  useEffect(() => {
-  if (isAfk) toast.warning("Afk mode detected.");
-}, []);
-
+    dataSender()
+  },[])
   const titleText = [
     selection.mode +
       " " +
@@ -69,6 +109,7 @@ export default function ResultPage({
         <div className="text-xl pl-10 relative">
           <p>{titleText[0]}</p>
           <p>{titleText[1]}</p>
+          {shadowRepeatedRef.current?<p className="absolute top-2 right-10 rounded-2xl bg-red-700 px-3 py-2 text-white">Repeated Test</p>:null}
           {isAfk?<p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-2xl bg-violet-700 px-3 py-2 text-white">Afk detected (ㆆ_ㆆ)</p>:null}
           {/* // if is afk only then this will be shown */}
           </div>

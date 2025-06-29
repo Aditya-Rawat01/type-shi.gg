@@ -37,15 +37,17 @@ export default function generateTest({
 
 function generateWords({uuid, wordList,mode, testLength, hasSeed}:{uuid:string, wordList:string[],mode:string, testLength:number|null, hasSeed:boolean}) {
   const rng = seedrandom(uuid);
-  const returnList = (mode==="time" && hasSeed)?[""]:[];
+  const returnList = [];
   const endValue = mode === "words" ? testLength! : 100
   const hash = createHash('sha256') 
   for (let i = 0; i < endValue; i++) {
       const index = Math.floor(rng() * wordList.length);
       returnList.push(wordList[index]);}
 
-      const finalString  = returnList // also return the numberOf generations to know that the hash is generated only once.
-      .join(" ")
+      const intermediateString  = returnList // also return the numberOf generations to know that the hash is generated only once.
+      .join(" ");
+
+      const finalString=(mode==="time")?intermediateString+" ":intermediateString
 
       const generatedHash = hash.update(finalString,'utf-8').digest('hex')
       
@@ -54,8 +56,8 @@ function generateWords({uuid, wordList,mode, testLength, hasSeed}:{uuid:string, 
         char,
         status: "pending", // 'correct', 'incorrect', 'extra'
       }));
-      console.log({finalString})
-      console.log({uuid, generatedHash})
+      // console.log({finalString})
+      // console.log({uuid, generatedHash})
       return {characters, generatedHash, originalSeed: !hasSeed?uuid:null}
 }
 
