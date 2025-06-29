@@ -75,6 +75,8 @@ model Test {
   mode        String // this is testType
   flameGraph  Json @db.JsonB
   accuracy    Float
+  avgWpm      Float
+  rawWpm      Float
   userId String
   user User @relation(fields: [userId], references: [id])
 }

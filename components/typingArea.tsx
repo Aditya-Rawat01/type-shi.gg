@@ -98,7 +98,9 @@ export default function TypingArea({
   const afkTimeoutRef =  useRef<ReturnType<typeof setTimeout> | null>(null);
   const  setAfkMode = useSetAtom(afkAtom)
   const [selectionPanelVisible,setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom)
-
+  const charArrayRef = useRef([0,0,0,0])
+  const firstVisibleCharIndexShadowRef = useRef(0)
+  const [offSet, setOffSet] = useState(0) 
     useEffect(()=>{
       wordsRef.current = words // to keep ref in syn for request animation frame
     },[words])
@@ -396,7 +398,7 @@ export default function TypingArea({
         i++
       ) {
         let currentindex = wordsRef.current[i];
-        if (currentindex.char != " ") {
+        
           if (currentindex.status === "correct") {
             charArrayForSec[0]++;
           } else if (currentindex.status === "incorrect") {
@@ -406,7 +408,7 @@ export default function TypingArea({
           } else {
             charArrayForSec[3]++;
           }
-        }
+        
       }
       const totalCharsInSec = charArrayForSec.reduce(
         (prevValue, currentValue) => prevValue + currentValue
@@ -419,12 +421,12 @@ export default function TypingArea({
         (currentTime - testStartTiming.current) / 1000
       );
       if (!interval) return; // if interval is 0 // redundant
-      const cumulatedRawWpm = Math.round(
+      const cumulatedRawWpm = 
         (totalCharsRef.current * 12) / interval
-      ); // to convert the interval from ms to seconds.
-      const cumulatedWpm = Math.round(
+      ; // to convert the interval from ms to seconds.
+      const cumulatedWpm = 
         (correctCharsRef.current * 12) / interval
-      );
+      ;
       totalTimePassed.current = interval;
       ArrayOnIntervals.current.push({
         rawWpm: cumulatedRawWpm,
@@ -482,6 +484,26 @@ export default function TypingArea({
   ];
   // this is the sliced part of the original flat index array.
   const visibleChars = useMemo(() => {
+    if (firstVisibleCharIndex!=firstVisibleCharIndexShadowRef.current) {
+      console.log("works here 1")
+      console.log({firstVisibleCharIndex: words[firstVisibleCharIndex], shadowRef: words[firstVisibleCharIndexShadowRef.current]})
+      for (let i = firstVisibleCharIndexShadowRef.current; i<firstVisibleCharIndex; i++) {
+        
+        if (words[i].status === "correct") {
+          charArrayRef.current[0]++;
+        } else if (words[i].status === "incorrect") {
+          charArrayRef.current[1]++;
+        } else if (words[i].status === "missed") {
+          charArrayRef.current[2]++;
+        } else if (words[i].status === "extra") {
+          charArrayRef.current[3]++;
+        } else {
+            charArrayRef.current[2]++;
+        }
+      
+      }
+      firstVisibleCharIndexShadowRef.current = firstVisibleCharIndex
+    }
     return words.slice(firstVisibleCharIndex);
   }, [words, firstVisibleCharIndex]);
 
@@ -511,7 +533,7 @@ export default function TypingArea({
   function calculateResult(key: string) {
     //setShowResultLoading(true)
     const charArray = [0, 0, 0, 0]; // correct, incorrect, missed, extra
-    for (let i = 0; i < words.length; i++) {
+    for (let i = 0; i < words.length; i++) {  
       let currentindex = words[i];
       if (currentindex.status === "pending" && selection.mode === "time") {
         break;
@@ -535,6 +557,33 @@ export default function TypingArea({
         }
       }
     }
+    console.log({char:words[firstVisibleCharIndex], firstVisibleCharIndex})
+    for (let i = firstVisibleCharIndexShadowRef.current; i < words.length; i++) {
+      let currentindex = words[i];
+      if (currentindex.status === "pending" && selection.mode === "time") {
+        console.log(currentindex)
+        break;
+      }
+      if (currentindex.char != " ") {
+        if (currentindex.status === "correct") {
+          charArrayRef.current[0]++;
+        } else if (currentindex.status === "incorrect") {
+          charArrayRef.current[1]++;
+        } else if (currentindex.status === "missed") {
+          charArrayRef.current[2]++;
+        } else if (currentindex.status === "extra") {
+          charArrayRef.current[3]++;
+        } else {
+          // run when the pointerIndex reaches to the last char.
+          if (key === words[words.length - 1].char) {
+            charArrayRef.current[0]++;
+          } else {
+            charArrayRef.current[2]++;
+          }
+        }
+      }
+    }
+    console.log({charArray,ref: charArrayRef.current})
     console.log(ArrayOnIntervals);
     console.log({ time: totalTimePassed.current });
     let i = 0;
@@ -864,9 +913,9 @@ export default function TypingArea({
   //             // Create a new array to avoid direct mutation
   //             const newWords = [...prevWords];
   //             // Ensure the character at the pointer exists before trying to update it
-  //             if (newWords[pointerIndex]) {
+  //             if (newwords[pointerIndex]) {
   //                  // Create a new object for the character being changed
-  //                 newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
+  //                 newwords[pointerIndex] = { ...newwords[pointerIndex], status: 'correct' };
   //             }
   //             return newWords;
   //         });

@@ -6,6 +6,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { toBlob } from "html-to-image";
 import {
   Chart as ChartJS,
   // controllers & elements
@@ -28,7 +29,7 @@ import { toast } from "sonner";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import axios from "axios";
 import { URI } from "@/lib/URI";
-
+import { motion, useMotionValue, useTransform, animate } from 'motion/react'
 export default function ResultPage({
   setShowResultPage,
   charArray,
@@ -38,14 +39,19 @@ export default function ResultPage({
   charArray: number[];
   setCharArray: Dispatch<SetStateAction<number[]>>;
 }) {
-  const [repeatedTest,setRestartSameTest] = useAtom(restartSameTestAtom);
-  const shadowRepeatedRef = useRef(repeatedTest) // this helps in removing the flicker of change in flag of repeated test.
-  console.log({shadowRepeatedRef, repeatedTest})
+  const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
+  const shadowRepeatedRef = useRef(repeatedTest); // this helps in removing the flicker of change in flag of repeated test.
   const shadowTest = useAtom(shadowTestAtom);
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
-  const hash = useAtomValue(hashAtom)
+  const hash = useAtomValue(hashAtom);
   const cumulativeInterval = useAtomValue(cumulativeIntervalAtom);
+  const errors = cumulativeInterval.reduce((acc,curr)=>acc+curr.errors,0)
+  const totalChars = charArray[0] + charArray[1] + charArray[2] + charArray[3]
+  const correctChars = charArray[0]
+  const accuracy= (correctChars>0 && totalChars>0)?(totalChars-errors)*100/totalChars:0
+  const rawWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].rawWpm:0
+  const avgWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].wpm:0
   // send the data to backend.
   // send the [correct, incorrect, missed, extra]
   // send the accuracy (once done)
@@ -53,39 +59,41 @@ export default function ResultPage({
   // send the {generatedHash, initialseed, generationAmt}
   // send some particular identifier to know the person.
   // user table id or userId is going to be the identifier.
-  useEffect(()=>{
+  useEffect(() => {
     if (isAfk || repeatedTest) {
       toast.warning("Test will not be stored.");
-      return
+      return;
     }
     async function dataSender() {
-      const mode2 = selection.mode==="words"?selection.words:selection.time
+      if (accuracy<36 || !rawWpm || !avgWpm) {
+        toast.error("Invalid test!")
+        return
+      }
+      const mode2 =
+        selection.mode === "words" ? selection.words : selection.time;
       const body = {
-        charSets : charArray, // correct, incorrect, extra, missed
+        charSets: charArray, // correct, incorrect, extra, missed
         mode: selection.mode,
         mode2: mode2,
         flameGraph: cumulativeInterval,
-        accuracy : 98.01, // hardcoded for a while.
-        rawWpm:70,
-        avgWpm:65,
+        accuracy: accuracy, // hardcoded for a while.
+        rawWpm: parseFloat(rawWpm.toFixed(2)),
+        avgWpm: parseFloat(avgWpm.toFixed(2)),
         language: selection.language,
         // these will not be saved.
         initialSeed: hash.originalSeed,
         generatedAmt: hash.GeneratedAmt,
-        finalHash: hash.hash
-      }
+        finalHash: hash.hash,
+      };
       try {
-        
-        const res = await axios.post(`${URI}/api/test`, body)
-        toast.success(res.data.msg)
+        const res = await axios.post(`${URI}/api/test`, body);
+        toast.success(res.data.msg);
       } catch (error) {
-        toast.warning("some fields are missing/tampered")  
+        toast.warning("some fields are missing/tampered");
       }
-      
     }
-
-    dataSender()
-  },[])
+    dataSender();
+  }, []);
   const titleText = [
     selection.mode +
       " " +
@@ -98,23 +106,103 @@ export default function ResultPage({
     setRestartSameTest(state);
     setShowResultPage(false);
   }
+  const charArrayRepresentation = charArray[0]+" / "+charArray[1]+" / "+charArray[2]+" / "+charArray[3]
+  const captureRef = useRef<HTMLDivElement>(null);
+
+  // take ss after some ms so to avoid any jitter or lag in ui.
+  const handleScreenshot = ()=>setTimeout(async()=>
+      {const ss = captureRef.current;
+        if (!ss) return
+    const blob = await toBlob(ss, { pixelRatio: 2 });
+    if (!blob) return;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob })
+      ]);
+      toast.success("Screenshot copied 🎉");
+    } catch (err) {
+      // Safari & older Firefox can’t write blobs → fallback download// new thig to learn.
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), {
+        href: url,
+        download: "capture.png"
+      });
+      a.click();
+      toast.info("Clipboard not supported – downloaded instead");
+      URL.revokeObjectURL(url);
+    }},100)
+
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-start pt-12 gap-3 bg-red-300">
-      <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around">
+    <div className="w-screen h-screen flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
+    ref={captureRef}>
+      <div className="w-full flex flex-col gap-1">
+      <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
+        <div>
+          <Tooltip>
+          <TooltipTrigger>
+            <p>{rawWpm?Math.round(rawWpm):"Nil"}</p>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p className="p-2">{rawWpm.toFixed(2)}</p>
+          </TooltipContent>
+        </Tooltip>
         <p>Raw wpm</p>
-        <p>wpm</p>
+        </div>
+        <div>
+          <Tooltip>
+          <TooltipTrigger>
+            <p>{avgWpm?Math.round(avgWpm):"Nil"}</p>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p className="p-2">{avgWpm.toFixed(2)}</p>
+          </TooltipContent>
+        </Tooltip>
+          
+        <p>Avg wpm</p>
+        </div>
+        <div>
+          <Tooltip>
+          <TooltipTrigger>
+            <p>{accuracy?Math.round(accuracy)+"%":"Nil"}</p>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p className="p-2">{accuracy.toFixed(2)}</p>
+          </TooltipContent>
+        </Tooltip>
+          
         <p>Accuracy</p>
+        </div>
       </div>
+      <div className="bg-red-600 text-2xl flex justify-center w-full mt-0">
+          <Tooltip>
+          <TooltipTrigger>
+            {charArrayRepresentation}
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="p-2 text-lg">Correct / Incorrect / Missed / Extra</p>
+          </TooltipContent>
+        </Tooltip>
+        </div>
+        </div>
       <div className="graph h-80 bg-orange-400 w-4/5 flex flex-col">
         <div className="text-xl pl-10 relative">
           <p>{titleText[0]}</p>
           <p>{titleText[1]}</p>
-          {shadowRepeatedRef.current?<p className="absolute top-2 right-10 rounded-2xl bg-red-700 px-3 py-2 text-white">Repeated Test</p>:null}
-          {isAfk?<p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-2xl bg-violet-700 px-3 py-2 text-white">Afk detected (ㆆ_ㆆ)</p>:null}
+          {shadowRepeatedRef.current ? (
+            <p className="absolute top-2 right-10 rounded-2xl bg-red-700 px-3 py-2 text-white">
+              Repeated Test
+            </p>
+          ) : null}
+          {isAfk ? (
+            <p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-2xl bg-violet-700 px-3 py-2 text-white">
+              Afk detected (ㆆ_ㆆ)
+            </p>
+          ) : null}
           {/* // if is afk only then this will be shown */}
-          </div>
-        <ChartRender />
+        </div>
+        <ChartRender /> 
       </div>
+      
       <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
         <Tooltip>
           <TooltipTrigger>
@@ -141,7 +229,7 @@ export default function ResultPage({
         <Tooltip>
           <TooltipTrigger>
             <Images
-              onClick={() => handleClick(false)}
+              onClick={handleScreenshot}
               className="cursor-pointer"
             />
           </TooltipTrigger>
@@ -195,6 +283,7 @@ function ChartRender() {
               pointStyle: "triangle",
               tension: 0.3,
               yAxisID: "y",
+              clip: false,
             },
             {
               label: "Avg WPM",
@@ -204,6 +293,7 @@ function ChartRender() {
               borderWidth: 2,
               tension: 0.3,
               yAxisID: "y",
+              clip: false,
             },
             {
               label: "Errors",
@@ -212,6 +302,7 @@ function ChartRender() {
               pointRadius: 5,
               pointBackgroundColor: "rgba(255,99,132,1)",
               yAxisID: "y2",
+              clip: false,
             },
           ],
         }}
@@ -220,8 +311,7 @@ function ChartRender() {
           maintainAspectRatio: false,
 
           interaction: {
-            // <-- affects both hover + tooltip
-            mode: "x", // compare all datasets with the same x
+            mode: "x",
             intersect: false,
           },
           plugins: {

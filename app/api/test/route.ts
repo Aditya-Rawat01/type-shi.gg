@@ -31,7 +31,7 @@ export async function POST(req:NextRequest) {
             "msg": result.error,
         }, {status: 401})
     } else {
-        const {charSets, mode, mode2 , flameGraph, accuracy, initialSeed, generatedAmt, finalHash, language} = result.data
+        const {charSets, mode, mode2 , flameGraph, accuracy, initialSeed, generatedAmt, finalHash, language, rawWpm, avgWpm} = result.data
 
         const endValue = mode==="words"?mode2:100
         let hashGenerationCount = generatedAmt
@@ -75,6 +75,8 @@ export async function POST(req:NextRequest) {
                 mode,
                 flameGraph,
                 accuracy,
+                rawWpm,
+                avgWpm,
                 userId: sessionCookie.user.id
             }
         })
