@@ -28,7 +28,7 @@ export function LoginForm({
     const data = await signIn({ email, password });
     if (data.success) {
       toast.success(data.msg);
-      router.push("/dashboard");
+      router.push("/me");
     } else {
       toast.error(data.msg);
     }
@@ -37,14 +37,14 @@ export function LoginForm({
   async function signInWithGoogle() {
     const data = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard"
+        callbackURL: "/me"
     })
     console.log(data)
 }
 async function signInWithGithub() {
     const data = await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/dashboard"
+        callbackURL: "/me"
     })
     console.log(data)
 }

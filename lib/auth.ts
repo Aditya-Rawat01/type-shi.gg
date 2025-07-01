@@ -7,6 +7,10 @@ import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth({
     session:{
+        cookieCache:{
+            enabled:true,
+            maxAge: 15*60
+        },
         expiresIn:7*24*60*60
     },
     database: prismaAdapter(prisma, {

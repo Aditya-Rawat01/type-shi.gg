@@ -31,7 +31,7 @@ export default function RootLayout({
     
     <html lang="en">
       <body
-        className={`${roboto.className} antialiased`}
+        className={`${roboto.className} antialiased scrollbar-custom`}
       >
       <JotaiProvider> {/* Use the Jotai provider */}
           {children}

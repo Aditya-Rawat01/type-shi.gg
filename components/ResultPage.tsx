@@ -29,19 +29,17 @@ import { toast } from "sonner";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import axios from "axios";
 import { URI } from "@/lib/URI";
-import { motion, useMotionValue, useTransform, animate } from 'motion/react'
+import { userCookie } from "@/app/store/atoms/userCookie";
+import { useRouter } from "next/navigation";
 export default function ResultPage({
   setShowResultPage,
   charArray,
-  setCharArray,
 }: {
   setShowResultPage: Dispatch<SetStateAction<boolean>>;
   charArray: number[];
-  setCharArray: Dispatch<SetStateAction<number[]>>;
 }) {
   const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
   const shadowRepeatedRef = useRef(repeatedTest); // this helps in removing the flicker of change in flag of repeated test.
-  const shadowTest = useAtom(shadowTestAtom);
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
   const hash = useAtomValue(hashAtom);
@@ -52,6 +50,9 @@ export default function ResultPage({
   const accuracy= (correctChars>0 && totalChars>0)?(totalChars-errors)*100/totalChars:0
   const rawWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].rawWpm:0
   const avgWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].wpm:0
+  const cookie = useAtomValue(userCookie)
+  //const [s,setCompletedTestBeforeSignIn] = useAtom(completedTestBeforeSignedInAtom)
+  const router = useRouter() // prevents full page refresh due to which the atom persist value between page renders
   // send the data to backend.
   // send the [correct, incorrect, missed, extra]
   // send the accuracy (once done)
@@ -60,10 +61,15 @@ export default function ResultPage({
   // send some particular identifier to know the person.
   // user table id or userId is going to be the identifier.
   useEffect(() => {
-    if (isAfk || repeatedTest) {
-      toast.warning("Test will not be stored.");
+    if ((isAfk) && cookie) {
+      toast.warning("Invalid test, Test will not be stored.");
       return;
     }
+    if (repeatedTest && cookie) {
+      toast.warning("Repeated test, Test will not be stored.");
+      return;
+    }
+    
     async function dataSender() {
       if (accuracy<36 || !rawWpm || !avgWpm) {
         toast.error("Invalid test!")
@@ -86,6 +92,16 @@ export default function ResultPage({
         finalHash: hash.hash,
       };
       try {
+        if (!cookie) {
+          try {
+            const data=await axios.post(`${URI}/api/tempTest`, body)
+            const stringifiedVersion:string = data.data.token
+            localStorage.setItem("token",stringifiedVersion)
+          } catch (error) {
+            toast.error("Error occurred! Tampered Fields!")
+          }
+          return
+      }
         const res = await axios.post(`${URI}/api/test`, body);
         toast.success(res.data.msg);
       } catch (error) {
@@ -133,7 +149,7 @@ export default function ResultPage({
     }},100)
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
+    <div className="w-full h-full flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
     ref={captureRef}>
       <div className="w-full flex flex-col gap-1">
       <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
@@ -238,6 +254,7 @@ export default function ResultPage({
           </TooltipContent>
         </Tooltip>
       </div>
+      {!cookie && <p> <span className="underline cursor-pointer" onClick={()=>router.push("/login")}>Sign in</span> to save the result</p>}
     </div>
   );
 }

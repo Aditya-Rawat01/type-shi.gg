@@ -41,6 +41,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --animate-shiny-text: shiny-text 5s infinite;
+  @keyframes shiny-text {
+  0%, 90%, 100% {
+    background-position: calc(-100% - var(--shiny-width)) 0;
+    }
+  30%, 60% {
+    background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
 }
 
 :root {
@@ -119,4 +128,23 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+html::-webkit-scrollbar {
+  width: 8px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb {
+  background: #ff4d4d;
+  border-radius: 4px;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: #e53939;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #ff4d4d transparent;
+  overflow-x:hidden
 }

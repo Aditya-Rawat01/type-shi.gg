@@ -1,15 +1,24 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TypingArea from "./typingArea";
 import SelectionPanel from "./ui/selectionPanel";
 import "../app/page.css";
 import ResultPage from "./ResultPage";
 import { motion, AnimatePresence } from "motion/react";
-export default function TypeScreen() {
+import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
+import { useAtom, useSetAtom } from 'jotai';
+import Topbar from "./topbar";
+import { charSetsAtom } from "@/app/store/atoms/charSets";
+export default function TypeScreen({sessionCookie}:{sessionCookie:cookieType}) {
     const [isMounted,SetisMounted] = useState(false)
     const [showResultPage, setShowResultPage] = useState(false)
-    const [charArray,setCharArray] = useState([0,0,0,0])
+    const [charArray,setCharArray] = useAtom(charSetsAtom)
+    const setUserCookie = useSetAtom(userCookie)
+    useEffect(()=>{
+      setUserCookie(sessionCookie)
+
+    },[])
     useEffect(()=>{
         setTimeout(()=>{
             SetisMounted(true)
@@ -34,9 +43,9 @@ export default function TypeScreen() {
             ease: "easeInOut",
             duration: 0.2,
           }}
-        >
-          
+        >   
            <LoadingUserConfig isMounted={isMounted}/>
+            <Topbar/>
            <SelectionPanel/>
             <TypingArea LoadingConfig={isMounted} setShowResultPage={setShowResultPage} setCharArray={setCharArray}/>
         </motion.div>
@@ -53,8 +62,9 @@ export default function TypeScreen() {
             ease: "easeInOut",
             duration: 0.2,
           }}
-        > 
-        <ResultPage setShowResultPage={setShowResultPage} charArray={charArray} setCharArray={setCharArray}/>
+        >
+          <Topbar/> 
+        <ResultPage setShowResultPage={setShowResultPage} charArray={charArray}/>
 
         </motion.div>
       )}
@@ -62,11 +72,29 @@ export default function TypeScreen() {
         </div>
     )}    
 
+const arr= ["t","y","p","e","-","s","h","i",".","g","g"]
+export function LoadingUserConfig({isMounted}:{isMounted:boolean}) {
+  const [charIndex, setCharIndex] = useState(-1)
+  const val = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(()=>{
+      if (charIndex>=arr.length-1) {
+        return
+      }
+      val.current=setTimeout(()=>{
+        setCharIndex((prev)=>prev+1)
+      },200)
 
-function LoadingUserConfig({isMounted}:{isMounted:boolean}) {
+      return ()=>{
+        if (val.current) {
+          clearTimeout(val.current)
+        }
+      }
+    },[charIndex])
     return (
-        <div className={`w-screen h-screen bg-[#343639] absolute z-50 flex flex-col gap-3 items-center justify-center text-yellow-400 text-3xl ${!isMounted?"opacity-100":"opacity-0 pointer-events-none"}`}>
-            <p>Loading User Config . . .</p>
+        <div className={`w-screen h-screen bg-[#343639] absolute left-0 top-0 z-[100] flex flex-col gap-3 items-center justify-center text-yellow-400 text-3xl ${!isMounted?"opacity-100":"opacity-0 pointer-events-none"}`}>
+            <div className="text-5xl">{arr.map((index, valIndex)=>{
+              return <span className={ `transition-all duration-200 ${valIndex<=charIndex?`text-yellow-300`:`text-gray-500`}`} key={valIndex}>{index}</span>
+            })}</div>
             <span className="loader"></span>
         </div>
     )

@@ -616,7 +616,7 @@ export default function TypingArea({
     let charsSkipped = 1;
     const key = e.key;
     const isActive = e.getModifierState("CapsLock");
-    if (selectionPanelVisible && !specialKeys.includes(key)) {
+    if (selectionPanelVisible && !specialKeys.includes(key) && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
       console.log("how the hell is this even possible now????")
       setSelectionPanelVisible(false)
     }
