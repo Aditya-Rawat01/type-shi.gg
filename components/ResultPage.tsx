@@ -156,7 +156,7 @@ export default function ResultPage({
         <div>
           <Tooltip>
           <TooltipTrigger>
-            <p>{rawWpm?Math.round(rawWpm):"Nil"}</p>
+            <p>{avgWpm?Math.round(rawWpm):"-"}</p>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p className="p-2">{rawWpm.toFixed(2)}</p>
@@ -167,7 +167,7 @@ export default function ResultPage({
         <div>
           <Tooltip>
           <TooltipTrigger>
-            <p>{avgWpm?Math.round(avgWpm):"Nil"}</p>
+            <p>{avgWpm?Math.round(avgWpm):"-"}</p>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p className="p-2">{avgWpm.toFixed(2)}</p>
@@ -179,7 +179,7 @@ export default function ResultPage({
         <div>
           <Tooltip>
           <TooltipTrigger>
-            <p>{accuracy?Math.round(accuracy)+"%":"Nil"}</p>
+            <p>{accuracy?Math.round(accuracy)+"%":"-"}</p>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p className="p-2">{accuracy.toFixed(2)}</p>

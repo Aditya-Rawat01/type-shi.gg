@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         userId: sessionCookie.session.userId,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
     });
     console.log({res})
