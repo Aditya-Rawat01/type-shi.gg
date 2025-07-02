@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { LoadingUserConfig } from "./TypeScreen"
 import { animationOnProfileAtom } from "@/app/store/atoms/animationOnProfile"
 import HistoryTable from "./historyTable"
+import { Prisma } from "@/lib/generated/prisma"
 
 const ZeroValues = {
   mode:"Placeholder",
@@ -24,35 +25,67 @@ const ZeroValues = {
   avgWpm: 0,
   charSets: [0,0,0,0]
 }
+export type results = {
+    charSets: number[];
+    mode: string;
+    rawWpm: number;
+    flameGraph: Prisma.JsonValue;
+    accuracy: number;
+    avgWpm: number;
+    language: string;
+    id: string;
+    createdAt: string;
+    userId: string;
+}[]
 export default function ProfilePage({sessionCookie}:{sessionCookie:cookieType}) {
-    const [cookie,setCookie] = useAtom(userCookie)
+  const [cookie,setCookie] = useAtom(userCookie)
     const [animation,setAnimation] = useAtom(animationOnProfileAtom)
     const [bodyToBeParsed, setBodyToBeParsed] = useState<TestPayload | null>(null)
-    const [isMounted, setIsMounted] = useState(false)
+    const [completedTestBeforeSignedIn, setCompletedTestBeforeSignIn] = useState<boolean|null>(false)
+    const [cursorId, setCursorId] = useState<string|null>(null)
+    const [results, setResults] = useState<results>([])
+    //test completed before sign in useEffects
     useEffect(()=>{
-        const value = localStorage.getItem("token") ? true : false;
-        setCompletedTestBeforeSignIn(value)
-        setCookie(sessionCookie)
-    },[])
-    useEffect(()=>{
+      const value = localStorage.getItem("token") ? true : false;
       if (!animation) {
          setTimeout(()=>{
             setAnimation(true)
         },3000)
       }
+        setCompletedTestBeforeSignIn(value)
+        setCookie(sessionCookie)
     },[])
-    const [completedTestBeforeSignedIn, setCompletedTestBeforeSignIn] = useState<boolean|null>(false)
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      setBodyToBeParsed(decodeJwt<TestPayload>(token));
-    } catch {
-      toast.error("Bad token in localStorage");
-    }
-  }, []);
-
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+  
+      try {
+        setBodyToBeParsed(decodeJwt<TestPayload>(token));
+      } catch {
+        toast.error("Bad token in localStorage");
+      }
+    }, []);
+    
+    useEffect(()=>{
+      LoadResults()
+    },[])
+    async function LoadResults() {
+        try {
+          const query = cursorId ? `?cursorId=${cursorId}` : '';
+          const res:{data:{data:results}} = await axios.get(`${URI}/api/getResults${query}`,{
+            params:{
+              cursorId: cursorId
+            }
+          })
+          const resultsVal = res.data.data
+          console.log({resultsVal})
+          setResults((prev)=>([...prev, ...resultsVal]))
+          setCursorId(resultsVal.length>0?resultsVal[resultsVal.length-1].id:null)
+        } catch (error) {
+          console.log(error)
+          toast.error(error as string)
+        }
+      }
     const {mode, mode2, accuracy, rawWpm, avgWpm, charSets:charArray}= bodyToBeParsed||ZeroValues
       const charArrayRepresentation = charArray[0]+" / "+charArray[1]+" / "+charArray[2]+" / "+charArray[3]
     async function handleClick(state:boolean) {
@@ -85,7 +118,7 @@ export default function ProfilePage({sessionCookie}:{sessionCookie:cookieType}) 
         <div className="w-full h-full">
             <LoadingUserConfig isMounted={animation}/>
             <Topbar/>
-            <div className="w-full h-full relative bg-gray-300 text-black px-20">
+            <div className="w-full h-full relative bg-gray-300 text-black flex flex-col items-center">
             {completedTestBeforeSignedIn 
             &&
             <div className="flex flex-col absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl text-fuchsia-700 bg-gray-400 w-[80%] sm:w-[60%] xl:w-[40%] h-[50%]">
@@ -122,7 +155,7 @@ export default function ProfilePage({sessionCookie}:{sessionCookie:cookieType}) 
                 </div>
             </div>
             }
-               <HistoryTable/>
+               <HistoryTable results = {results}/>
           </div> 
         </div>
     )

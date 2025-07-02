@@ -74,9 +74,10 @@ export async function POST(req:NextRequest) {
                 charSets,
                 mode,
                 flameGraph,
-                accuracy,
-                rawWpm,
-                avgWpm,
+                accuracy:parseFloat(accuracy.toFixed(2)),
+                rawWpm:parseFloat(rawWpm.toFixed(2)),
+                avgWpm:parseFloat(avgWpm.toFixed(2)),
+                language,
                 userId: sessionCookie.user.id
             }
         })

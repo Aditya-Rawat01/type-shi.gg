@@ -8,12 +8,6 @@ import English from "@/languages/English.json"
 import English1k from "@/languages/English1k.json"
 import { createHash } from "crypto";
 export async function POST(req:NextRequest) {
-    // const {seed, hash } = await req.json()
-    // if (!seed || !hash) {
-    //     return NextResponse.json({
-    //         "msg": "Invalid request. seed or hash is missing"
-    //     })
-    // }
     const sessionCookie = await auth.api.getSession({
         headers:req.headers
     })
@@ -74,9 +68,10 @@ export async function POST(req:NextRequest) {
                 charSets,
                 mode,
                 flameGraph,
-                accuracy,
-                rawWpm,
-                avgWpm,
+                accuracy:parseFloat(accuracy.toFixed(2)),
+                rawWpm:parseFloat(rawWpm.toFixed(2)),
+                avgWpm:parseFloat(avgWpm.toFixed(2)),
+                language,
                 userId: sessionCookie.user.id
             }
         })
