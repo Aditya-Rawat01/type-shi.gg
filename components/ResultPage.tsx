@@ -3,25 +3,10 @@ import {
   shadowTestAtom,
 } from "@/app/store/atoms/restartSameTest";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import { Bot, BotIcon, ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { toBlob } from "html-to-image";
-import {
-  Chart as ChartJS,
-  // controllers & elements
-  LineController,
-  ScatterController,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  // plugins
-  Tooltip as tooltipChart,
-  Legend,
-  Title,
-} from "chart.js";
-import { Chart } from "react-chartjs-2";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { afkAtom } from "@/app/store/atoms/afkModeAtom";
@@ -31,6 +16,9 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { userCookie } from "@/app/store/atoms/userCookie";
 import { useRouter } from "next/navigation";
+import ChartRender from "./renderChart";
+import {motion} from 'motion/react'
+import { Skeleton } from "./ui/skeleton";
 export default function ResultPage({
   setShowResultPage,
   charArray,
@@ -51,15 +39,10 @@ export default function ResultPage({
   const rawWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].rawWpm:0
   const avgWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].wpm:0
   const cookie = useAtomValue(userCookie)
-  //const [s,setCompletedTestBeforeSignIn] = useAtom(completedTestBeforeSignedInAtom)
-  const router = useRouter() // prevents full page refresh due to which the atom persist value between page renders
-  // send the data to backend.
-  // send the [correct, incorrect, missed, extra]
-  // send the accuracy (once done)
-  // send the raw and avg wpm
-  // send the {generatedHash, initialseed, generationAmt}
-  // send some particular identifier to know the person.
-  // user table id or userId is going to be the identifier.
+  const router = useRouter()
+  const [generatingReport, setGeneratingReport] = useState(false) 
+  const [report, setReport] = useState<string[]|null>(null)
+  const [modalVisible, setModalVisible] = useState(false)
   useEffect(() => {
     if ((isAfk) && cookie) {
       toast.warning("Invalid test, Test will not be stored.");
@@ -78,7 +61,7 @@ export default function ResultPage({
       const mode2 =
         selection.mode === "words" ? selection.words : selection.time;
       const body = {
-        charSets: charArray, // correct, incorrect, extra, missed
+        charSets: charArray, // correct, incorrect, missed, extra
         mode: selection.mode,
         mode2: mode2,
         flameGraph: cumulativeInterval,
@@ -94,6 +77,7 @@ export default function ResultPage({
       try {
         if (!cookie) {
           try {
+            console.log(body)
             const data=await axios.post(`${URI}/api/tempTest`, body)
             const stringifiedVersion:string = data.data.token
             localStorage.setItem("token",stringifiedVersion)
@@ -118,7 +102,7 @@ export default function ResultPage({
         : selection.words.toString()),
     selection.language,
   ];
-  function handleClick(state: boolean) {
+  function handleStartTest(state: boolean) {
     setRestartSameTest(state);
     setShowResultPage(false);
   }
@@ -147,9 +131,36 @@ export default function ResultPage({
       toast.info("Clipboard not supported – downloaded instead");
       URL.revokeObjectURL(url);
     }},100)
-
+  async function handleGenerateReport() {
+    if (!cookie || isAfk || accuracy<36 || !rawWpm || !avgWpm) {
+      !cookie && toast.warning("Signin to generate report!")
+      isAfk && toast.warning("Afk Test, cannot generate result!")
+      accuracy<36 && toast.warning("Cannot generate for less accuracy")
+      !rawWpm && toast.warning("Raw Wpm Missing")
+      !avgWpm && toast.warning("Avg Wpm Missing!")
+      return
+    }
+    setGeneratingReport(true)
+    setModalVisible(true)
+    try {
+      const res=await axios.post(`${URI}/api/generate-report`,{
+      flameGraph:cumulativeInterval 
+    })
+    const lines:string = res.data.result
+    setReport(lines.split("\n\n"))
+    } catch (error) {
+      (error as {status:number}).status===429
+      ?
+      toast.error("Free tier got exhausted. ┗( T﹏T )┛")
+      :
+      toast.error("Cookie not Valid. ಠ_ಠ")
+    } 
+   
+    setGeneratingReport(false)
+  }
+  console.log(report)
   return (
-    <div className="w-full h-full flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
+    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
     ref={captureRef}>
       <div className="w-full flex flex-col gap-1">
       <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
@@ -216,14 +227,14 @@ export default function ResultPage({
           ) : null}
           {/* // if is afk only then this will be shown */}
         </div>
-        <ChartRender /> 
+        <ChartRender cumulativeInterval = {cumulativeInterval}/> 
       </div>
       
-      <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
+        <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
         <Tooltip>
           <TooltipTrigger>
             <RotateCcw
-              onClick={() => handleClick(true)}
+              onClick={() => handleStartTest(true)}
               className="cursor-pointer"
             />
           </TooltipTrigger>
@@ -234,12 +245,23 @@ export default function ResultPage({
         <Tooltip>
           <TooltipTrigger>
             <ChevronRight
-              onClick={() => handleClick(false)}
+              onClick={() => handleStartTest(false)}
               className="cursor-pointer"
             />
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <p className="p-2">Next Test</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <BotIcon
+              onClick={handleGenerateReport}
+              className="cursor-pointer"
+            />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="p-2">Generate Report</p>
           </TooltipContent>
         </Tooltip>
         <Tooltip>
@@ -253,120 +275,33 @@ export default function ResultPage({
             <p className="p-2">Screenshot</p>
           </TooltipContent>
         </Tooltip>
+
       </div>
       {!cookie && <p> <span className="underline cursor-pointer" onClick={()=>router.push("/login")}>Sign in</span> to save the result</p>}
+      <div className={`min-h-40 bg-red-600 w-4/5 flex-col gap-3 p-1 justify-center text-justify text-white ${modalVisible?"flex":"hidden"}`}>
+        {generatingReport
+        ?
+        <>
+        <Skeleton className="h-3 w-full"/>
+        <Skeleton className="h-3 w-full"/>
+        <Skeleton className="h-3 w-3/4"/>
+        </>
+        :
+        <>
+        {report
+        ?
+        <>
+        {report.map((line,index)=>{
+          console.log({index})
+          return <p key={index} className={`${index===0  && "font-semibold"}`}>{line}</p>
+        })}
+        </>
+        :
+        <p className="font-bold">Error Occurred!</p>}
+        </>
+        }
+      </div>
     </div>
   );
 }
 
-type Mixed = "scatter" | "line";
-ChartJS.register(
-  LineController,
-  ScatterController,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  tooltipChart,
-  Legend,
-  Title
-);
-
-function ChartRender() {
-  const cumulativeInterval = useAtomValue(cumulativeIntervalAtom);
-  const wpmData = cumulativeInterval.map((s) => ({ x: s.interval, y: s.wpm }));
-  const rawData = cumulativeInterval.map((s) => ({
-    x: s.interval,
-    y: s.rawWpm,
-  }));
-  const errorPts = cumulativeInterval.map((s) => ({
-    x: s.interval,
-    y: s.errors === 0 ? NaN : s.errors,
-  }));
-
-  return (
-    <div className="w-full h-3/4">
-      <Chart<Mixed, (number | { x: number; y: number })[], number>
-        type="scatter"
-        data={{
-          datasets: [
-            {
-              label: "Raw WPM",
-              type: "line",
-              data: rawData,
-              borderColor: "rgba(54,162,235,1)",
-              borderWidth: 2,
-              borderDash: [6, 4],
-              pointStyle: "triangle",
-              tension: 0.3,
-              yAxisID: "y",
-              clip: false,
-            },
-            {
-              label: "Avg WPM",
-              type: "line",
-              data: wpmData,
-              borderColor: "rgba(134,12,35,1)",
-              borderWidth: 2,
-              tension: 0.3,
-              yAxisID: "y",
-              clip: false,
-            },
-            {
-              label: "Errors",
-              type: "scatter",
-              data: errorPts,
-              pointRadius: 5,
-              pointBackgroundColor: "rgba(255,99,132,1)",
-              yAxisID: "y2",
-              clip: false,
-            },
-          ],
-        }}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-
-          interaction: {
-            mode: "x",
-            intersect: false,
-          },
-          plugins: {
-            tooltip: {
-              mode: "x",
-              intersect: false,
-            },
-            legend: { position: "top" },
-          },
-
-          scales: {
-            x: {
-              type: "linear",
-              min: cumulativeInterval[0] ? cumulativeInterval[0].interval : 0,
-              max: cumulativeInterval.at(-1)
-                ? cumulativeInterval.at(-1)!.interval
-                : 1,
-              ticks: {
-                stepSize: cumulativeInterval.length <= 30 ? 1 : undefined,
-                precision: 0,
-              },
-              grid: { drawOnChartArea: false },
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 20 },
-              title: { display: true, text: "WPM" },
-            },
-            y2: {
-              position: "right",
-              beginAtZero: true,
-              grid: { drawOnChartArea: false },
-              ticks: { stepSize: 1 },
-              title: { display: true, text: "Errors" },
-            },
-          },
-        }}
-      />
-    </div>
-  );
-}

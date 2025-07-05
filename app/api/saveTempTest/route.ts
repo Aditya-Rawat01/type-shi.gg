@@ -68,11 +68,12 @@ export async function POST(req:NextRequest) {
             return NextResponse.json({
             "msg": "Hash didn't match. Wordlist has been tampered."
         }, {status: 401})
-        } 
+        }
+        const completeMode = mode + " " + mode2 
         await prisma.test.create({
             data:{
                 charSets,
-                mode,
+                mode: completeMode,
                 flameGraph,
                 accuracy:parseFloat(accuracy.toFixed(2)),
                 rawWpm:parseFloat(rawWpm.toFixed(2)),

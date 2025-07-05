@@ -18,8 +18,16 @@ const flameGraphPoint = z
       required_error: "errors is missing",
       invalid_type_error: "errors must be a number",
     }),
+    problematicKeys: z.array(z.string(),{
+      required_error: "problematicKeys field missing",
+      invalid_type_error: "problematicKeys field must be an array",
+    }).max(3,{message:"Supports only top 3 problematic keys per test. (┬┬﹏┬┬)"}),
   })
   .strict();
+
+const flameGraph = z
+      .array(flameGraphPoint)
+      .nonempty({ message: "flameGraph must contain at least one entry" })
 
 const test = z
   .object({
@@ -39,9 +47,7 @@ const test = z
       invalid_type_error: "mode must be number",
     })
     ,
-    flameGraph: z
-      .array(flameGraphPoint)
-      .nonempty({ message: "flameGraph must contain at least one entry" }),
+    flameGraph: flameGraph ,
 
     accuracy: z.number({
       required_error: "accuracy is missing",
@@ -76,3 +82,4 @@ const test = z
 
 export type TestPayload = z.infer<typeof test>;
 export default test;
+export {flameGraph};

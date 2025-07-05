@@ -22,7 +22,11 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LanguagesIcon, Lock, RefreshCw, RotateCcw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { persistWordListAtom, restartSameTestAtom, shadowTestAtom } from "@/app/store/atoms/restartSameTest";
+import {
+  persistWordListAtom,
+  restartSameTestAtom,
+  shadowTestAtom,
+} from "@/app/store/atoms/restartSameTest";
 import { shouldFetchLanguageAtom } from "@/app/store/atoms/shouldFetchLang";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 import { afkAtom } from "@/app/store/atoms/afkModeAtom";
@@ -45,17 +49,22 @@ export default function TypingArea({
       status: string;
     }[]
   >([]);
-  const wordsRef = useRef<{
+  const wordsRef = useRef<
+    {
       char: string;
       status: string;
-    }[]>([])  // just because request animation frame closure gets stale in time mode so ref keep that in sync
-  const [wordListFromBackend, setwordListFromBackend] = useAtom(persistWordListAtom)
+    }[]
+  >([]); // just because request animation frame closure gets stale in time mode so ref keep that in sync
+  const [wordListFromBackend, setwordListFromBackend] =
+    useAtom(persistWordListAtom);
   //const mode:"words"|"time" = 'time' // have to be set by maybe cookies or something else like localstorage.
   const selection = useAtomValue(modeAtom);
-  const [repeatTest, setRepeatTest] = useAtom(restartSameTestAtom)
-  const [shadowTest, setShadowTest] = useAtom(shadowTestAtom)
-  const [shouldFetchLang, setShouldFetchLang] = useAtom(shouldFetchLanguageAtom)
-  const [hash, setHash] = useAtom(hashAtom)
+  const [repeatTest, setRepeatTest] = useAtom(restartSameTestAtom);
+  const [shadowTest, setShadowTest] = useAtom(shadowTestAtom);
+  const [shouldFetchLang, setShouldFetchLang] = useAtom(
+    shouldFetchLanguageAtom
+  );
+  const [hash, setHash] = useAtom(hashAtom);
   const [pointerIndex, setPointerIndex] = useState(0);
   const cursorElementRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,44 +90,58 @@ export default function TypingArea({
   const correctCharsRef = useRef(0);
   const totalCharsRef = useRef(0);
   const ArrayOnIntervals = useRef<
-    { wpm: number; rawWpm: number; interval: number; errors: number }[]
+    { wpm: number; rawWpm: number; interval: number; errors: number, problematicKeys: string[] }[]
   >([]);
-  const setCumulativeIntervaltom = useSetAtom(cumulativeIntervalAtom)
+  const setCumulativeIntervaltom = useSetAtom(cumulativeIntervalAtom);
   const [isTestActive, setIsTestActive] = useState(false);
   const intervalForSec = useRef<number | null>(null);
   const pointerIndexCopyRef = useRef(0); // clever workaround so that useEffect dont run again and again.
   const testStartTiming = useRef(Date.now());
-  const accumulatorTimeRef = useRef(Date.now());
   const [timer, setTimer] = useState(0);
   const timeShadowRef = useRef(0);
   const totalTimePassed = useRef(0);
   const isAlreadyCalculatingResult = useRef(false);
-  const errorsInterval = useRef<{ errors: number; timer: number }[]>([]);
-  const currentWordRef = useRef(0) // not setting this to zero, lets see what happens
-  const afkTimeoutRef =  useRef<ReturnType<typeof setTimeout> | null>(null);
-  const  setAfkMode = useSetAtom(afkAtom)
-  const [selectionPanelVisible,setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom)
-  const charArrayRef = useRef([0,0,0,0])
-  const firstVisibleCharIndexShadowRef = useRef(0)
-  const [offSet, setOffSet] = useState(0) 
-    useEffect(()=>{
-      wordsRef.current = words // to keep ref in syn for request animation frame
-    },[words])
+  const errorsInterval = useRef<
+    {
+      errors: number;
+      timer: number;
+      diffKeys: { correctKey: string; incorrectKey: string }[];
+    }[]
+  >([]);
+  const currentWordRef = useRef(0); // not setting this to zero, lets see what happens
+  const afkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setAfkMode = useSetAtom(afkAtom);
+  const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(
+    selectionPanelVisibleAtom
+  );
+  const framesRef = useRef<{
+    correct: number;
+    incorrect: number;
+    missed: number;
+    extra: number;
+    errors: number;
+    correctKeyErrors: string[]
+  }>({ correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[] });
+  useEffect(() => {
+    wordsRef.current = words; // to keep ref in syn for request animation frame
+  }, [words]);
 
   useEffect(() => {
     if (!isTestActive) {
       // stop timer
       setTimer(0);
       if (afkTimeoutRef.current) {
-      clearTimeout(afkTimeoutRef.current)
-    }
-      setAfkMode(false)
-      setCumulativeIntervaltom([])
-      setHash({GeneratedAmt:0, hash:"", originalSeed:""}) // just to be safe.(redundant)
+        clearTimeout(afkTimeoutRef.current);
+      }
+      framesRef.current = { correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[]};
+      setCharArray([0, 0, 0, 0]);
+      setAfkMode(false);
+      setCumulativeIntervaltom([]);
+      setHash({ GeneratedAmt: 0, hash: "", originalSeed: "" }); // just to be safe.(redundant)
       timeShadowRef.current = 0;
       totalTimePassed.current = 0;
-      errorsInterval.current=[]
-      ArrayOnIntervals.current=[]
+      errorsInterval.current = [];
+      ArrayOnIntervals.current = [];
       isAlreadyCalculatingResult.current = false;
       if (intervalForSec.current !== null) {
         cancelAnimationFrame(intervalForSec.current);
@@ -161,8 +184,8 @@ export default function TypingArea({
         clearTimeout(focusTimeoutRef.current);
       }
       if (afkTimeoutRef.current) {
-      clearTimeout(afkTimeoutRef.current)
-    }
+        clearTimeout(afkTimeoutRef.current);
+      }
     };
   }, []);
   // took help from gemini for the cursor irregularities.
@@ -295,36 +318,39 @@ export default function TypingArea({
   // responsible only to get the langauge from the backend
   useEffect(() => {
     if (!selectionPanelVisible) {
-      setSelectionPanelVisible(true)
+      setSelectionPanelVisible(true);
     }
     if (repeatTest) {
-      console.log("dhould not be here")
-      const newRef=shadowTest.map((prev)=>({...prev}))
-      setWords(newRef)
+      console.log("dhould not be here");
+      const newRef = shadowTest.map((prev) => ({ ...prev }));
+      setWords(newRef);
       //setRestartSameTest(false) // redundant tho.  , keep it true so that repeated flag could be shown.
-      return
+      return;
     }
     if (!shouldFetchLang) {
-      setIsRefreshed(performance.now())// so that the below useEffect run and generate the words array. running that function here means increment in dep array.
+      setIsRefreshed(performance.now()); // so that the below useEffect run and generate the words array. running that function here means increment in dep array.
       // is refreshed is not in the dep array so this value exists for this closure only
-      return}
-    async function getWords() { // problem here is that this is also runniing on mount, 
+      return;
+    }
+    async function getWords() {
+      // problem here is that this is also runniing on mount,
       // on first point we want it to run when the selection.language doesnt change.
       // but when the language is same then this should not run
       // on mount run only for first time, then selection.language dekh ke run kro.
       try {
-        const res = await axios.get(`${URI}/api/language/${selection.language}`);
+        const res = await axios.get(
+          `${URI}/api/language/${selection.language}`
+        );
         setwordListFromBackend(res.data.msg.words);
-        if (wordListFromBackend.length!==0) {
-          toast.success("Language updated (👉ﾟヮﾟ)👉")
-         }
-        
+        if (wordListFromBackend.length !== 0) {
+          toast.success("Language updated (👉ﾟヮﾟ)👉");
+        }
       } catch (error) {
         setwordListFromBackend([]);
-        toast.error("Error while fetching languages.")
-        console.log(error)
+        toast.error("Error while fetching languages.");
+        console.log(error);
       }
-      setShouldFetchLang(false)
+      setShouldFetchLang(false);
     }
     getWords();
   }, [selection.language, shouldFetchLang]);
@@ -340,37 +366,42 @@ export default function TypingArea({
       clearTimeout(refreshTimeout.current);
     }
     if (wordListFromBackend.length == 0) {
-      console.log("why 3 times");
       return;
     }
     //setRefreshed(true)
-    refreshTimeout.current = setTimeout(() => {
-      const response = generateTest({
-        mode: selection.mode,
-        wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
-        // so this line contains no words just an empty array which returns empty strings.
-        testWordlength: selection.words,
-      });
+    refreshTimeout.current = setTimeout(
+      () => {
+        const response = generateTest({
+          mode: selection.mode,
+          wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
+          // so this line contains no words just an empty array which returns empty strings.
+          testWordlength: selection.words,
+        });
 
-      if (typeof response === "string") {
-        toast.error(response);
-        return;
-      }
-      setWords(response.characters);
-      setHash({hash:response.generatedHash, GeneratedAmt: 1, originalSeed:response.originalSeed!}) //this is the only place where original seed should be updated.
-      console.log({response})
-      const newRef=response.characters.map((prev)=>({...prev})) // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
-      setShadowTest(newRef)
-      setFirstVisibleCharIndex(0);
-      secondLineTopRef.current = null;
-      setRepeatTest(false)
-      numberOfGenerations.current = 1;
-      currentWordRef.current=0
-      setPointerIndex(0);
-      setIsTestActive(false);
-      containerRef.current?.focus();
-      //setRefreshed(false)
-    }, isRefreshed? 80:400);
+        if (typeof response === "string") {
+          toast.error(response);
+          return;
+        }
+        setWords(response.characters);
+        setHash({
+          hash: response.generatedHash,
+          GeneratedAmt: 1,
+          originalSeed: response.originalSeed!,
+        }); //this is the only place where original seed should be updated.
+        const newRef = response.characters.map((prev) => ({ ...prev })); // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
+        setShadowTest(newRef);
+        setFirstVisibleCharIndex(0);
+        secondLineTopRef.current = null;
+        setRepeatTest(false);
+        numberOfGenerations.current = 1;
+        currentWordRef.current = 0;
+        setPointerIndex(0);
+        setIsTestActive(false);
+        containerRef.current?.focus();
+        //setRefreshed(false)
+      },
+      isRefreshed ? 80 : 400
+    );
   }, [selection, isRefreshed, wordListFromBackend]);
 
   function callBackRequestAnimationFrame() {
@@ -379,41 +410,39 @@ export default function TypingArea({
     const currentTotalFullSecond = Math.floor(elapsedMilliseconds / 1000);
 
     // to check if 1 sec has passed from when previous setInterval fired off
-    if (
-      selection.mode === "time" &&
-      timeShadowRef.current === selection.time &&
-      !isAlreadyCalculatingResult.current
-    ) {
-      calculateResult(""); // just give random key , will not matter as the mode is time.
-      isAlreadyCalculatingResult.current = true;
+    
+    
+    for (let i = wordsTypedInSec.current;i < pointerIndexCopyRef.current;i++) {
+      const status = wordsRef.current[i].status;
+      switch (status) {
+        case "correct":
+          framesRef.current.correct++;
+          break;
+        case "incorrect":
+          framesRef.current.incorrect++;
+          framesRef.current.errors++;
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char)
+          break;
+        case "missed":
+          framesRef.current.missed++;
+          framesRef.current.errors++;
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char)
+          break;
+        default:
+          framesRef.current.extra++;
+          framesRef.current.errors++;
+          console.log(i)
+          framesRef.current.correctKeyErrors.push("spacekey")
+      }
     }
+    wordsTypedInSec.current = pointerIndexCopyRef.current;
     if (
       currentTotalFullSecond >= 1 &&
       currentTotalFullSecond > totalTimePassed.current
     ) {
-      const charArrayForSec = [0, 0, 0, 0];
-      for (
-        let i = wordsTypedInSec.current;
-        i < pointerIndexCopyRef.current;
-        i++
-      ) {
-        let currentindex = wordsRef.current[i];
-        
-          if (currentindex.status === "correct") {
-            charArrayForSec[0]++;
-          } else if (currentindex.status === "incorrect") {
-            charArrayForSec[1]++;
-          } else if (currentindex.status === "missed") {
-            charArrayForSec[2]++;
-          } else {
-            charArrayForSec[3]++;
-          }
-        
-      }
-      const totalCharsInSec = charArrayForSec.reduce(
-        (prevValue, currentValue) => prevValue + currentValue
-      ); // as 60/5 = 12 // divided by 5 because chars to words and 5 is mere approximation
-      const correctCharsInSec = charArrayForSec[0];
+      const totalCharsInSec = framesRef.current.correct + framesRef.current.incorrect + framesRef.current.extra + framesRef.current.missed
+       // as 60/5 = 12 // divided by 5 because chars to words and 5 is mere approximation
+      const correctCharsInSec = framesRef.current.correct;
       totalCharsRef.current += totalCharsInSec;
       correctCharsRef.current += correctCharsInSec;
       //const errorInSec = totalCharsInSec-correctCharsInSec
@@ -421,25 +450,31 @@ export default function TypingArea({
         (currentTime - testStartTiming.current) / 1000
       );
       if (!interval) return; // if interval is 0 // redundant
-      const cumulatedRawWpm = 
-        (totalCharsRef.current * 12) / interval
-      ; // to convert the interval from ms to seconds.
-      const cumulatedWpm = 
-        (correctCharsRef.current * 12) / interval
-      ;
+      const cumulatedRawWpm = (totalCharsRef.current * 12) / interval; // to convert the interval from ms to seconds.
+      const cumulatedWpm = (correctCharsRef.current * 12) / interval;
       totalTimePassed.current = interval;
       ArrayOnIntervals.current.push({
         rawWpm: cumulatedRawWpm,
         wpm: cumulatedWpm,
         interval: interval,
-        errors: 0,
+        errors: framesRef.current.errors,
+        problematicKeys: [...framesRef.current.correctKeyErrors]
       });
-      wordsTypedInSec.current = pointerIndexCopyRef.current;
+      
+      framesRef.current= { correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[]}
 
       if (selection.mode === "time") {
         timeShadowRef.current++;
         setTimer(timeShadowRef.current);
       }
+    }
+    if (
+      selection.mode === "time" &&
+      timeShadowRef.current === selection.time &&
+      !isAlreadyCalculatingResult.current
+    ) {
+      calculateResult(""); // just give random key , will not matter as the mode is time.
+      isAlreadyCalculatingResult.current = true;
     }
     intervalForSec.current = requestAnimationFrame(
       callBackRequestAnimationFrame
@@ -484,26 +519,6 @@ export default function TypingArea({
   ];
   // this is the sliced part of the original flat index array.
   const visibleChars = useMemo(() => {
-    if (firstVisibleCharIndex!=firstVisibleCharIndexShadowRef.current) {
-      console.log("works here 1")
-      console.log({firstVisibleCharIndex: words[firstVisibleCharIndex], shadowRef: words[firstVisibleCharIndexShadowRef.current]})
-      for (let i = firstVisibleCharIndexShadowRef.current; i<firstVisibleCharIndex; i++) {
-        
-        if (words[i].status === "correct") {
-          charArrayRef.current[0]++;
-        } else if (words[i].status === "incorrect") {
-          charArrayRef.current[1]++;
-        } else if (words[i].status === "missed") {
-          charArrayRef.current[2]++;
-        } else if (words[i].status === "extra") {
-          charArrayRef.current[3]++;
-        } else {
-            charArrayRef.current[2]++;
-        }
-      
-      }
-      firstVisibleCharIndexShadowRef.current = firstVisibleCharIndex
-    }
     return words.slice(firstVisibleCharIndex);
   }, [words, firstVisibleCharIndex]);
 
@@ -532,8 +547,46 @@ export default function TypingArea({
 
   function calculateResult(key: string) {
     //setShowResultLoading(true)
+    const hasRemaining =
+    framesRef.current.correct > 0 ||
+    framesRef.current.incorrect > 0 ||
+    framesRef.current.missed > 0 ||
+    framesRef.current.extra > 0;
+
+    if (hasRemaining) {
+      const totalCharsInSec =
+      framesRef.current.correct +
+      framesRef.current.incorrect +
+      framesRef.current.extra +
+      framesRef.current.missed;
+
+    const correctCharsInSec = framesRef.current.correct;
+      totalCharsRef.current+=totalCharsInSec
+      correctCharsRef.current+=correctCharsInSec
+    const interval = Math.round(
+      (performance.now() - testStartTiming.current) / 1000
+    );
+
+    const cumulatedRawWpm = (totalCharsRef.current * 12) / interval;
+    const cumulatedWpm = (correctCharsRef.current * 12) / interval;
+    const originalArray = ArrayOnIntervals.current[ArrayOnIntervals.current.length-1]
+    originalArray.errors += framesRef.current.errors
+    originalArray.problematicKeys = [...originalArray.problematicKeys, ...framesRef.current.correctKeyErrors]
+    originalArray.rawWpm = cumulatedRawWpm
+    originalArray.wpm = cumulatedWpm
+
+    // Reset frames to prevent duplicate pushing
+    framesRef.current = {
+      correct: 0,
+      incorrect: 0,
+      missed: 0,
+      extra: 0,
+      errors: 0,
+      correctKeyErrors: [],
+    }
+    }
     const charArray = [0, 0, 0, 0]; // correct, incorrect, missed, extra
-    for (let i = 0; i < words.length; i++) {  
+    for (let i = 0; i < words.length; i++) {
       let currentindex = words[i];
       if (currentindex.status === "pending" && selection.mode === "time") {
         break;
@@ -557,48 +610,20 @@ export default function TypingArea({
         }
       }
     }
-    console.log({char:words[firstVisibleCharIndex], firstVisibleCharIndex})
-    for (let i = firstVisibleCharIndexShadowRef.current; i < words.length; i++) {
-      let currentindex = words[i];
-      if (currentindex.status === "pending" && selection.mode === "time") {
-        console.log(currentindex)
-        break;
-      }
-      if (currentindex.char != " ") {
-        if (currentindex.status === "correct") {
-          charArrayRef.current[0]++;
-        } else if (currentindex.status === "incorrect") {
-          charArrayRef.current[1]++;
-        } else if (currentindex.status === "missed") {
-          charArrayRef.current[2]++;
-        } else if (currentindex.status === "extra") {
-          charArrayRef.current[3]++;
-        } else {
-          // run when the pointerIndex reaches to the last char.
-          if (key === words[words.length - 1].char) {
-            charArrayRef.current[0]++;
-          } else {
-            charArrayRef.current[2]++;
-          }
-        }
-      }
-    }
-    console.log({charArray,ref: charArrayRef.current})
+    // let i = 0;
+    // let j = 0;
+    // while (i < errorsInterval.current.length && j < ArrayOnIntervals.current.length) {
+    //   if (
+    //     errorsInterval.current[i].timer > ArrayOnIntervals.current[j].interval
+    //   ) {
+    //     j++;
+    //   } else {
+    //     ArrayOnIntervals.current[j].errors += errorsInterval.current[i].errors;
+    //     i++;
+    //   }
+    // }
     console.log(ArrayOnIntervals);
-    console.log({ time: totalTimePassed.current });
-    let i = 0;
-    let j = 0;
-    while (i < errorsInterval.current.length && j < ArrayOnIntervals.current.length) {
-      if (
-        errorsInterval.current[i].timer > ArrayOnIntervals.current[j].interval
-      ) {
-        j++;
-      } else {
-        ArrayOnIntervals.current[j].errors += errorsInterval.current[i].errors;
-        i++;
-      }
-    }
-    setCumulativeIntervaltom(ArrayOnIntervals.current)
+    setCumulativeIntervaltom(ArrayOnIntervals.current);
     setCharArray(charArray);
     setShowResultPage(true);
   }
@@ -616,9 +641,14 @@ export default function TypingArea({
     let charsSkipped = 1;
     const key = e.key;
     const isActive = e.getModifierState("CapsLock");
-    if (selectionPanelVisible && !specialKeys.includes(key) && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
-      console.log("how the hell is this even possible now????")
-      setSelectionPanelVisible(false)
+    if (
+      selectionPanelVisible &&
+      !specialKeys.includes(key) &&
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      !e.metaKey
+    ) {
+      setSelectionPanelVisible(false);
     }
     if ((isActive || capsKey) && key === "CapsLock") {
       setCapsKey(isActive);
@@ -642,11 +672,15 @@ export default function TypingArea({
     ) {
       setCapsKey(true);
     }
+    if (isAlreadyCalculatingResult.current) {
+      return;
+    }
     if (
       pointerIndex === words.length - 1 &&
       !specialKeys.includes(key) &&
       key != "Backspace"
     ) {
+      isAlreadyCalculatingResult.current = true;
       calculateResult(key);
       return;
     }
@@ -692,7 +726,9 @@ export default function TypingArea({
         }
         backIterator--;
       }
-      words[pointerIndex].char!=" " && currentWordRef.current>0 ? currentWordRef.current-- : null   // as the ctrl + backspace will always decrease one word
+      words[pointerIndex].char != " " && currentWordRef.current > 0
+        ? currentWordRef.current--
+        : null; // as the ctrl + backspace will always decrease one word
       setWords((prev) => {
         const data = [...prev];
         let pointerIndexCopy = pointerIndex;
@@ -719,7 +755,7 @@ export default function TypingArea({
       if (words[pointerIndex - 1].char === " ") {
         let isWordCorrect = true;
         let prevWordPtr = pointerIndex - 2;
-        while (words[prevWordPtr].char != " " && prevWordPtr > 0) {
+        while (words[prevWordPtr].char != " " && prevWordPtr >= 0) {
           if (words[prevWordPtr].status != "correct") {
             isWordCorrect = false;
             break;
@@ -753,7 +789,9 @@ export default function TypingArea({
         });
         setPointerIndex(backMove);
         pointerIndexCopyRef.current = backMove;
-        (words[pointerIndex - 1].char === " " && currentWordRef.current>0)?currentWordRef.current-- : null
+        words[pointerIndex - 1].char === " " && currentWordRef.current > 0
+          ? currentWordRef.current--
+          : null;
         return;
       }
 
@@ -768,11 +806,12 @@ export default function TypingArea({
       });
       setPointerIndex((prev) => prev - 1);
       pointerIndexCopyRef.current -= 1;
-      (words[pointerIndex - 1].char === " " && currentWordRef.current>0)?currentWordRef.current-- : null
-
-    } 
-    else {
+      words[pointerIndex - 1].char === " " && currentWordRef.current > 0
+        ? currentWordRef.current--
+        : null;
+    } else {
       let errors = 0;
+      let diffKeys: { correctKey: string; incorrectKey: string }[] = [];
       const data = [...words];
       if (key === data[pointerIndex].char) {
         data[pointerIndex].status = "correct";
@@ -783,23 +822,30 @@ export default function TypingArea({
             while (data[iterator].char != " ") {
               data[iterator].status = "missed";
               iterator++;
+              diffKeys.push({
+                correctKey: data[iterator].char,
+                incorrectKey: "SpaceKey",
+              });
               errors++;
               if (iterator === words.length) {
                 errorsInterval.current.push({
                   errors: errors,
+                  diffKeys: diffKeys,
                   timer: timer,
                 });
+                setWords(data);
                 calculateResult(key); // as the last key typed in this scenario will be this =" "
                 return;
               }
             }
             errorsInterval.current.push({
               errors: errors,
+              diffKeys: diffKeys,
               timer: timer,
             });
             data[iterator].status = "missed";
             charsSkipped = iterator + 1 - pointerIndex;
-            currentWordRef.current++
+            currentWordRef.current++;
           }
         }
       } else {
@@ -809,15 +855,25 @@ export default function TypingArea({
               char: key,
               status: "extra",
             });
+            diffKeys.push({
+              correctKey: "SpaceKey",
+              incorrectKey: key,
+            });
             errorsInterval.current.push({
               errors: 1,
+              diffKeys: diffKeys,
               timer: timer,
             });
           }
         } else {
           data[pointerIndex].status = "incorrect";
+          diffKeys.push({
+            correctKey: data[pointerIndex].char,
+            incorrectKey: key,
+          });
           errorsInterval.current.push({
             errors: 1,
+            diffKeys: diffKeys,
             timer: timer,
           });
         }
@@ -826,7 +882,7 @@ export default function TypingArea({
       setWords(data);
       if (pointerIndex > 0) {
         if (words[pointerIndex - 1].char == " " && key == " ") {
-        currentWordRef.current++
+          currentWordRef.current++;
           return;
         } else if (words[pointerIndex - 1].status != "extra" || key == " ") {
           setPointerIndex(pointerIndex + charsSkipped);
@@ -839,8 +895,9 @@ export default function TypingArea({
         } // this is for normal typing
       }
       charsSkipped = 1;
-      if (key===" " && words[pointerIndex].char === key) { // will not hit in the case of missed words.
-      currentWordRef.current++
+      if (key === " " && words[pointerIndex].char === key) {
+        // will not hit in the case of missed words.
+        currentWordRef.current++;
       }
     }
     if (!isTestActive && pointerIndexCopyRef.current > 0) {
@@ -854,7 +911,7 @@ export default function TypingArea({
       clearTimeout(focusTimeoutRef.current);
     }
     if (afkTimeoutRef.current) {
-      clearTimeout(afkTimeoutRef.current)
+      clearTimeout(afkTimeoutRef.current);
     }
     setBlinking(false);
 
@@ -883,20 +940,24 @@ export default function TypingArea({
       mode: "time",
       testWordlength: null,
       wordList: wordListFromBackend,
-      seed:hash.hash
+      seed: hash.hash,
     });
     if (typeof response === "string") {
       toast.error("Something went wrong.");
       return;
     }
     numberOfGenerations.current++;
-    console.log({words, newArr: response.characters})
+    console.log({ words, newArr: response.characters });
     setWords((prev) => [...prev, ...response.characters]);
-    console.log(shadowTest)
-    setHash({GeneratedAmt:hash.GeneratedAmt+1, originalSeed: hash.originalSeed, hash:response.generatedHash})
-    console.log({amt: hash.GeneratedAmt+1})
-    const newRef=response.characters.map((prev)=>({...prev}))
-    setShadowTest((prev) => [...prev, ...newRef])
+    console.log(shadowTest);
+    setHash({
+      GeneratedAmt: hash.GeneratedAmt + 1,
+      originalSeed: hash.originalSeed,
+      hash: response.generatedHash,
+    });
+    console.log({ amt: hash.GeneratedAmt + 1 });
+    const newRef = response.characters.map((prev) => ({ ...prev }));
+    setShadowTest((prev) => [...prev, ...newRef]);
   }
   // // Add this state to your component
   // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
@@ -953,150 +1014,159 @@ export default function TypingArea({
 
   return (
     <motion.div
-     variants={{
-      animate: { opacity: 0.8 },
-      default:   { opacity: 1 },
-    }}
-          key={selection.language + selection.mode + isRefreshed}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: {delay:0.1} }}
-          
-          transition={{
-            ease: "easeIn",
-            type: "spring",
-          damping: 50,                       // ↓ damping → bouncier
-          stiffness: 20,                    // ↑ stiffness → faster
-          mass: 1.5, 
-            duration: 0.7,
-          }}
-        >
-    <div
-      ref={containerRef}
-      className="h-fit w-full p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden bg-pink-500"
-      onBlur={handleContainerBlur}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      onClick={ClickToFocus} // moved from line 457 to here
-      onMouseMove={()=>{!selectionPanelVisible?setSelectionPanelVisible(true):null}}
+      variants={{
+        animate: { opacity: 0.8 },
+        default: { opacity: 1 },
+      }}
+      key={selection.language + selection.mode + isRefreshed}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { delay: 0.1 } }}
+      transition={{
+        ease: "easeIn",
+        type: "spring",
+        damping: 50, // ↓ damping → bouncier
+        stiffness: 20, // ↑ stiffness → faster
+        mass: 1.5,
+        duration: 0.7,
+      }}
     >
       <div
-        className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl z-20 ${
-          capsKey ? "flex" : "hidden"
-        }`}
-      >
-        <Lock />
-        <p>Caps Lock On</p>
-      </div>
-      <div
-        className={`p-3 w-full flex items-center justify-center relative gap-3 h-28 bg-red-400 rounded-2xl`}
-      >
-        <div className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${repeatTest?"opacity-100":"opacity-0 pointer-events-none"} absolute mr-80`}>
-        <RotateCcw />
-        <p className="text-red-500">Repeated</p></div>
-        <div className="flex gap-2 p-2 rounded-xl">
-        <LanguageSelector/>
-        </div>
-      </div>
-      <div className="absolute top-0">
-        {selection.mode === "time" ? (
-          <p>{(selection.time - timer).toString()}</p>
-        ) : (
-          <p>{currentWordRef.current.toString()+"/" + selection.words.toString()}</p>
-        )}
-      </div>
-      {/* will show the total words typed or the time passing */}
-      <div
-        ref={textFlowAreaRef}
-        className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-6 px-2 w-[85%] outline outline-gray-400"
+        ref={containerRef}
+        className="h-fit w-full p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden bg-pink-500"
+        onBlur={handleContainerBlur}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        onClick={ClickToFocus} // moved from line 457 to here
+        onMouseMove={() => {
+          !selectionPanelVisible ? setSelectionPanelVisible(true) : null;
+        }}
       >
         <div
-          className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
-            !focus ? "opacity-100" : "opacity-0 pointer-events-none"
-          } origin-center flex transition-all duration-300 ease-out items-center justify-center text-gray-500 z-10`}
+          className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl z-20 ${
+            capsKey ? "flex" : "hidden"
+          }`}
         >
-          Click here to focus ^_^
+          <Lock />
+          <p>Caps Lock On</p>
         </div>
-
         <div
-          className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
+          className={`p-3 w-full flex items-center justify-center relative gap-3 h-28 bg-red-400 rounded-2xl`}
         >
-          {wordGroups.map((word, wordIndex) => {
-            let charOffset = 0;
-            for (let i = 0; i < wordIndex; i++) {
-              charOffset += wordGroups[i].length;
-            }
-
-            return (
-              <span
-                key={`word-${wordIndex}`}
-                className="inline-block whitespace-pre"
-              >
-                {word.map((value, charIndex) => {
-                  const localIndex = charOffset + charIndex;
-                  const globalIndex = firstVisibleCharIndex + localIndex;
-                  const status = value.status;
-                  const char = value.char;
-                  return (
-                    <span
-                      key={`char-${globalIndex}`}
-                      className={`${CHAR_SPAN_CLASS} ${
-                        status === "pending"
-                          ? "text-gray-400"
-                          : status === "correct"
-                          ? "text-green-400"
-                          : status === "missed"
-                          ? char !== " "
-                            ? "text-gray-400 border-b-2  border-red-500"
-                            : null
-                          : "text-red-500 border-b-2  border-red-500" // incorrect and extra
-                      }`}
-                    >
-                      {value.char}
-                    </span>
-                  );
-                })}
-              </span>
-            );
-          })}
+          <div
+            className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${
+              repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
+            } absolute mr-80`}
+          >
+            <RotateCcw />
+            <p className="text-red-500">Repeated</p>
+          </div>
+          <div className="flex gap-2 p-2 rounded-xl">
+            <LanguageSelector />
+          </div>
         </div>
-      </div>
-      {words.length > 0 && (
+        <div className="absolute top-0">
+          {selection.mode === "time" ? (
+            <p>{(selection.time - timer).toString()}</p>
+          ) : (
+            <p>
+              {currentWordRef.current.toString() +
+                "/" +
+                selection.words.toString()}
+            </p>
+          )}
+        </div>
+        {/* will show the total words typed or the time passing */}
         <div
-          ref={cursorElementRef}
-          id="cursor"
-          className={` absolute top-0 left-0 w-0.5 bg-amber-500
+          ref={textFlowAreaRef}
+          className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-6 px-2 w-[85%] outline outline-gray-400"
+        >
+          <div
+            className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
+              !focus ? "opacity-100" : "opacity-0 pointer-events-none"
+            } origin-center flex transition-all duration-300 ease-out items-center justify-center text-gray-500 z-10`}
+          >
+            Click here to focus ^_^
+          </div>
+
+          <div
+            className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
+          >
+            {wordGroups.map((word, wordIndex) => {
+              let charOffset = 0;
+              for (let i = 0; i < wordIndex; i++) {
+                charOffset += wordGroups[i].length;
+              }
+
+              return (
+                <span
+                  key={`word-${wordIndex}`}
+                  className="inline-block whitespace-pre"
+                >
+                  {word.map((value, charIndex) => {
+                    const localIndex = charOffset + charIndex;
+                    const globalIndex = firstVisibleCharIndex + localIndex;
+                    const status = value.status;
+                    const char = value.char;
+                    return (
+                      <span
+                        key={`char-${globalIndex}`}
+                        className={`${CHAR_SPAN_CLASS} ${
+                          status === "pending"
+                            ? "text-gray-400"
+                            : status === "correct"
+                            ? "text-green-400"
+                            : status === "missed"
+                            ? char !== " "
+                              ? "text-gray-400 border-b-2  border-red-500"
+                              : null
+                            : "text-red-500 border-b-2  border-red-500" // incorrect and extra
+                        }`}
+                      >
+                        {value.char}
+                      </span>
+                    );
+                  })}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+        {words.length > 0 && (
+          <div
+            ref={cursorElementRef}
+            id="cursor"
+            className={` absolute top-0 left-0 w-0.5 bg-amber-500
             
                     ${
-                         blinking
-                          ? "cursor animate-blink"
-                          : "transition-transform duration-150 ease-out "
+                      blinking
+                        ? "cursor animate-blink"
+                        : "transition-transform duration-150 ease-out "
                     }
                     ${!focus && "bg-transparent"}
                     w-0.5 z-0`}
-          style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
-        />
-      )}
-    <RefreshIcon setIsRefreshed={setIsRefreshed}/>  
-    </div>
-  </motion.div>
-  )
+            style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
+          />
+        )}
+        <RefreshIcon setIsRefreshed={setIsRefreshed} />
+      </div>
+    </motion.div>
+  );
 }
 
 function ResultLoadingPlaceholder() {
   return <div className="bg-white"> Loading results, please wait...</div>;
 }
 
-
-
 //memoizing icons to reduce their re-renders
-const RefreshIcon = memo(({setIsRefreshed}:{
-
-  setIsRefreshed: Dispatch<SetStateAction<number>>
-})=>{
-  console.log("here")
-  return (
-  
-  <Tooltip>
+const RefreshIcon = memo(
+  ({
+    setIsRefreshed,
+  }: {
+    setIsRefreshed: Dispatch<SetStateAction<number>>;
+  }) => {
+    console.log("here");
+    return (
+      <Tooltip>
         <TooltipTrigger>
           <RefreshCw
             className={`cursor-pointer transition-all ease-out duration-[400ms]`}
@@ -1109,5 +1179,6 @@ const RefreshIcon = memo(({setIsRefreshed}:{
           <p className="p-2">Restart Test</p>
         </TooltipContent>
       </Tooltip>
-  )
-})
+    );
+  }
+);

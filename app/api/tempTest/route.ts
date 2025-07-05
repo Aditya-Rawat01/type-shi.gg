@@ -6,6 +6,7 @@ export async function POST(req:NextRequest) {
     const result = test.safeParse(body)
 
     if (!result.success) {
+        console.log(result.error)
         return NextResponse.json({
             "msg": result.error,
         }, {status: 401})
