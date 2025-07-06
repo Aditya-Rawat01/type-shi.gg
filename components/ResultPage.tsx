@@ -3,8 +3,22 @@ import {
   shadowTestAtom,
 } from "@/app/store/atoms/restartSameTest";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Bot, BotIcon, ChevronRight, Images, ListRestart, RotateCcw } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import {
+  Bot,
+  BotIcon,
+  ChevronRight,
+  Images,
+  ListRestart,
+  RotateCcw,
+} from "lucide-react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { toBlob } from "html-to-image";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
@@ -17,34 +31,50 @@ import { URI } from "@/lib/URI";
 import { userCookie } from "@/app/store/atoms/userCookie";
 import { useRouter } from "next/navigation";
 import ChartRender from "./renderChart";
-import {motion} from 'motion/react'
+import { motion } from "motion/react";
 import { Skeleton } from "./ui/skeleton";
+import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 export default function ResultPage({
   setShowResultPage,
   charArray,
+  keyPressDuration,
+  keySpaceDuration,
 }: {
   setShowResultPage: Dispatch<SetStateAction<boolean>>;
   charArray: number[];
+  keyPressDuration: RefObject<number[]>;
+  keySpaceDuration: RefObject<number[]>;
 }) {
+  console.log({ keyPressDuration, keySpaceDuration });
   const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
+  const [careerStats, setCareerStats] = useAtom(careerStatsAtom);
   const shadowRepeatedRef = useRef(repeatedTest); // this helps in removing the flicker of change in flag of repeated test.
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
   const hash = useAtomValue(hashAtom);
   const cumulativeInterval = useAtomValue(cumulativeIntervalAtom);
-  const errors = cumulativeInterval.reduce((acc,curr)=>acc+curr.errors,0)
-  const totalChars = charArray[0] + charArray[1] + charArray[2] + charArray[3]
-  const correctChars = charArray[0]
-  const accuracy= (correctChars>0 && totalChars>0)?(totalChars-errors)*100/totalChars:0
-  const rawWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].rawWpm:0
-  const avgWpm = cumulativeInterval.length>0?cumulativeInterval[cumulativeInterval.length-1].wpm:0
-  const cookie = useAtomValue(userCookie)
-  const router = useRouter()
-  const [generatingReport, setGeneratingReport] = useState(false) 
-  const [report, setReport] = useState<string[]|null>(null)
-  const [modalVisible, setModalVisible] = useState(false)
+  const errors = cumulativeInterval.reduce((acc, curr) => acc + curr.errors, 0);
+  const totalChars = charArray[0] + charArray[1] + charArray[2] + charArray[3];
+  const correctChars = charArray[0];
+  const accuracy =
+    correctChars > 0 && totalChars > 0
+      ? ((totalChars - errors) * 100) / totalChars
+      : 0;
+  const rawWpm =
+    cumulativeInterval.length > 0
+      ? cumulativeInterval[cumulativeInterval.length - 1].rawWpm
+      : 0;
+  const avgWpm =
+    cumulativeInterval.length > 0
+      ? cumulativeInterval[cumulativeInterval.length - 1].wpm
+      : 0;
+  const cookie = useAtomValue(userCookie);
+  const router = useRouter();
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [report, setReport] = useState<string[] | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   useEffect(() => {
-    if ((isAfk) && cookie) {
+    if (isAfk && cookie) {
       toast.warning("Invalid test, Test will not be stored.");
       return;
     }
@@ -52,44 +82,84 @@ export default function ResultPage({
       toast.warning("Repeated test, Test will not be stored.");
       return;
     }
-    
+    const mode = selection.mode;
+    const mode2 = mode === "words" ? selection.words : selection.time;
+    const fullMode = mode + " " + mode2;
+    const bestStats = careerStats[fullMode];
+    const accuracyWeight = 0.5;
+    const avgWpmWeight = 0.5;
+    // if (!bestStats) {
+    //   // here is the problem, instead of localStorage atom, we should fetch the best Stats on mounting (if cookie) and put it inside the global array.
+    //   // this is early returning so this is a bug for time mode.
+    //   console.log({bestStats})
+    //   return;
+    // }
+    // const weightedStatsMean =
+    //   (avgWpmWeight * bestStats.avgWpm) / 200 +
+    //   (accuracyWeight * bestStats.accuracy) / 100; // to get in the range of 0 to 1
+    // const weightedTestMean =
+    //   (accuracy * accuracyWeight) / 100 + (avgWpm * avgWpmWeight) / 200; // taking 200 wpm as the top limit
+    // if (weightedTestMean > weightedStatsMean) {
+    //   toast.success("New Record");
+    //   setCareerStats((prev) => ({
+    //     ...prev,
+    //     [fullMode]: { accuracy: accuracy, rawWpm: rawWpm, avgWpm: avgWpm },
+    //   }));
+    // }
     async function dataSender() {
-      if (accuracy<36 || !rawWpm || !avgWpm) {
-        toast.error("Invalid test!")
-        return
-      }
-      const mode2 =
-        selection.mode === "words" ? selection.words : selection.time;
+      // if (accuracy < 36 || !rawWpm || !avgWpm) {
+      //   toast.error("Invalid test!");
+      //   return;
+      // }
       const body = {
         charSets: charArray, // correct, incorrect, missed, extra
-        mode: selection.mode,
+        mode: mode,
         mode2: mode2,
-        flameGraph: cumulativeInterval,
+        flameGraph: [
+          {
+            wpm: 100,
+            rawWpm: 100,
+            interval: 1,
+            errors: 0,
+            problematicKeys: [],
+          },
+        ],
         accuracy: accuracy, // hardcoded for a while.
         rawWpm: parseFloat(rawWpm.toFixed(2)),
         avgWpm: parseFloat(avgWpm.toFixed(2)),
         language: selection.language,
+        isPb: false,
         // these will not be saved.
+        keySpaceDuration: keySpaceDuration.current,
+        keyPressDuration: keyPressDuration.current,
         initialSeed: hash.originalSeed,
         generatedAmt: hash.GeneratedAmt,
         finalHash: hash.hash,
       };
-      try {
-        if (!cookie) {
-          try {
-            console.log(body)
-            const data=await axios.post(`${URI}/api/tempTest`, body)
-            const stringifiedVersion:string = data.data.token
-            localStorage.setItem("token",stringifiedVersion)
-          } catch (error) {
-            toast.error("Error occurred! Tampered Fields!")
-          }
-          return
+      // direct frontend values cannot be trusted. Find a middle ground.
+      // if (weightedTestMean > weightedStatsMean) {
+      //   body.isPb = true;
+      // }
+      if (!cookie) {
+        try {
+          console.log(body);
+          const data = await axios.post(`${URI}/api/tempTest`, body);
+          const stringifiedVersion: string = data.data.token;
+          localStorage.setItem("token", stringifiedVersion);
+        } catch (error) {
+          (error as { status: number }).status === 429
+            ? toast.error("Bot 🤖 detected! Test will not be stored.")
+            : toast.error("Error occurred! Tampered Fields!");
+        }
+        return;
       }
+      try {
         const res = await axios.post(`${URI}/api/test`, body);
         toast.success(res.data.msg);
       } catch (error) {
-        toast.warning("some fields are missing/tampered");
+         (error as { status: number }).status === 429
+            ?toast.error("Bot 🤖 detected! Test will not be stored.")
+            :toast.error("Error occurred! Tampered Fields!");
       }
     }
     dataSender();
@@ -106,111 +176,120 @@ export default function ResultPage({
     setRestartSameTest(state);
     setShowResultPage(false);
   }
-  const charArrayRepresentation = charArray[0]+" / "+charArray[1]+" / "+charArray[2]+" / "+charArray[3]
+  const charArrayRepresentation =
+    charArray[0] +
+    " / " +
+    charArray[1] +
+    " / " +
+    charArray[2] +
+    " / " +
+    charArray[3];
   const captureRef = useRef<HTMLDivElement>(null);
 
   // take ss after some ms so to avoid any jitter or lag in ui.
-  const handleScreenshot = ()=>setTimeout(async()=>
-      {const ss = captureRef.current;
-        if (!ss) return
-    const blob = await toBlob(ss, { pixelRatio: 2 });
-    if (!blob) return;
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob })
-      ]);
-      toast.success("Screenshot copied 🎉");
-    } catch (err) {
-      // Safari & older Firefox can’t write blobs → fallback download// new thig to learn.
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement("a"), {
-        href: url,
-        download: "capture.png"
-      });
-      a.click();
-      toast.info("Clipboard not supported – downloaded instead");
-      URL.revokeObjectURL(url);
-    }},100)
+  const handleScreenshot = () =>
+    setTimeout(async () => {
+      const ss = captureRef.current;
+      if (!ss) return;
+      const blob = await toBlob(ss, { pixelRatio: 2 });
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        toast.success("Screenshot copied 🎉");
+      } catch (err) {
+        // Safari & older Firefox can’t write blobs → fallback download// new thig to learn.
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement("a"), {
+          href: url,
+          download: "capture.png",
+        });
+        a.click();
+        toast.info("Clipboard not supported – downloaded instead");
+        URL.revokeObjectURL(url);
+      }
+    }, 100);
   async function handleGenerateReport() {
-    if (!cookie || isAfk || accuracy<36 || !rawWpm || !avgWpm) {
-      !cookie && toast.warning("Signin to generate report!")
-      isAfk && toast.warning("Afk Test, cannot generate result!")
-      accuracy<36 && toast.warning("Cannot generate for less accuracy")
-      !rawWpm && toast.warning("Raw Wpm Missing")
-      !avgWpm && toast.warning("Avg Wpm Missing!")
-      return
+    if (!cookie || isAfk || accuracy < 36 || !rawWpm || !avgWpm) {
+      !cookie && toast.warning("Signin to generate report!");
+      isAfk && toast.warning("Afk Test, cannot generate result!");
+      accuracy < 36 && toast.warning("Cannot generate for less accuracy");
+      !rawWpm && toast.warning("Raw Wpm Missing");
+      !avgWpm && toast.warning("Avg Wpm Missing!");
+      return;
     }
-    setGeneratingReport(true)
-    setModalVisible(true)
+    setGeneratingReport(true);
+    setModalVisible(true);
     try {
-      const res=await axios.post(`${URI}/api/generate-report`,{
-      flameGraph:cumulativeInterval 
-    })
-    const lines:string = res.data.result
-    setReport(lines.split("\n\n"))
+      const res = await axios.post(`${URI}/api/generate-report`, {
+        flameGraph: cumulativeInterval,
+      });
+      const lines: string = res.data.result;
+      setReport(lines.split("\n\n"));
     } catch (error) {
-      (error as {status:number}).status===429
-      ?
-      toast.error("Free tier got exhausted. ┗( T﹏T )┛")
-      :
-      toast.error("Cookie not Valid. ಠ_ಠ")
-    } 
-   
-    setGeneratingReport(false)
+      (error as { status: number }).status === 429
+        ? toast.error("Free tier got exhausted. ┗( T﹏T )┛")
+        : toast.error("Cookie not Valid. ಠ_ಠ");
+    }
+
+    setGeneratingReport(false);
   }
-  console.log(report)
+  console.log(report);
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
-    ref={captureRef}>
+    <div
+      className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
+      ref={captureRef}
+    >
       <div className="w-full flex flex-col gap-1">
-      <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
-        <div>
-          <Tooltip>
-          <TooltipTrigger>
-            <p>{avgWpm?Math.round(rawWpm):"-"}</p>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p className="p-2">{rawWpm.toFixed(2)}</p>
-          </TooltipContent>
-        </Tooltip>
-        <p>Raw wpm</p>
+        <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
+          <div>
+            <Tooltip>
+              <TooltipTrigger>
+                <p>{avgWpm ? Math.round(rawWpm) : "-"}</p>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="p-2">{rawWpm.toFixed(2)}</p>
+              </TooltipContent>
+            </Tooltip>
+            <p>Raw wpm</p>
+          </div>
+          <div>
+            <Tooltip>
+              <TooltipTrigger>
+                <p>{avgWpm ? Math.round(avgWpm) : "-"}</p>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="p-2">{avgWpm.toFixed(2)}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <p>Avg wpm</p>
+          </div>
+          <div>
+            <Tooltip>
+              <TooltipTrigger>
+                <p>{accuracy ? Math.round(accuracy) + "%" : "-"}</p>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="p-2">{accuracy.toFixed(2)}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <p>Accuracy</p>
+          </div>
         </div>
-        <div>
+        <div className="bg-red-600 text-2xl flex justify-center w-full mt-0">
           <Tooltip>
-          <TooltipTrigger>
-            <p>{avgWpm?Math.round(avgWpm):"-"}</p>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p className="p-2">{avgWpm.toFixed(2)}</p>
-          </TooltipContent>
-        </Tooltip>
-          
-        <p>Avg wpm</p>
-        </div>
-        <div>
-          <Tooltip>
-          <TooltipTrigger>
-            <p>{accuracy?Math.round(accuracy)+"%":"-"}</p>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p className="p-2">{accuracy.toFixed(2)}</p>
-          </TooltipContent>
-        </Tooltip>
-          
-        <p>Accuracy</p>
+            <TooltipTrigger>{charArrayRepresentation}</TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="p-2 text-lg">
+                Correct / Incorrect / Missed / Extra
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
-      <div className="bg-red-600 text-2xl flex justify-center w-full mt-0">
-          <Tooltip>
-          <TooltipTrigger>
-            {charArrayRepresentation}
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="p-2 text-lg">Correct / Incorrect / Missed / Extra</p>
-          </TooltipContent>
-        </Tooltip>
-        </div>
-        </div>
       <div className="graph h-80 bg-orange-400 w-4/5 flex flex-col">
         <div className="text-xl pl-10 relative">
           <p>{titleText[0]}</p>
@@ -227,10 +306,10 @@ export default function ResultPage({
           ) : null}
           {/* // if is afk only then this will be shown */}
         </div>
-        <ChartRender cumulativeInterval = {cumulativeInterval}/> 
+        <ChartRender cumulativeInterval={cumulativeInterval} />
       </div>
-      
-        <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
+
+      <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
         <Tooltip>
           <TooltipTrigger>
             <RotateCcw
@@ -266,42 +345,58 @@ export default function ResultPage({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger>
-            <Images
-              onClick={handleScreenshot}
-              className="cursor-pointer"
-            />
+            <Images onClick={handleScreenshot} className="cursor-pointer" />
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <p className="p-2">Screenshot</p>
           </TooltipContent>
         </Tooltip>
-
       </div>
-      {!cookie && <p> <span className="underline cursor-pointer" onClick={()=>router.push("/login")}>Sign in</span> to save the result</p>}
-      <div className={`min-h-40 bg-red-600 w-4/5 flex-col gap-3 p-1 justify-center text-justify text-white ${modalVisible?"flex":"hidden"}`}>
-        {generatingReport
-        ?
-        <>
-        <Skeleton className="h-3 w-full"/>
-        <Skeleton className="h-3 w-full"/>
-        <Skeleton className="h-3 w-3/4"/>
-        </>
-        :
-        <>
-        {report
-        ?
-        <>
-        {report.map((line,index)=>{
-          console.log({index})
-          return <p key={index} className={`${index===0  && "font-semibold"}`}>{line}</p>
-        })}
-        </>
-        :
-        <p className="font-bold">Error Occurred!</p>}
-        </>
-        }
+      {!cookie && (
+        <p>
+          {" "}
+          <span
+            className="underline cursor-pointer"
+            onClick={() => router.push("/login")}
+          >
+            Sign in
+          </span>{" "}
+          to save the result
+        </p>
+      )}
+      <div
+        className={`min-h-40 bg-red-600 w-4/5 flex-col gap-3 p-1 justify-center text-justify text-white ${
+          modalVisible ? "flex" : "hidden"
+        }`}
+      >
+        {generatingReport ? (
+          <>
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+          </>
+        ) : (
+          <>
+            {report ? (
+              <>
+                {report.map((line, index) => {
+                  console.log({ index });
+                  return (
+                    <p
+                      key={index}
+                      className={`${index === 0 && "font-semibold"}`}
+                    >
+                      {line}
+                    </p>
+                  );
+                })}
+              </>
+            ) : (
+              <p className="font-bold">Error Occurred!</p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
-

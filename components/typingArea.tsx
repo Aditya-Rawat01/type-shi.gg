@@ -4,6 +4,7 @@ import {
   Dispatch,
   KeyboardEvent,
   memo,
+  RefObject,
   SetStateAction,
   useCallback,
   useEffect,
@@ -38,10 +39,20 @@ export default function TypingArea({
   setShowResultPage,
   setCharArray,
   LoadingConfig,
+  keyPressDuration,
+  currentkeysPressed,
+  keySpaceDuration,
+  currentKeySpace,
 }: {
   setShowResultPage: Dispatch<SetStateAction<boolean>>;
   setCharArray: Dispatch<SetStateAction<number[]>>;
   LoadingConfig: boolean;
+  keyPressDuration: RefObject<number[]>;
+  currentkeysPressed: RefObject<{
+    [key: string]: number;
+  }>;
+  keySpaceDuration: RefObject<number[]>;
+  currentKeySpace: RefObject<number>;
 }) {
   const [words, setWords] = useState<
     {
@@ -90,7 +101,13 @@ export default function TypingArea({
   const correctCharsRef = useRef(0);
   const totalCharsRef = useRef(0);
   const ArrayOnIntervals = useRef<
-    { wpm: number; rawWpm: number; interval: number; errors: number, problematicKeys: string[] }[]
+    {
+      wpm: number;
+      rawWpm: number;
+      interval: number;
+      errors: number;
+      problematicKeys: string[];
+    }[]
   >([]);
   const setCumulativeIntervaltom = useSetAtom(cumulativeIntervalAtom);
   const [isTestActive, setIsTestActive] = useState(false);
@@ -120,20 +137,40 @@ export default function TypingArea({
     missed: number;
     extra: number;
     errors: number;
-    correctKeyErrors: string[]
-  }>({ correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[] });
+    correctKeyErrors: string[];
+  }>({
+    correct: 0,
+    incorrect: 0,
+    missed: 0,
+    extra: 0,
+    errors: 0,
+    correctKeyErrors: [],
+  });
+
   useEffect(() => {
     wordsRef.current = words; // to keep ref in syn for request animation frame
   }, [words]);
 
   useEffect(() => {
     if (!isTestActive) {
+      keyPressDuration.current = [];
+      currentkeysPressed.current = {};
+      keySpaceDuration.current = [];
+      currentKeySpace.current = 0;
+
       // stop timer
       setTimer(0);
       if (afkTimeoutRef.current) {
         clearTimeout(afkTimeoutRef.current);
       }
-      framesRef.current = { correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[]};
+      framesRef.current = {
+        correct: 0,
+        incorrect: 0,
+        missed: 0,
+        extra: 0,
+        errors: 0,
+        correctKeyErrors: [],
+      };
       setCharArray([0, 0, 0, 0]);
       setAfkMode(false);
       setCumulativeIntervaltom([]);
@@ -410,9 +447,12 @@ export default function TypingArea({
     const currentTotalFullSecond = Math.floor(elapsedMilliseconds / 1000);
 
     // to check if 1 sec has passed from when previous setInterval fired off
-    
-    
-    for (let i = wordsTypedInSec.current;i < pointerIndexCopyRef.current;i++) {
+
+    for (
+      let i = wordsTypedInSec.current;
+      i < pointerIndexCopyRef.current;
+      i++
+    ) {
       const status = wordsRef.current[i].status;
       switch (status) {
         case "correct":
@@ -421,18 +461,18 @@ export default function TypingArea({
         case "incorrect":
           framesRef.current.incorrect++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char)
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char);
           break;
         case "missed":
           framesRef.current.missed++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char)
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char);
           break;
         default:
           framesRef.current.extra++;
           framesRef.current.errors++;
-          console.log(i)
-          framesRef.current.correctKeyErrors.push("spacekey")
+          console.log(i);
+          framesRef.current.correctKeyErrors.push("spacekey");
       }
     }
     wordsTypedInSec.current = pointerIndexCopyRef.current;
@@ -440,8 +480,12 @@ export default function TypingArea({
       currentTotalFullSecond >= 1 &&
       currentTotalFullSecond > totalTimePassed.current
     ) {
-      const totalCharsInSec = framesRef.current.correct + framesRef.current.incorrect + framesRef.current.extra + framesRef.current.missed
-       // as 60/5 = 12 // divided by 5 because chars to words and 5 is mere approximation
+      const totalCharsInSec =
+        framesRef.current.correct +
+        framesRef.current.incorrect +
+        framesRef.current.extra +
+        framesRef.current.missed;
+      // as 60/5 = 12 // divided by 5 because chars to words and 5 is mere approximation
       const correctCharsInSec = framesRef.current.correct;
       totalCharsRef.current += totalCharsInSec;
       correctCharsRef.current += correctCharsInSec;
@@ -458,10 +502,17 @@ export default function TypingArea({
         wpm: cumulatedWpm,
         interval: interval,
         errors: framesRef.current.errors,
-        problematicKeys: [...framesRef.current.correctKeyErrors]
+        problematicKeys: [...framesRef.current.correctKeyErrors],
       });
-      
-      framesRef.current= { correct: 0, incorrect: 0, missed: 0, extra: 0, errors:0, correctKeyErrors:[]}
+
+      framesRef.current = {
+        correct: 0,
+        incorrect: 0,
+        missed: 0,
+        extra: 0,
+        errors: 0,
+        correctKeyErrors: [],
+      };
 
       if (selection.mode === "time") {
         timeShadowRef.current++;
@@ -548,42 +599,46 @@ export default function TypingArea({
   function calculateResult(key: string) {
     //setShowResultLoading(true)
     const hasRemaining =
-    framesRef.current.correct > 0 ||
-    framesRef.current.incorrect > 0 ||
-    framesRef.current.missed > 0 ||
-    framesRef.current.extra > 0;
+      framesRef.current.correct > 0 ||
+      framesRef.current.incorrect > 0 ||
+      framesRef.current.missed > 0 ||
+      framesRef.current.extra > 0;
 
     if (hasRemaining) {
       const totalCharsInSec =
-      framesRef.current.correct +
-      framesRef.current.incorrect +
-      framesRef.current.extra +
-      framesRef.current.missed;
+        framesRef.current.correct +
+        framesRef.current.incorrect +
+        framesRef.current.extra +
+        framesRef.current.missed;
 
-    const correctCharsInSec = framesRef.current.correct;
-      totalCharsRef.current+=totalCharsInSec
-      correctCharsRef.current+=correctCharsInSec
-    const interval = Math.round(
-      (performance.now() - testStartTiming.current) / 1000
-    );
+      const correctCharsInSec = framesRef.current.correct;
+      totalCharsRef.current += totalCharsInSec;
+      correctCharsRef.current += correctCharsInSec;
+      const interval = Math.round(
+        (performance.now() - testStartTiming.current) / 1000
+      );
 
-    const cumulatedRawWpm = (totalCharsRef.current * 12) / interval;
-    const cumulatedWpm = (correctCharsRef.current * 12) / interval;
-    const originalArray = ArrayOnIntervals.current[ArrayOnIntervals.current.length-1]
-    originalArray.errors += framesRef.current.errors
-    originalArray.problematicKeys = [...originalArray.problematicKeys, ...framesRef.current.correctKeyErrors]
-    originalArray.rawWpm = cumulatedRawWpm
-    originalArray.wpm = cumulatedWpm
+      const cumulatedRawWpm = (totalCharsRef.current * 12) / interval;
+      const cumulatedWpm = (correctCharsRef.current * 12) / interval;
+      const originalArray =
+        ArrayOnIntervals.current[ArrayOnIntervals.current.length - 1];
+      originalArray.errors += framesRef.current.errors;
+      originalArray.problematicKeys = [
+        ...originalArray.problematicKeys,
+        ...framesRef.current.correctKeyErrors,
+      ];
+      originalArray.rawWpm = cumulatedRawWpm;
+      originalArray.wpm = cumulatedWpm;
 
-    // Reset frames to prevent duplicate pushing
-    framesRef.current = {
-      correct: 0,
-      incorrect: 0,
-      missed: 0,
-      extra: 0,
-      errors: 0,
-      correctKeyErrors: [],
-    }
+      // Reset frames to prevent duplicate pushing
+      framesRef.current = {
+        correct: 0,
+        incorrect: 0,
+        missed: 0,
+        extra: 0,
+        errors: 0,
+        correctKeyErrors: [],
+      };
     }
     const charArray = [0, 0, 0, 0]; // correct, incorrect, missed, extra
     for (let i = 0; i < words.length; i++) {
@@ -632,6 +687,21 @@ export default function TypingArea({
     // if (!timeRef) {
     //   //timeRef =
     // }
+    const key = e.key;
+    if (isTestActive && !e.repeat && !currentkeysPressed.current[key]) {
+      currentkeysPressed.current[key] = performance.now(); // this handles the key pressing time
+    }
+    if (isTestActive && !e.repeat) {
+      // this handles the cadence.
+      if (!currentKeySpace.current) {
+        currentKeySpace.current = performance.now();
+      } else {
+        const currentTime = performance.now();
+        const space = currentTime - currentKeySpace.current;
+        currentKeySpace.current = currentTime;
+        keySpaceDuration.current.push(space);
+      }
+    }
     if (!LoadingConfig) return;
     e.preventDefault();
     if (!focus) {
@@ -639,7 +709,7 @@ export default function TypingArea({
     } // will see what better i can do here
 
     let charsSkipped = 1;
-    const key = e.key;
+
     const isActive = e.getModifierState("CapsLock");
     if (
       selectionPanelVisible &&
@@ -926,6 +996,19 @@ export default function TypingArea({
       setBlinking(true);
     }, 500);
   }
+
+  function handleKeyUp(e: KeyboardEvent<HTMLSpanElement>) {
+    // pressing duration.
+    if (e.repeat) return;
+    const key = e.key;
+    const startTime = currentkeysPressed.current[key];
+    if (startTime) {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      keyPressDuration.current.push(duration);
+      delete currentkeysPressed.current[key];
+    }
+  }
   //// when the pointerIndex becomes greater than 0 then start the clock thats it.
   /// later on detect the afk here as well.
   // firstly i will calculate that for each sec what is the current wpm is for the user that will be used for the line chart then after on.
@@ -960,38 +1043,42 @@ export default function TypingArea({
     setShadowTest((prev) => [...prev, ...newRef]);
   }
   // // Add this state to your component
-  // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
-  //     // Add this useEffect to your component
-  // useEffect(() => {
-  //     // Don't run the simulation if it's not enabled or the test is over
-  //     if (!isSimulating || pointerIndex >= words.length) {
-  //         return;
-  //     }
+    const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
+        // Add this useEffect to your component
+    useEffect(() => {
+        // Don't run the simulation if it's not enabled or the test is over
+        if (!isSimulating || pointerIndex >= words.length) {
+            return;
+        }
 
-  //     const intervalId = setInterval(() => {
-  //         // Correct, immutable state update for the words array
-  //         setWords(prevWords => {
-  //             // Create a new array to avoid direct mutation
-  //             const newWords = [...prevWords];
-  //             // Ensure the character at the pointer exists before trying to update it
-  //             if (newwords[pointerIndex]) {
-  //                  // Create a new object for the character being changed
-  //                 newwords[pointerIndex] = { ...newwords[pointerIndex], status: 'correct' };
-  //             }
-  //             return newWords;
-  //         });
+        const intervalId = setInterval(() => {
+          if (pointerIndex===words.length-1) {
+            calculateResult("w")
+            return
+          }
+            // Correct, immutable state update for the words array
+            setWords(prevWords => {
+                // Create a new array to avoid direct mutation
+                const newWords = [...prevWords];
+                // Ensure the character at the pointer exists before trying to update it
+                if (newWords[pointerIndex]) {
+                    // Create a new object for the character being changed
+                    newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
+                }
+                return newWords;
+            });
 
-  //         // Correct state update for the pointer
-  //         setPointerIndex(prevIndex => prevIndex + 1);
+            // Correct state update for the pointer
+            setPointerIndex(prevIndex => prevIndex + 1);
 
-  //     }, 10); // Changed to 200ms for a more visible typing speed
+        }, 10); // Changed to 200ms for a more visible typing speed
 
-  //     // Cleanup function: This is crucial!
-  //     // It runs when the component unmounts or when dependencies change.
-  //     return () => {
-  //         clearInterval(intervalId);
-  //     };
-  // }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
+        // Cleanup function: This is crucial!
+        // It runs when the component unmounts or when dependencies change.
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
   function ClickToFocus() {
     if (focusTimeoutRef.current) {
       clearTimeout(focusTimeoutRef.current);
@@ -1036,6 +1123,7 @@ export default function TypingArea({
         onBlur={handleContainerBlur}
         tabIndex={0}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         onClick={ClickToFocus} // moved from line 457 to here
         onMouseMove={() => {
           !selectionPanelVisible ? setSelectionPanelVisible(true) : null;

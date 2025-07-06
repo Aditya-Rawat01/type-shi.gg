@@ -7,6 +7,17 @@ import seedrandom from "seedrandom";
 import English from "@/languages/English.json"
 import English1k from "@/languages/English1k.json"
 import { createHash } from "crypto";
+
+
+export function findMeanAndDeviation(arr:number[]) {
+    const mean = arr.reduce((sum, value) => sum + value, 0) / arr.length;
+    const variance = arr.reduce((sum, value) => {
+    const difference = value - mean;
+    return sum + (difference * difference);
+  }, 0) / arr.length;
+
+  return {mean,stdDev:Math.sqrt(variance)};
+}
 export async function POST(req:NextRequest) {
     const sessionCookie = await auth.api.getSession({
         headers:req.headers
@@ -25,8 +36,64 @@ export async function POST(req:NextRequest) {
             "msg": result.error,
         }, {status: 401})
     } else {
-        const {charSets, mode, mode2 , flameGraph, accuracy, initialSeed, generatedAmt, finalHash, language, rawWpm, avgWpm} = result.data
+        const {charSets, mode, mode2 , flameGraph, accuracy, initialSeed, generatedAmt, finalHash, language, rawWpm, avgWpm, keySpaceDuration, keyPressDuration} = result.data
 
+           if (!keySpaceDuration || keySpaceDuration.length < 1 || !avgWpm || avgWpm <= 0) {
+    if (avgWpm >= 0 && (!keySpaceDuration || keySpaceDuration.length < 1)) {
+        return NextResponse.json({ 
+            "msg": "WPM reported with no corresponding keystroke data. 🤖" 
+        }, { status: 400 });
+    }
+} else {
+    const sumOfCadenceMs = keySpaceDuration.reduce((a, b) => a + b, 0);
+    const evidenceBasedTypingTimeMinutes = sumOfCadenceMs / 1000 / 60;
+    const evidenceBasedCharacterCount = keySpaceDuration.length + 1; 
+    const evidenceBasedWordCount = evidenceBasedCharacterCount / 5;
+
+    let evidenceWPM = 0;
+    if (evidenceBasedTypingTimeMinutes > 0) {
+        evidenceWPM = evidenceBasedWordCount / evidenceBasedTypingTimeMinutes;
+    }
+    const difference = Math.abs(avgWpm - evidenceWPM);
+    const allowedMargin = avgWpm * 0.15; // 15% tolerance
+    if (difference > allowedMargin) {
+        return NextResponse.json({ 
+            "msg": "Reported WPM is inconsistent with keystroke timing evidence. Test rejected." 
+        }, { status: 400 }); //
+    }
+}
+        // bot check
+        const {mean:meanPress, stdDev:deviationPress} = findMeanAndDeviation(keyPressDuration)
+        const {mean:meanSpace, stdDev:deviationSpace} = findMeanAndDeviation(keySpaceDuration)
+
+        let botScore = 0;
+
+    if (deviationSpace === 0) { // not possible for humans
+        botScore += 10;
+    } else if (deviationSpace < 8) {
+        botScore += 5;
+    }
+    
+    if (deviationPress < 8) {
+        botScore += 2;
+    }
+
+    if (meanSpace < 60) {
+        botScore += 3;
+    }
+    if (meanPress < 20) {
+        botScore += 2;
+    }
+    const PAUSE_THRESHOLD = 600;
+    const hasPause = keySpaceDuration.some(duration => duration > PAUSE_THRESHOLD);
+    if (!hasPause) {
+        botScore += 2;
+    }
+    if (botScore >= 6) {
+        return NextResponse.json({
+            "msg":"Bot 🤖 detected! Test will not be stored."
+        }, {status:429})
+    }
         const endValue = mode==="words"?mode2:100
         let hashGenerationCount = generatedAmt
         let seed = initialSeed
@@ -41,6 +108,7 @@ export async function POST(req:NextRequest) {
             default:
                 break;
         }
+        let finalLength=0
         while (hashGenerationCount!=0) {
             const list = []
             const hash = createHash('sha256')
@@ -56,6 +124,7 @@ export async function POST(req:NextRequest) {
         const generatedHash = hash.update(finalString,'utf-8').digest('hex')
             hashGenerationCount--
             seed=generatedHash
+            finalLength+=finalString.split("").length
         }
         //console.log({finalHash, seed, initialSeed, generatedAmt})
         if (seed !== finalHash) {
@@ -63,6 +132,12 @@ export async function POST(req:NextRequest) {
             "msg": "Hash didn't match. Wordlist has been tampered."
         }, {status: 401})
         }
+        const limit=finalLength*0.8
+                    if ((keyPressDuration.length<limit|| keySpaceDuration.length<limit) && mode==="words") {
+                        return NextResponse.json({
+                        "msg":"Bot 🤖 detected! Test will not be stored."
+                    }, {status: 429})
+                    }
         const completeMode = mode + " " + mode2 
         await prisma.test.create({
             data:{

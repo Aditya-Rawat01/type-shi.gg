@@ -33,42 +33,8 @@ export async function POST(req:NextRequest) {
     if (!test.safeParse(payload).success)
     return NextResponse.json({ ok: false, reason: "Tampered body!" }, { status: 400 });
 
-        const {mode, mode2, generatedAmt, initialSeed, language, finalHash, charSets, flameGraph, accuracy, rawWpm, avgWpm} = payload
-    
-        const endValue = mode==="words"?mode2:100
-        let hashGenerationCount = generatedAmt
-        let seed = initialSeed
-        let JsonLang = English
-        switch (language) {
-            case "English":
-                JsonLang = English
-                break;
-            case "English1k":
-                JsonLang = English1k
-                break;
-            default:
-                break;
-        }
-        while (hashGenerationCount!=0) {
-            const list = []
-            const hash = createHash('sha256')
-            const rng = seedrandom(seed);
-            for (let i = 0; i < endValue; i++) {
-            const index = Math.floor(rng() * JsonLang.words.length);
-            list.push(JsonLang.words[index]);
-        }
-        const intermediateString  = list.join(" ");
-
-      const finalString=(mode==="time")?intermediateString+" ":intermediateString
-        const generatedHash = hash.update(finalString,'utf-8').digest('hex')
-            hashGenerationCount--
-            seed=generatedHash
-        }
-        if (seed !== finalHash) {
-            return NextResponse.json({
-            "msg": "Hash didn't match. Wordlist has been tampered."
-        }, {status: 401})
-        }
+        const {mode, mode2, language, charSets, flameGraph, accuracy, rawWpm, avgWpm} = payload // not removing the finalHas, generatedAmt etc as the difference in size will be redundant
+        // no need of checking the data again.
         const completeMode = mode + " " + mode2 
         await prisma.test.create({
             data:{

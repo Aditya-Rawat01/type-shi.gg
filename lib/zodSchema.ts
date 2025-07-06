@@ -18,16 +18,20 @@ const flameGraphPoint = z
       required_error: "errors is missing",
       invalid_type_error: "errors must be a number",
     }),
-    problematicKeys: z.array(z.string(),{
-      required_error: "problematicKeys field missing",
-      invalid_type_error: "problematicKeys field must be an array",
-    }).max(3,{message:"Supports only top 3 problematic keys per test. (┬┬﹏┬┬)"}),
+    problematicKeys: z
+      .array(z.string(), {
+        required_error: "problematicKeys field missing",
+        invalid_type_error: "problematicKeys field must be an array",
+      })
+      .max(3, {
+        message: "Supports only top 3 problematic keys per test. (┬┬﹏┬┬)",
+      }),
   })
   .strict();
 
 const flameGraph = z
-      .array(flameGraphPoint)
-      .nonempty({ message: "flameGraph must contain at least one entry" })
+  .array(flameGraphPoint)
+  .nonempty({ message: "flameGraph must contain at least one entry" });
 
 const test = z
   .object({
@@ -43,11 +47,10 @@ const test = z
       invalid_type_error: "mode must be one of: time | words | quote",
     }),
     mode2: z.number({
-        required_error: "mode 2 is required",
+      required_error: "mode 2 is required",
       invalid_type_error: "mode must be number",
-    })
-    ,
-    flameGraph: flameGraph ,
+    }),
+    flameGraph: flameGraph,
 
     accuracy: z.number({
       required_error: "accuracy is missing",
@@ -73,13 +76,26 @@ const test = z
       required_error: "finalHash is missing",
       invalid_type_error: "finalHash must be a string",
     }),
-    language: z.enum(["English","English1k"], {
+    language: z.enum(["English", "English1k"], {
       required_error: "Language is required",
       invalid_type_error: "Language must be one of: English | English1k",
+    }),
+    isPb: z.boolean({
+      required_error: "isPb is missing",
+      invalid_type_error: "isPb must be a number",
+    }),
+    // these will not be saved.
+    keySpaceDuration:z.array(z.number(),{
+      required_error: "keySpaceDuration field missing",
+      invalid_type_error: "KeySpaceDuration field must be an array",
+    }),
+    keyPressDuration:z.array(z.number(),{
+      required_error: "keySpaceDuration field missing",
+      invalid_type_error: "KeySpaceDuration field must be an array",
     })
   })
   .strict();
 
 export type TestPayload = z.infer<typeof test>;
 export default test;
-export {flameGraph};
+export { flameGraph };
