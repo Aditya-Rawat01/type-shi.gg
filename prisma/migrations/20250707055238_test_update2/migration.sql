@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "BestStats" ALTER COLUMN "time15" DROP DEFAULT;

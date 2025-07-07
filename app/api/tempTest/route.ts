@@ -20,11 +20,12 @@ export async function POST(req:NextRequest) {
         const keyPressDuration = result.data.keyPressDuration
         const keySpaceDuration = result.data.keySpaceDuration
         const avgWpm = result.data.avgWpm
+        const rawWpm = result.data.rawWpm
         if (!keySpaceDuration || keySpaceDuration.length < 1 || !avgWpm || avgWpm <= 0) {
             if (avgWpm >= 0 && (!keySpaceDuration || keySpaceDuration.length < 1)) {
                 return NextResponse.json({ 
                     "msg": "WPM reported with no corresponding keystroke data. 🤖" 
-                }, { status: 400 });
+                }, { status: 429 });
             }
         } else {
             const sumOfCadenceMs = keySpaceDuration.reduce((a, b) => a + b, 0);
@@ -36,12 +37,12 @@ export async function POST(req:NextRequest) {
             if (evidenceBasedTypingTimeMinutes > 0) {
                 evidenceWPM = evidenceBasedWordCount / evidenceBasedTypingTimeMinutes;
             }
-            const difference = Math.abs(avgWpm - evidenceWPM);
-            const allowedMargin = avgWpm * 0.15; // 15% tolerance
+            const difference = rawWpm - evidenceWPM;
+            const allowedMargin = rawWpm * 0.15; // 15% tolerance
             if (difference > allowedMargin) {
                 return NextResponse.json({ 
                     "msg": "Reported WPM is inconsistent with keystroke timing evidence. Test rejected." 
-                }, { status: 400 }); //
+                }, { status: 429 }); //
             }
         }
         

@@ -1043,42 +1043,42 @@ export default function TypingArea({
     setShadowTest((prev) => [...prev, ...newRef]);
   }
   // // Add this state to your component
-    const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
-        // Add this useEffect to your component
-    useEffect(() => {
-        // Don't run the simulation if it's not enabled or the test is over
-        if (!isSimulating || pointerIndex >= words.length) {
-            return;
-        }
+    // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
+    //     // Add this useEffect to your component
+    // useEffect(() => {
+    //     // Don't run the simulation if it's not enabled or the test is over
+    //     if (!isSimulating || pointerIndex >= words.length) {
+    //         return;
+    //     }
 
-        const intervalId = setInterval(() => {
-          if (pointerIndex===words.length-1) {
-            calculateResult("w")
-            return
-          }
-            // Correct, immutable state update for the words array
-            setWords(prevWords => {
-                // Create a new array to avoid direct mutation
-                const newWords = [...prevWords];
-                // Ensure the character at the pointer exists before trying to update it
-                if (newWords[pointerIndex]) {
-                    // Create a new object for the character being changed
-                    newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
-                }
-                return newWords;
-            });
+    //     const intervalId = setInterval(() => {
+    //       if (pointerIndex===words.length-1) {
+    //         calculateResult("w")
+    //         return
+    //       }
+    //         // Correct, immutable state update for the words array
+    //         setWords(prevWords => {
+    //             // Create a new array to avoid direct mutation
+    //             const newWords = [...prevWords];
+    //             // Ensure the character at the pointer exists before trying to update it
+    //             if (newWords[pointerIndex]) {
+    //                 // Create a new object for the character being changed
+    //                 newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
+    //             }
+    //             return newWords;
+    //         });
 
-            // Correct state update for the pointer
-            setPointerIndex(prevIndex => prevIndex + 1);
+    //         // Correct state update for the pointer
+    //         setPointerIndex(prevIndex => prevIndex + 1);
 
-        }, 10); // Changed to 200ms for a more visible typing speed
+    //     }, 10); // Changed to 200ms for a more visible typing speed
 
-        // Cleanup function: This is crucial!
-        // It runs when the component unmounts or when dependencies change.
-        return () => {
-            clearInterval(intervalId);
-        };
-    }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
+    //     // Cleanup function: This is crucial!
+    //     // It runs when the component unmounts or when dependencies change.
+    //     return () => {
+    //         clearInterval(intervalId);
+    //     };
+    // }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
   function ClickToFocus() {
     if (focusTimeoutRef.current) {
       clearTimeout(focusTimeoutRef.current);

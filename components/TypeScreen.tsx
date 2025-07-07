@@ -10,6 +10,10 @@ import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
 import { useAtom, useSetAtom } from "jotai";
 import Topbar from "./topbar";
 import { charSetsAtom } from "@/app/store/atoms/charSets";
+import axios from "axios";
+import { URI } from "@/lib/URI";
+import { toast } from "sonner";
+import { careerStatsAtom, careerStatsType } from "@/app/store/atoms/bestCareerStats";
 export default function TypeScreen({
   sessionCookie,
 }: {
@@ -23,7 +27,26 @@ export default function TypeScreen({
   const currentkeysPressed = useRef<{ [key: string]: number }>({});
   const keySpaceDuration = useRef<number[]>([]);
   const currentKeySpace = useRef<number>(0);
+  const setCareerStats = useSetAtom(careerStatsAtom)
   useEffect(() => {
+    // get the best stats.
+    async function getStats() {
+      try {
+        const res=await axios.get(`${URI}/api/get-stats`)
+        const data:careerStatsType|{} = res.data
+        console.log(data)
+        Object.keys(data).length != 0
+        ?setCareerStats((prev)=>({...prev,...data}))
+        :null
+      } catch (error) {
+        (error as {status:number}).status===500
+        ?toast.error("Error occurred while fetching best stats.")
+        :toast.error("User not logged in.")
+      }
+    }
+    if (sessionCookie) {
+      getStats()
+    }
     setUserCookie(sessionCookie);
   }, []);
   useEffect(() => {

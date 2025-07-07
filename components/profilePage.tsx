@@ -23,6 +23,7 @@ const ZeroValues = {
   accuracy: 0,
   rawWpm: 0,
   avgWpm: 0,
+  isPb:false,
   charSets: [0, 0, 0, 0],
 };
 
@@ -88,6 +89,7 @@ export default function ProfilePage({
     accuracy,
     rawWpm,
     avgWpm,
+    isPb,
     charSets: charArray,
   } = bodyToBeParsed || ZeroValues;
   const charArrayRepresentation =
@@ -137,6 +139,7 @@ export default function ProfilePage({
               </p>
               <p className="w-full h-1 bg-gray-600"></p>
               <div className="bg-red-300 w-full h-20 flex flex-col items-center justify-center gap-3">
+                {isPb && <p>New Record!</p>}
                 <p>Test type</p>
                 <p>
                   {mode} {mode2}

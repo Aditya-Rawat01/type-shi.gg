@@ -48,6 +48,7 @@ export default function ResultPage({
   console.log({ keyPressDuration, keySpaceDuration });
   const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
   const [careerStats, setCareerStats] = useAtom(careerStatsAtom);
+  console.log({careerStats})
   const shadowRepeatedRef = useRef(repeatedTest); // this helps in removing the flicker of change in flag of repeated test.
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
@@ -87,43 +88,26 @@ export default function ResultPage({
     const fullMode = mode + " " + mode2;
     const bestStats = careerStats[fullMode];
     const accuracyWeight = 0.5;
-    const avgWpmWeight = 0.5;
-    // if (!bestStats) {
-    //   // here is the problem, instead of localStorage atom, we should fetch the best Stats on mounting (if cookie) and put it inside the global array.
-    //   // this is early returning so this is a bug for time mode.
-    //   console.log({bestStats})
-    //   return;
-    // }
-    // const weightedStatsMean =
-    //   (avgWpmWeight * bestStats.avgWpm) / 200 +
-    //   (accuracyWeight * bestStats.accuracy) / 100; // to get in the range of 0 to 1
-    // const weightedTestMean =
-    //   (accuracy * accuracyWeight) / 100 + (avgWpm * avgWpmWeight) / 200; // taking 200 wpm as the top limit
-    // if (weightedTestMean > weightedStatsMean) {
-    //   toast.success("New Record");
-    //   setCareerStats((prev) => ({
-    //     ...prev,
-    //     [fullMode]: { accuracy: accuracy, rawWpm: rawWpm, avgWpm: avgWpm },
-    //   }));
-    // }
+    const avgWpmWeight = 0.5; 
+    const weightedStatsMean = (avgWpmWeight * bestStats.avgWpm) / 200 + (accuracyWeight * bestStats.accuracy) / 100; // to get in the range of 0 to 1
+    const weightedTestMean = (accuracy * accuracyWeight) / 100 + (avgWpm * avgWpmWeight) / 200; // taking 200 wpm as the top limit
+    if (weightedTestMean > weightedStatsMean) {
+      toast.success("New Record");
+      setCareerStats((prev) => ({
+        ...prev,
+        [fullMode]: { accuracy: accuracy, rawWpm: rawWpm, avgWpm: avgWpm },
+      }));
+    }
     async function dataSender() {
-      // if (accuracy < 36 || !rawWpm || !avgWpm) {
-      //   toast.error("Invalid test!");
-      //   return;
-      // }
+      if (accuracy < 36 || !rawWpm || !avgWpm) {
+        toast.error("Invalid test!");
+        return;
+      }
       const body = {
         charSets: charArray, // correct, incorrect, missed, extra
         mode: mode,
         mode2: mode2,
-        flameGraph: [
-          {
-            wpm: 100,
-            rawWpm: 100,
-            interval: 1,
-            errors: 0,
-            problematicKeys: [],
-          },
-        ],
+        flameGraph: cumulativeInterval,
         accuracy: accuracy, // hardcoded for a while.
         rawWpm: parseFloat(rawWpm.toFixed(2)),
         avgWpm: parseFloat(avgWpm.toFixed(2)),
@@ -136,10 +120,10 @@ export default function ResultPage({
         generatedAmt: hash.GeneratedAmt,
         finalHash: hash.hash,
       };
-      // direct frontend values cannot be trusted. Find a middle ground.
-      // if (weightedTestMean > weightedStatsMean) {
-      //   body.isPb = true;
-      // }
+      //direct frontend values cannot be trusted. Find a middle ground. if user switches this as false then the pb will not be stored. thats it.
+      if (weightedTestMean > weightedStatsMean) {
+        body.isPb = true;
+      }
       if (!cookie) {
         try {
           console.log(body);

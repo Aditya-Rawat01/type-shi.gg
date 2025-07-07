@@ -42,7 +42,7 @@ const test = z
       })
       .nonempty({ message: "charSets cannot be empty" }),
 
-    mode: z.enum(["time", "words", "quote"], {
+    mode: z.enum(["time", "words"], {
       required_error: "mode is required",
       invalid_type_error: "mode must be one of: time | words | quote",
     }),

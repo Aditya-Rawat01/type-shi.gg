@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "BestStats" ALTER COLUMN "bestStats" SET DEFAULT '{ "time15": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }", "time30": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }", "time60": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }", "time120": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }", "words10": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }","words25": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }","words50": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }","words100": "{ rawWpm: 0, avgWpm: 0, accuracy: 0 }" }';
