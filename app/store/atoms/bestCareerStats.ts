@@ -11,14 +11,14 @@ export type careerStatsType = {
 };
 
 const defaultCareerStats: careerStatsType = {
-  "time 15": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "time 30": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "time 60": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "time 120": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "words 10": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "words 25": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "words 50": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
-  "words 100": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "time15": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "time30": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "time60": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "time120": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "words10": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "words25": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "words50": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
+  "words100": { rawWpm: 0, avgWpm: 0, accuracy: 0 },
 };
 
 

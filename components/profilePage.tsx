@@ -16,6 +16,8 @@ import { LoadingUserConfig } from "./TypeScreen";
 import { animationOnProfileAtom } from "@/app/store/atoms/animationOnProfile";
 import HistoryTable from "./historyTable";
 import { Prisma } from "@/lib/generated/prisma";
+import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
+import BestStats from "./bestStats";
 
 const ZeroValues = {
   mode: "Placeholder",
@@ -58,7 +60,6 @@ export default function ProfilePage({
   const [completedTestBeforeSignedIn, setCompletedTestBeforeSignIn] = useState<
     boolean
   >(false);
-
   //test completed before sign in useEffects
   useEffect(() => {
     const value = localStorage.getItem("token") ? true : false;
@@ -181,7 +182,8 @@ export default function ProfilePage({
               </div>
             </div>
           )}
-       
+      
+      <BestStats/>
       <HistoryTable/>
     </div>
   );

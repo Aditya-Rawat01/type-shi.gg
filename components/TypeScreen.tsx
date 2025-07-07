@@ -33,7 +33,8 @@ export default function TypeScreen({
     async function getStats() {
       try {
         const res=await axios.get(`${URI}/api/get-stats`)
-        const data:careerStatsType|{} = res.data
+        const wrapper:{msg:careerStatsType}|{msg:{}} = res.data
+        const data = wrapper.msg
         console.log(data)
         Object.keys(data).length != 0
         ?setCareerStats((prev)=>({...prev,...data}))
