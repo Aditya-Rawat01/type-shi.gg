@@ -17,7 +17,7 @@ export async function GET(req:NextRequest) {
             userId: sessionCookie.session.userId
         }
     })
-    console.log({asdfasdf:res?.time15})
+    console.log({asdfasdf:res})
     return NextResponse.json({
         "msg": res
     })

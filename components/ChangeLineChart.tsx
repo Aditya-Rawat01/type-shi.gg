@@ -24,7 +24,10 @@ ChartJS.register(
 
 
 export default function ChangeLineChart({accuracy, rawWpm, avgWpm}:{accuracy:number[], rawWpm:number[], avgWpm:number[]}) {
-    const labels = [1,2,3,4,5,6,7,8,9,10]
+    const labels:number[] = rawWpm.map((index, num)=>{
+      return num+1
+    })
+    console.log(labels)
     let maxRawWpm = rawWpm[0] || 0
     rawWpm.forEach((index)=>{
         if (index>maxRawWpm) {
@@ -81,7 +84,7 @@ export default function ChangeLineChart({accuracy, rawWpm, avgWpm}:{accuracy:num
         type: "linear" as const,
         position: "right" as const,
         beginAtZero: true,
-        max: maxRawWpm + 10, 
+        max: Math.round(maxRawWpm) + 10, 
         title: { display: true, text: "WPM" },
       },
       acc: {

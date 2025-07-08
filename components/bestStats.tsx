@@ -15,8 +15,8 @@ const BestStats = memo(()=>{
         const res = await axios.get(`${URI}/api/get-stats`);
         const wrapper: { msg: careerStatsType } | { msg: {} } = res.data;
         const data = wrapper.msg;
-        console.log(data);
-        Object.keys(data).length != 0
+        console.log({data});
+        data && Object.keys(data).length != 0
           ? setBestCareerStats((prev) => ({ ...prev, ...data }))
           : null;
       } catch (error) {
@@ -42,16 +42,16 @@ const BestStats = memo(()=>{
                             {time} seconds
                           </p>
                           <p>
-                            {bestCareerStats["time"+time].avgWpm} wpm
+                            {bestCareerStats["time"+time].avgWpm.toFixed(2)} wpm
                           </p>
                           <p>
-                            {bestCareerStats["time"+time].accuracy} %
+                            {bestCareerStats["time"+time].accuracy.toFixed(2)} %
                           </p>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                          <p className="p-2 text-base">raw: {bestCareerStats["time"+time].rawWpm}</p>
-                          <p className="p-2 text-base">avg: {bestCareerStats["time"+time].avgWpm}</p>
-                          <p className="p-2 text-base">accuracy: {bestCareerStats["time"+time].accuracy}</p>
+                          <p className="p-2 text-base">raw: {bestCareerStats["time"+time].rawWpm.toFixed(2)}</p>
+                          <p className="p-2 text-base">avg: {bestCareerStats["time"+time].avgWpm.toFixed(2)}</p>
+                          <p className="p-2 text-base">accuracy: {bestCareerStats["time"+time].accuracy.toFixed(3)}%</p>
                         </TooltipContent>
                       </Tooltip>
                 ))}
@@ -64,16 +64,16 @@ const BestStats = memo(()=>{
                             {words} words
                           </p>
                           <p>
-                            {bestCareerStats["words"+words].avgWpm} wpm
+                            {bestCareerStats["words"+words].avgWpm.toFixed(2)} wpm
                           </p>
                           <p>
-                            {bestCareerStats["words"+words].accuracy} %
+                            {bestCareerStats["words"+words].accuracy.toFixed(2)} %
                           </p>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                          <p className="p-2 text-base">raw: {bestCareerStats["words"+words].rawWpm}</p>
-                          <p className="p-2 text-base">avg: {bestCareerStats["words"+words].avgWpm}</p>
-                          <p className="p-2 text-base">accuracy: {bestCareerStats["words"+words].accuracy}</p>
+                          <p className="p-2 text-base">raw: {bestCareerStats["words"+words].rawWpm.toFixed(2)}</p>
+                          <p className="p-2 text-base">avg: {bestCareerStats["words"+words].avgWpm.toFixed(2)}</p>
+                          <p className="p-2 text-base">accuracy: {bestCareerStats["words"+words].accuracy.toFixed(3)}%</p>
                         </TooltipContent>
                       </Tooltip>
                 ))}

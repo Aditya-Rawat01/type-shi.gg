@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
       const rng = seedrandom(seed);
       for (let i = 0; i < endValue; i++) {
         const index = Math.floor(rng() * JsonLang.words.length);
-        list.push(JsonLang.words[index]);
+        list.push(JsonLang.words[index].toLowerCase());
       }
       const intermediateString = list // also return the numberOf generations to know that the hash is generated only once.
         .join(" ");

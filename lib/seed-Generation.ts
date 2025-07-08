@@ -42,7 +42,7 @@ function generateWords({uuid, wordList,mode, testLength, hasSeed}:{uuid:string, 
   const hash = createHash('sha256') 
   for (let i = 0; i < endValue; i++) {
       const index = Math.floor(rng() * wordList.length);
-      returnList.push(wordList[index]);}
+      returnList.push(wordList[index].toLowerCase());}
 
       const intermediateString  = returnList // also return the numberOf generations to know that the hash is generated only once.
       .join(" ");

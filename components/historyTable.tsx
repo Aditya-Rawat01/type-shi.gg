@@ -37,7 +37,7 @@ import { DialogClose } from "@radix-ui/react-dialog";
 
 const HistoryTable = memo(() => {
   const [cursorId, setCursorId] = useState<string | null>(null);
-  const setResults = useSetAtom(resultsAtom);
+  const [results, setResults] = useAtom(resultsAtom);
   const [reccurringResults, setReccuringResults] = useState<results>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [refresh, setRefresh] = useState(1); // random value to hold as if changing this value in useEffect will cause another useEffect to run 2 times
@@ -56,7 +56,7 @@ const HistoryTable = memo(() => {
         const resultsVal = res.data.data;
         console.log({ resultsVal });
         setTimeout(() => {
-          reccurringResults.length == 0
+          results.length == 0
             ? setResults((prev) => [...prev, ...resultsVal])
             : null;
           setReccuringResults((prev) => [...prev, ...resultsVal]);

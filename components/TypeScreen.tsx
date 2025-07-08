@@ -35,8 +35,7 @@ export default function TypeScreen({
         const res=await axios.get(`${URI}/api/get-stats`)
         const wrapper:{msg:careerStatsType}|{msg:{}} = res.data
         const data = wrapper.msg
-        console.log(data)
-        Object.keys(data).length != 0
+        data && Object.keys(data).length != 0
         ?setCareerStats((prev)=>({...prev,...data}))
         :null
       } catch (error) {
@@ -134,7 +133,7 @@ export function LoadingUserConfig({ isMounted }: { isMounted: boolean }) {
   }, [charIndex]);
   return (
     <div
-      className={`w-screen h-screen bg-[#343639] absolute left-0 top-0 z-[100] flex flex-col gap-3 items-center justify-center text-yellow-400 text-3xl ${
+      className={`w-screen h-screen bg-[#343639] fixed left-0 top-0 z-[100] flex flex-col gap-3 items-center justify-center text-yellow-400 text-3xl ${
         !isMounted ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
