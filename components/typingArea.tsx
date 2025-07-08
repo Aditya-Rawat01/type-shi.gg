@@ -96,7 +96,6 @@ export default function TypingArea({
   const [capsKey, setCapsKey] = useState(false);
   const isMounted = useRef(false);
   const wordsTypedInSec = useRef(0);
-  const timeCountdownFortimer = useRef(selection.time);
   const [showResultLoading, setShowResultLoading] = useState(false);
   const correctCharsRef = useRef(0);
   const totalCharsRef = useRef(0);
@@ -461,12 +460,12 @@ export default function TypingArea({
         case "incorrect":
           framesRef.current.incorrect++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char);
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char===" "?"spacekey":wordsRef.current[i].char);
           break;
         case "missed":
           framesRef.current.missed++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char);
+          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char===" "?"spacekey":wordsRef.current[i].char);
           break;
         default:
           framesRef.current.extra++;
@@ -665,18 +664,6 @@ export default function TypingArea({
         }
       }
     }
-    // let i = 0;
-    // let j = 0;
-    // while (i < errorsInterval.current.length && j < ArrayOnIntervals.current.length) {
-    //   if (
-    //     errorsInterval.current[i].timer > ArrayOnIntervals.current[j].interval
-    //   ) {
-    //     j++;
-    //   } else {
-    //     ArrayOnIntervals.current[j].errors += errorsInterval.current[i].errors;
-    //     i++;
-    //   }
-    // }
     console.log(ArrayOnIntervals);
     setCumulativeIntervaltom(ArrayOnIntervals.current);
     setCharArray(charArray);

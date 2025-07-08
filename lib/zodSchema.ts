@@ -23,8 +23,8 @@ const flameGraphPoint = z
         required_error: "problematicKeys field missing",
         invalid_type_error: "problematicKeys field must be an array",
       })
-      .max(3, {
-        message: "Supports only top 3 problematic keys per test. (┬┬﹏┬┬)",
+      .max(25, {
+        message: "Too many error in short span of time. (┬┬﹏┬┬)",
       }),
   })
   .strict();

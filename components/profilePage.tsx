@@ -18,6 +18,9 @@ import HistoryTable from "./historyTable";
 import { Prisma } from "@/lib/generated/prisma";
 import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 import BestStats from "./bestStats";
+import LastTenTests from "./LastTenTests";
+import ChangeInLastTenTests from "./ChangeInLastTenTests";
+import PerformaceInTenTests from "./PerformaceInTenTests";
 
 const ZeroValues = {
   mode: "Placeholder",
@@ -33,7 +36,8 @@ type cumulativeInterval = {
   wpm: number;
   rawWpm: number;
   interval: number;
-  errors: number;
+  errors: number
+  problematicKeys: string[] 
 }[];
 export type results = {
   charSets: number[];
@@ -127,7 +131,7 @@ export default function ProfilePage({
   const rawWpmVal = parseFloat(rawWpm.toFixed(2));
   const avgWpmVal = parseFloat(avgWpm.toFixed(2));
   return (
-    <div className="w-full min-h-screen relative bg-yellow-300 text-black flex flex-col items-center overflow-auto">
+    <div className="w-full min-h-screen relative bg-yellow-300 text-black flex flex-col gap-10 items-center">
       <LoadingUserConfig isMounted={animation} />
       <Topbar />
           {completedTestBeforeSignedIn && (
@@ -184,6 +188,9 @@ export default function ProfilePage({
           )}
       
       <BestStats/>
+      <ChangeInLastTenTests/>
+      <LastTenTests/>
+      <PerformaceInTenTests/>
       <HistoryTable/>
     </div>
   );

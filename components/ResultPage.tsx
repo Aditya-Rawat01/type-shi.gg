@@ -30,10 +30,10 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { userCookie } from "@/app/store/atoms/userCookie";
 import { useRouter } from "next/navigation";
-import ChartRender from "./renderChart";
 import { motion } from "motion/react";
 import { Skeleton } from "./ui/skeleton";
 import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
+import LineChart from "./LineChart";
 export default function ResultPage({
   setShowResultPage,
   charArray,
@@ -45,7 +45,6 @@ export default function ResultPage({
   keyPressDuration: RefObject<number[]>;
   keySpaceDuration: RefObject<number[]>;
 }) {
-  console.log({ keyPressDuration, keySpaceDuration });
   const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
   const [careerStats, setCareerStats] = useAtom(careerStatsAtom);
   console.log({careerStats})
@@ -85,7 +84,7 @@ export default function ResultPage({
     }
     const mode = selection.mode;
     const mode2 = mode === "words" ? selection.words : selection.time;
-    const fullMode = mode + " " + mode2;
+    const fullMode = mode + mode2;
     const bestStats = careerStats[fullMode];
     const accuracyWeight = 0.5;
     const avgWpmWeight = 0.5; 
@@ -219,7 +218,6 @@ export default function ResultPage({
 
     setGeneratingReport(false);
   }
-  console.log(report);
   return (
     <div
       className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
@@ -290,7 +288,7 @@ export default function ResultPage({
           ) : null}
           {/* // if is afk only then this will be shown */}
         </div>
-        <ChartRender cumulativeInterval={cumulativeInterval} />
+        <LineChart cumulativeInterval={cumulativeInterval} />
       </div>
 
       <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
@@ -364,7 +362,6 @@ export default function ResultPage({
             {report ? (
               <>
                 {report.map((line, index) => {
-                  console.log({ index });
                   return (
                     <p
                       key={index}

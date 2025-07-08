@@ -16,4 +16,8 @@
   100% {
     transform: rotate(360deg);
   }
+}
+html[data-state=open] {
+  scrollbar-gutter: stable;
+  overflow: scroll !important;
 } 

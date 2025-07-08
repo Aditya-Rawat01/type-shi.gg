@@ -25,7 +25,8 @@ const BestStats = memo(()=>{
           : toast.error("User not logged in.");
       }
     }
-    fetchBestStats()
+    const shouldFetch=Object.values(bestCareerStats).reduce((acc,curr)=>acc+curr.avgWpm,0)
+    shouldFetch<=0?fetchBestStats():null
   },[]);
   const timeArr=[15,30,60,120]
   const wordsArr=[10,25,50,100]

@@ -15,13 +15,13 @@ import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import "./components.css";
+import { BarChart, LucideLanguages, SpellCheck2 } from "lucide-react";
 import {
-  BarChart,
-  GitGraph,
-  LanguagesIcon,
-  LucideLanguages,
-} from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -30,11 +30,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import ChartRender from "./renderChart";
+import { resultsAtom } from "@/app/store/atoms/resultAtom";
+import { useAtom, useSetAtom } from "jotai";
+import LineChart from "./LineChart";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 const HistoryTable = memo(() => {
   const [cursorId, setCursorId] = useState<string | null>(null);
-  const [results, setResults] = useState<results>([]);
+  const setResults = useSetAtom(resultsAtom);
+  const [reccurringResults, setReccuringResults] = useState<results>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [refresh, setRefresh] = useState(1); // random value to hold as if changing this value in useEffect will cause another useEffect to run 2 times
   useEffect(() => {
@@ -52,7 +56,10 @@ const HistoryTable = memo(() => {
         const resultsVal = res.data.data;
         console.log({ resultsVal });
         setTimeout(() => {
-          setResults((prev) => [...prev, ...resultsVal]);
+          reccurringResults.length == 0
+            ? setResults((prev) => [...prev, ...resultsVal])
+            : null;
+          setReccuringResults((prev) => [...prev, ...resultsVal]);
           setCursorId(
             resultsVal.length > 0 ? resultsVal[resultsVal.length - 1].id : null
           );
@@ -74,11 +81,11 @@ const HistoryTable = memo(() => {
     setIsFetching(true);
     setRefresh(Date.now());
   }
-  const MemoisedFlameGraph = memo(ChartRender); // to stop flickering while opening the chart
+  const MemoisedFlameGraph = memo(LineChart); // to stop flickering while opening the chart
   return (
     <>
       <Table className="w-full sm:w-4/5 bg-amber-300">
-        <TableCaption>A list of your recent TableData.</TableCaption>
+        <TableCaption>type-shi.gg</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] text-center">Raw Wpm</TableHead>
@@ -86,15 +93,15 @@ const HistoryTable = memo(() => {
             <TableHead className="w-[100px] text-center">Accuracy</TableHead>
             <TableHead className="w-[100px] text-center">
               <Tooltip>
-                        <TooltipTrigger>
-                          <p>
-                            CharSets
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p className="p-2 text-base">correct / incorrect / missed / extra</p>
-                        </TooltipContent>
-                      </Tooltip>
+                <TooltipTrigger>
+                  <p>CharSets</p>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="p-2 text-base">
+                    correct / incorrect / missed / extra
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </TableHead>
             <TableHead className="w-[100px] text-center">Mode</TableHead>
             <TableHead className="w-[100px] text-center">Details</TableHead>
@@ -102,13 +109,21 @@ const HistoryTable = memo(() => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {results.length > 0 ? (
-            results.map((test, index) => (
+          {reccurringResults.length > 0 ? (
+            reccurringResults.map((test, index) => (
               <TableRow key={index}>
                 <TableCell>{test.rawWpm}</TableCell>
                 <TableCell>{test.avgWpm}</TableCell>
                 <TableCell>{test.accuracy + "%"}</TableCell>
-                <TableCell>{test.charSets[0] + "/" + test.charSets[1] + "/" + test.charSets[2] + "/" + test.charSets[3]}</TableCell>
+                <TableCell>
+                  {test.charSets[0] +
+                    "/" +
+                    test.charSets[1] +
+                    "/" +
+                    test.charSets[2] +
+                    "/" +
+                    test.charSets[3]}
+                </TableCell>
                 <TableCell className="">{test.mode}</TableCell>
                 <TableCell>
                   {
@@ -125,22 +140,49 @@ const HistoryTable = memo(() => {
                       </Tooltip>
 
                       <TooltipProvider delayDuration={300}>
-      <Dialog>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DialogTrigger asChild>
-              <p><BarChart/></p>
-            </DialogTrigger>
-          </TooltipTrigger>
+                        <Dialog modal={false}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DialogTrigger asChild>
+                                <p>
+                                  <BarChart />
+                                </p>
+                              </DialogTrigger>
+                            </TooltipTrigger>
 
-          <TooltipContent side="top">Graph</TooltipContent>
-        </Tooltip>
-          <DialogContent className="sm:max-w-[720px] h-[460px] flex flex-col gap-5 justify-center">
-              <DialogTitle>Flame Graph</DialogTitle>
-          <MemoisedFlameGraph cumulativeInterval={test.flameGraph}/>
-          </DialogContent>
-      </Dialog>
-    </TooltipProvider>
+                            <TooltipContent side="top">Graph</TooltipContent>
+                          </Tooltip>
+                          <DialogClose asChild>
+                            <DialogContent className=" fixed inset-0 z-50 flex items-center justify-center bg-black/40 w-screen h-screen rounded-none translate-x-0 translate-y-0">
+                              <div className="bg-white sm:w-2/3 h-1/2 flex flex-col gap-5 justify-center rounded-2xl">
+                                <DialogTitle>Flame Graph</DialogTitle>
+                                <MemoisedFlameGraph
+                                  cumulativeInterval={test.flameGraph}
+                                />
+                              </div>
+                            </DialogContent>
+                          </DialogClose>
+                        </Dialog>
+                      </TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <p>
+                            <SpellCheck2 />
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          className="flex gap-1 items-center"
+                        >
+                          Top Problematic keys:
+                          <div className="flex p-1">
+                            {" "}
+                            {getProblematicKeys(test.flameGraph).length > 0
+                              ? getProblematicKeys(test.flameGraph).join(", ")
+                              : "none"}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   }
                 </TableCell>
@@ -162,7 +204,7 @@ const HistoryTable = memo(() => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            {results.length > 5 && cursorId && (
+            {reccurringResults.length > 5 && cursorId && (
               <TableCell colSpan={8}>
                 <Button
                   className={`h-[36px] w-[107.14px] cursor-pointer`}
@@ -180,20 +222,34 @@ const HistoryTable = memo(() => {
           </TableRow>
         </TableFooter>
       </Table>
-
-      {/* <Dialog>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog> */}
     </>
   );
 });
 
 export default HistoryTable;
+
+function getProblematicKeys(
+  cumulativeInterval: {
+    wpm: number;
+    rawWpm: number;
+    interval: number;
+    errors: number;
+    problematicKeys: string[];
+  }[]
+) {
+  const allKeys = cumulativeInterval.reduce<string[]>((acc, curr) => {
+    acc.push(...curr.problematicKeys);
+    return acc;
+  }, []);
+
+  // to count frequency
+  const freq: Record<string, number> = {};
+  for (const k of allKeys) {
+    freq[k] = (freq[k] ?? 0) + 1;
+  }
+  // sort
+  const desc = Object.entries(freq)
+    .sort(([, aCount], [, bCount]) => bCount - aCount) // ← sort here
+    .map(([key, count]) => ({ [key]: count }));
+  return desc.slice(0, 3).map((obj) => Object.keys(obj)[0]);
+}

@@ -27,7 +27,7 @@ export default function TypeScreen({
   const currentkeysPressed = useRef<{ [key: string]: number }>({});
   const keySpaceDuration = useRef<number[]>([]);
   const currentKeySpace = useRef<number>(0);
-  const setCareerStats = useSetAtom(careerStatsAtom)
+  const [careerStats, setCareerStats] = useAtom(careerStatsAtom)
   useEffect(() => {
     // get the best stats.
     async function getStats() {
@@ -45,7 +45,8 @@ export default function TypeScreen({
         :toast.error("User not logged in.")
       }
     }
-    if (sessionCookie) {
+    const shouldFetch=Object.values(careerStats).reduce((acc,curr)=>acc+curr.avgWpm,0)
+    if (sessionCookie && shouldFetch<=0) {
       getStats()
     }
     setUserCookie(sessionCookie);

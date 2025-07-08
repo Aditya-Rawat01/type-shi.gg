@@ -27,11 +27,12 @@ ChartJS.register(
   Title
 );
 
-export default function ChartRender({cumulativeInterval}:{cumulativeInterval:{
+export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
     wpm: number;
     rawWpm: number;
     interval: number;
     errors: number;
+    problematicKeys:string[]
 }[]}) {
   const wpmData = cumulativeInterval.map((s) => ({ x: s.interval, y: s.wpm }));
   const rawData = cumulativeInterval.map((s) => ({
@@ -42,7 +43,6 @@ export default function ChartRender({cumulativeInterval}:{cumulativeInterval:{
     x: s.interval,
     y: s.errors === 0 ? NaN : s.errors,
   }));
-
   return (
     <div className="w-full h-3/4">
       <Chart<Mixed, (number | { x: number; y: number })[], number>
