@@ -386,11 +386,11 @@ export default function TypingArea({
         toast.error("Error while fetching languages.");
         console.log(error);
       }
+      SetFocus(true)
       setShouldFetchLang(false);
     }
     getWords();
   }, [selection.language, shouldFetchLang]);
-
   // responsible to set the states when the backend sends the language on mounting
   useEffect(() => {
     // refresh tes runs again
@@ -1092,7 +1092,8 @@ export default function TypingArea({
         animate: { opacity: 0.8 },
         default: { opacity: 1 },
       }}
-      key={selection.language + selection.mode + isRefreshed}
+      //here is the thing
+      key={selection.mode + isRefreshed}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { delay: 0.1 } }}
       transition={{
@@ -1126,15 +1127,10 @@ export default function TypingArea({
         </div>
         <div
           className={`p-3 w-full flex items-center justify-center relative gap-3 h-28 bg-red-400 rounded-2xl`}
-        >
-          <div
-            className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${
-              repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
-            } absolute mr-80`}
-          >
-            <RotateCcw />
-            <p className="text-red-500">Repeated</p>
-          </div>
+        >        
+
+          <RepeatedTestIndicator repeatTest={repeatTest}/>
+
           <div className="flex gap-2 p-2 rounded-xl">
             <LanguageSelector />
           </div>
@@ -1257,3 +1253,16 @@ const RefreshIcon = memo(
     );
   }
 );
+
+
+
+const RepeatedTestIndicator = memo(({repeatTest}:{repeatTest:boolean})=>(
+  <div
+            className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${
+              repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
+            } absolute mr-80`}
+          >
+            <RotateCcw />
+            <p className="text-red-500">Repeated</p>
+          </div>
+))

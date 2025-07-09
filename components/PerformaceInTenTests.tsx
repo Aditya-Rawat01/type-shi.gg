@@ -99,7 +99,7 @@ const PerformaceInTenTests = memo(() => {
           <p className="text-xs">{topAvgWpm.test}</p>
         </div>
         <div className="flex flex-col items-center">
-          <p>{topAccuracy.value}</p>
+          <p>{topAccuracy.value} %</p>
           <p className="text-sm">Highest Accuracy</p>
           <p className="text-xs">{topAccuracy.test}</p>
         </div>

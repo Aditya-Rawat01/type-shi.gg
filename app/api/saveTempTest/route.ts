@@ -4,9 +4,6 @@ import test, { TestPayload } from "@/lib/zodSchema";
 import { createHash } from "crypto";
 import { jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
-import seedrandom from "seedrandom";
-import English from "@/languages/English.json";
-import English1k from "@/languages/English1k.json";
 export async function POST(req: NextRequest) {
   const { token }: { token: string | undefined | null } = await req.json();
   const sessionCookie = await auth.api.getSession({
@@ -15,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!sessionCookie || !sessionCookie.user || !sessionCookie.session) {
     return NextResponse.json({
       msg: "Cookie is not valid",
-    });
+    }, {status: 401});
   }
   if (!token) {
     return NextResponse.json(

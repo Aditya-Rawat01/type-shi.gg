@@ -76,9 +76,10 @@ const test = z
       required_error: "finalHash is missing",
       invalid_type_error: "finalHash must be a string",
     }),
-    language: z.enum(["English", "English1k"], {
+    language: z.enum(["English", "English1k","C", "C++" , "French", "French1k", "Italian", "Italian1k", "Java", "Javascript", "Php", "Portuguese", 
+      "Portuguese1k", "Ruby", "Russian", "Russian1k", "Spanish", "Spanish1k", "Typescript"], {
       required_error: "Language is required",
-      invalid_type_error: "Language must be one of: English | English1k",
+      invalid_type_error: "Language must be one of: C | C++ | English | English1k | French | French1k | Italian | Italian1k | Java | Javascript | Php | Portuguese | Portuguese1k | Ruby | Russian | Russian1k | Spanish | Spanish1k | Typescript",
     }),
     isPb: z.boolean({
       required_error: "isPb is missing",

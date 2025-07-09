@@ -4,8 +4,25 @@ import test, { TestPayload } from "@/lib/zodSchema";
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 import seedrandom from "seedrandom";
+import C from "@/languages/C.json"
+import CPP from "@/languages/C++.json"
 import English from "@/languages/English.json";
 import English1k from "@/languages/English1k.json";
+import French from "@/languages/French.json";
+import French1k from "@/languages/French1k.json";
+import Italian from "@/languages/Italian.json";
+import Italian1k from "@/languages/Italian1k.json";
+import Java from "@/languages/Java.json";
+import JavaScript from "@/languages/Javascript.json";
+import Php from "@/languages/Php.json";
+import Portuguese from "@/languages/Portuguese.json";
+import Portuguese1k from "@/languages/Portuguese1k.json";
+import Ruby from "@/languages/Ruby.json";
+import Russian from "@/languages/Russian.json";
+import Russian1k from "@/languages/Russian1k.json";
+import Spanish from "@/languages/Spanish.json";
+import Spanish1k from "@/languages/Spanish1k.json";
+import Typescript from "@/languages/Typescript.json";
 import { createHash } from "crypto";
 
 export function findMeanAndDeviation(arr: number[]) {
@@ -25,7 +42,7 @@ export async function POST(req: NextRequest) {
   if (!sessionCookie || !sessionCookie.user || !sessionCookie.session) {
     return NextResponse.json({
       msg: "Cookie is not valid",
-    });
+    }, {status: 401});
   }
 
   const body: TestPayload = await req.json();
@@ -83,7 +100,15 @@ export async function POST(req: NextRequest) {
       const difference = rawWpm - evidenceWPM;
       const allowedMargin = rawWpm * 0.15; // 15% tolerance
       if (difference > allowedMargin) {
-        console.log({difference, allowedMargin, rawWpm, evidenceWPM, evidenceBasedCharacterCount, evidenceBasedWordCount, evidenceBasedTypingTimeMinutes })
+        console.log({
+          difference,
+          allowedMargin,
+          rawWpm,
+          evidenceWPM,
+          evidenceBasedCharacterCount,
+          evidenceBasedWordCount,
+          evidenceBasedTypingTimeMinutes,
+        });
         return NextResponse.json(
           {
             msg: "Reported WPM is inconsistent with keystroke timing evidence. Test rejected.",
@@ -140,8 +165,59 @@ export async function POST(req: NextRequest) {
       case "English":
         JsonLang = English;
         break;
+      case "C":
+        JsonLang = C;
+        break;
+      case "C++":
+        JsonLang = CPP;
+        break;
       case "English1k":
         JsonLang = English1k;
+        break;
+      case "French":
+        JsonLang = French;
+        break;
+      case "French1k":
+        JsonLang = French1k;
+        break;
+      case "Italian":
+        JsonLang = Italian;
+        break;
+      case "Italian1k":
+        JsonLang = Italian1k;
+        break;
+      case "Java":
+        JsonLang = Java;
+        break;
+      case "Javascript":
+        JsonLang = JavaScript;
+        break;
+      case "Php":
+        JsonLang = Php;
+        break;
+      case "Portuguese":
+        JsonLang = Portuguese;
+        break;
+      case "Portuguese1k":
+        JsonLang = Portuguese1k;
+        break;
+      case "Ruby":
+        JsonLang = Ruby;
+        break;
+      case "Russian":
+        JsonLang = Russian;
+        break;
+      case "Russian1k":
+        JsonLang = Russian1k;
+        break;
+      case "Spanish":
+        JsonLang = Spanish;
+        break;
+      case "Spanish1k":
+        JsonLang = Spanish1k;
+        break;
+      case "Typescript":
+        JsonLang = Typescript;
         break;
       default:
         break;

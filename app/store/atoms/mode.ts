@@ -10,7 +10,7 @@ export interface defaultSettings {
   words: number;
   punctuation: boolean;
   numbers: boolean;
-  language: 'English'|'English1k'
+  language: 'English'|'English1k' | 'C' | 'C++' | 'French' | 'French1k' | 'Italian' | 'Italian1k' | 'Java' | 'Javascript' | 'Php' | 'Portuguese' | 'Portuguese1k' | 'Ruby' | 'Russian' | 'Russian1k' | 'Spanish' | 'Spanish1k' | 'Typescript'
 }
 
 // just default values.
@@ -32,7 +32,7 @@ const rawConfigAtom  = atomWithStorage<defaultSettings>(
 
 // to check the validity of the localStorage key. basically to know if that has been tampered.
 function isValidConfig(config:defaultSettings) {
-    const languages = ['English', 'English1k'];
+    const languages = ['English', 'English1k', 'C', 'C++', 'French' ,'French1k','Italian','Italian1k' ,'Java','Javascript','Php','Portuguese','Portuguese1k','Ruby','Russian','Russian1k','Spanish','Spanish1k','Typescript'];
     return  (
           (config.mode == "words" || config.mode == "time") &&
           config.time > 0 &&
