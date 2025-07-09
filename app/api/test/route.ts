@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
       keySpaceDuration,
       keyPressDuration,
       isPb,
+      punctuation,
+      numbers
     } = result.data;
 
     if (
@@ -227,8 +229,17 @@ export async function POST(req: NextRequest) {
       const list = [];
       const hash = createHash("sha256");
       const rng = seedrandom(seed);
+      const punctuationArr = [".",",",":","!","?",";","-","~"]
       for (let i = 0; i < endValue; i++) {
         const index = Math.floor(rng() * JsonLang.words.length);
+        let originalWord = JsonLang.words[index].toLowerCase()
+                if (rng()<0.2 && punctuation) {
+                  originalWord = originalWord+punctuationArr[Math.floor(rng()*punctuationArr.length)]
+                }
+                if (rng()<0.1 && numbers) {
+                  const randomNumber = Math.floor(rng() * 1000); // takes about 0 to 999
+                  originalWord = originalWord+randomNumber.toString()
+                }
         list.push(JsonLang.words[index].toLowerCase());
       }
       const intermediateString = list // also return the numberOf generations to know that the hash is generated only once.

@@ -210,7 +210,7 @@ export default function TypingArea({
     // as soon as the page mounts (code duplication here,  will be applied/run only once)
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false);
-    }, 10000); // initially it is more
+    }, 10000); 
 
     return () => {
       if (blinkTimeoutRef.current) {
@@ -386,7 +386,6 @@ export default function TypingArea({
         toast.error("Error while fetching languages.");
         console.log(error);
       }
-      SetFocus(true)
       setShouldFetchLang(false);
     }
     getWords();
@@ -412,6 +411,8 @@ export default function TypingArea({
           wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
           // so this line contains no words just an empty array which returns empty strings.
           testWordlength: selection.words,
+          numbers:selection.numbers,
+          punctuation:selection.punctuation
         });
 
         if (typeof response === "string") {
@@ -1011,6 +1012,8 @@ export default function TypingArea({
       testWordlength: null,
       wordList: wordListFromBackend,
       seed: hash.hash,
+      numbers:selection.numbers,
+      punctuation:selection.punctuation
     });
     if (typeof response === "string") {
       toast.error("Something went wrong.");
@@ -1081,10 +1084,10 @@ export default function TypingArea({
 
   const handleContainerBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const next = e.relatedTarget as HTMLElement | null; // the element that’s about to get focus
-    if (!next || !e.currentTarget.contains(next)) {
-      SetFocus(false); // real blur – outside the box
-    }
-  };
+    const selectionPanelId = "focusStaysActive"
+     if (!e.currentTarget.contains(next) && (next === null || next.id !== selectionPanelId)) {
+    SetFocus(false); 
+  }};
 
   return (
     <motion.div
@@ -1093,7 +1096,7 @@ export default function TypingArea({
         default: { opacity: 1 },
       }}
       //here is the thing
-      key={selection.mode + isRefreshed}
+      key={selection.mode + selection.numbers + selection.punctuation + selection.time + selection.words + isRefreshed}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { delay: 0.1 } }}
       transition={{

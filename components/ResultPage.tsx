@@ -47,7 +47,7 @@ export default function ResultPage({
 }) {
   const [repeatedTest, setRestartSameTest] = useAtom(restartSameTestAtom);
   const [careerStats, setCareerStats] = useAtom(careerStatsAtom);
-  console.log({careerStats})
+  console.log({ careerStats });
   const shadowRepeatedRef = useRef(repeatedTest); // this helps in removing the flicker of change in flag of repeated test.
   const selection = useAtomValue(modeAtom);
   const isAfk = useAtomValue(afkAtom);
@@ -84,12 +84,17 @@ export default function ResultPage({
     }
     const mode = selection.mode;
     const mode2 = mode === "words" ? selection.words : selection.time;
+    const punctuation = selection.punctuation;
+    const numbers = selection.numbers;
     const fullMode = mode + mode2;
     const bestStats = careerStats[fullMode];
     const accuracyWeight = 0.5;
-    const avgWpmWeight = 0.5; 
-    const weightedStatsMean = (avgWpmWeight * bestStats.avgWpm) / 200 + (accuracyWeight * bestStats.accuracy) / 100; // to get in the range of 0 to 1
-    const weightedTestMean = (accuracy * accuracyWeight) / 100 + (avgWpm * avgWpmWeight) / 200; // taking 200 wpm as the top limit
+    const avgWpmWeight = 0.5;
+    const weightedStatsMean =
+      (avgWpmWeight * bestStats.avgWpm) / 200 +
+      (accuracyWeight * bestStats.accuracy) / 100; // to get in the range of 0 to 1
+    const weightedTestMean =
+      (accuracy * accuracyWeight) / 100 + (avgWpm * avgWpmWeight) / 200; // taking 200 wpm as the top limit
     if (weightedTestMean > weightedStatsMean) {
       toast.success("New Record");
       setCareerStats((prev) => ({
@@ -106,6 +111,8 @@ export default function ResultPage({
         charSets: charArray, // correct, incorrect, missed, extra
         mode: mode,
         mode2: mode2,
+        punctuation,
+        numbers,
         flameGraph: cumulativeInterval,
         accuracy: accuracy, // hardcoded for a while.
         rawWpm: parseFloat(rawWpm.toFixed(2)),
@@ -140,9 +147,9 @@ export default function ResultPage({
         const res = await axios.post(`${URI}/api/test`, body);
         toast.success(res.data.msg);
       } catch (error) {
-         (error as { status: number }).status === 429
-            ?toast.error("Bot 🤖 detected! Test will not be stored.")
-            :toast.error("Error occurred! Tampered Fields!");
+        (error as { status: number }).status === 429
+          ? toast.error("Bot 🤖 detected! Test will not be stored.")
+          : toast.error("Error occurred! Tampered Fields!");
       }
     }
     dataSender();
@@ -202,21 +209,25 @@ export default function ResultPage({
       !avgWpm && toast.warning("Avg Wpm Missing!");
       return;
     }
-    setGeneratingReport(true);
-    setModalVisible(true);
-    try {
-      const res = await axios.post(`${URI}/api/generate-report`, {
-        flameGraph: cumulativeInterval,
-      });
-      const lines: string = res.data.result;
-      setReport(lines.split("\n\n"));
-    } catch (error) {
-      (error as { status: number }).status === 429
-        ? toast.error("Free tier got exhausted. ┗( T﹏T )┛")
-        : toast.error("Cookie not Valid. ಠ_ಠ");
+    if (!report) {
+      setModalVisible(true);
+      setGeneratingReport(true);
+      try {
+        const res = await axios.post(`${URI}/api/generate-report`, {
+          flameGraph: cumulativeInterval,
+        });
+        const lines: string = res.data.result;
+        setReport(lines.split("\n\n"));
+      } catch (error) {
+        (error as { status: number }).status === 429
+          ? toast.error("Free tier got exhausted. ┗( T﹏T )┛")
+          : toast.error("Cookie not Valid. ಠ_ಠ");
+      }
+      setGeneratingReport(false);
+    } else {
+      setModalVisible((prev)=>!prev)
     }
 
-    setGeneratingReport(false);
   }
   return (
     <div

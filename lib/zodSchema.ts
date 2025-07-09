@@ -51,7 +51,14 @@ const test = z
       invalid_type_error: "mode must be number",
     }),
     flameGraph: flameGraph,
-
+    punctuation: z.boolean({
+      required_error: "punctuation is missing",
+      invalid_type_error: "punctuation must be of boolean value",
+    }),
+    numbers: z.boolean({
+      required_error: "punctuation is missing",
+      invalid_type_error: "punctuation must be of boolean value",
+    }),
     accuracy: z.number({
       required_error: "accuracy is missing",
       invalid_type_error: "accuracy must be a number",

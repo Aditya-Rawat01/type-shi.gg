@@ -2,7 +2,7 @@
 import { modeAtom } from "@/app/store/atoms/mode";
 import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
 import { localStorageConfig } from "@/lib/localStorageConfig";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Settings2Icon } from "lucide-react";
 import { useState } from "react";
 
@@ -44,7 +44,7 @@ export default function SelectionPanel() {
   }
 
   return (
-    <div className={`flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
+    <div id="focusStaysActive" tabIndex={0} className={`flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
       <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
         <p className="relative left-5">Test Settings</p>
         <Settings2Icon
