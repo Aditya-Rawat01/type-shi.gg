@@ -34,6 +34,7 @@ import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 import LanguageSelector from "./languageSelector";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
+import { themeAtom } from "@/app/store/atoms/theme";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -130,6 +131,21 @@ export default function TypingArea({
   const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(
     selectionPanelVisibleAtom
   );
+  const [themeColor,setThemeColor] = useAtom(themeAtom)
+
+  const themeColorsAtBuildTime = {            // tailwind doesnt understand the dynamic values easily. // mapping because said in documentation
+    surface:themeColor.surface,
+    background:themeColor.background,
+    backgroundSecondary:themeColor.backgroundSecondary,
+    surfaceSecondary:themeColor.surfaceSecondary,
+    miscellaneous:themeColor.miscellaneous,
+    text:themeColor.text
+  }
+
+
+
+
+
   const framesRef = useRef<{
     correct: number;
     incorrect: number;
@@ -145,7 +161,47 @@ export default function TypingArea({
     errors: 0,
     correctKeyErrors: [],
   });
+  useEffect(()=>{
+    function windowKeyDown(e:globalThis.KeyboardEvent) {
+      if (focus) {
+        e.preventDefault()
+        e.stopPropagation()
+        return
+      }
+      const key = e.key
+      const specialkeysWithoutCapsLock = specialKeys.reduce<string[]>((acc, curr)=>{ 
+        if (curr!="CapsLock") {
+          acc.push(curr)
+        }
+        return acc
+      },[])
+      if (specialkeysWithoutCapsLock.includes(key)) {
+        return
+      }
+      const isActive = e.getModifierState("CapsLock");
+      if (key==="CapsLock") {
+         setCapsKey(isActive)
+      } else {
+        SetFocus(true)
+        setBlinking(true)
+        containerRef.current?.focus();
+        if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+    }
+        focusTimeoutRef.current = setTimeout(() => {
+      SetFocus(false);
+    }, 10000); 
+      }
 
+    }
+    window.addEventListener('keydown',windowKeyDown)
+    return ()=>{
+    // one smol problem is that now every time focus changed , previous listener is removed and new one is added.
+    // as the useEffect will not remember the focus state if not put in the deps array, so this is ok as it doesnt
+    // culminate many listeners together.
+    window.removeEventListener('keydown',windowKeyDown)
+    }
+  },[focus])
   useEffect(() => {
     wordsRef.current = words; // to keep ref in syn for request animation frame
   }, [words]);
@@ -1110,7 +1166,7 @@ export default function TypingArea({
     >
       <div
         ref={containerRef}
-        className="h-fit w-full p-5 relative focus:outline-none flex flex-col gap-5 items-center justify-center overflow-hidden bg-pink-500"
+        className={`h-fit w-full p-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden`}
         onBlur={handleContainerBlur}
         tabIndex={0}
         onKeyDown={handleKeyDown}
@@ -1128,17 +1184,7 @@ export default function TypingArea({
           <Lock />
           <p>Caps Lock On</p>
         </div>
-        <div
-          className={`p-3 w-full flex items-center justify-center relative gap-3 h-28 bg-red-400 rounded-2xl`}
-        >        
-
-          <RepeatedTestIndicator repeatTest={repeatTest}/>
-
-          <div className="flex gap-2 p-2 rounded-xl">
-            <LanguageSelector />
-          </div>
-        </div>
-        <div className="absolute top-0">
+        <div className={`h-fit w-fit p-1 flex items-center justify-center text-3xl`}>
           {selection.mode === "time" ? (
             <p>{(selection.time - timer).toString()}</p>
           ) : (
@@ -1149,10 +1195,20 @@ export default function TypingArea({
             </p>
           )}
         </div>
+        <div
+          className={` w-full flex items-end justify-center relative gap-3 h-fit border border-red-400 rounded-2xl`}
+        >        
+
+          <RepeatedTestIndicator repeatTest={true}/>
+
+          <div className="flex gap-2 p-2 rounded-xl">
+            <LanguageSelector />
+          </div>
+        </div>
         {/* will show the total words typed or the time passing */}
         <div
           ref={textFlowAreaRef}
-          className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40  mt-6 px-2 w-[85%] outline outline-gray-400"
+          className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 mb-5  w-[85%]"
         >
           <div
             className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
@@ -1163,7 +1219,7 @@ export default function TypingArea({
           </div>
 
           <div
-            className={`h-full w-full overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
+            className={`h-full w-full px-2 overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
           >
             {wordGroups.map((word, wordIndex) => {
               let charOffset = 0;

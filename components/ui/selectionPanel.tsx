@@ -44,7 +44,7 @@ export default function SelectionPanel() {
   }
 
   return (
-    <div id="focusStaysActive" tabIndex={0} className={`flex justify-center p-5 h-32 flex-col items-center gap-10 bg-black cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
+    <div id="focusStaysActive" tabIndex={0} className={`flex justify-center h-fit flex-col items-center gap-10 p-3 cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
       <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
         <p className="relative left-5">Test Settings</p>
         <Settings2Icon
@@ -144,7 +144,7 @@ export default function SelectionPanel() {
           </button>
         </div>
       </div>
-      <div className="bg-yellow-400 w-[600px] h-fit p-5 rounded-full hidden sm:flex items-center justify-center gap-5">
+      <div className="bg-yellow-400 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
         <p
           onClick={() => {
             setSelectionFn({ choice: "punctuation" });
