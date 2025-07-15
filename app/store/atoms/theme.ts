@@ -11,17 +11,17 @@ export interface defaultTheme {
   surface: string;
   surfaceSecondary: string;
   text: string;
-  miscellaneous: string;
+  destructive: string;
 }
 
 // just default values.
 const appDefaultConfig: defaultTheme = {
-  background: "#65B891",
-  backgroundSecondary: "#00241B",
+  background: "#FFF287",
+  backgroundSecondary: "#C83F12",
   surface: "#93E5AB",
   surfaceSecondary: "#4E878C",
-  text: "#B5FFE1",
-  miscellaneous: "#134074",
+  text: "#3B060A",
+  destructive: "#000000",
 };
 
 const rawConfigAtom = atomWithStorage<defaultTheme>(
@@ -42,7 +42,7 @@ const themeSchema = z.object({
   surface: zColorString,
   surfaceSecondary: zColorString,
   text: zColorString,
-  miscellaneous: zColorString,
+  destructive: zColorString,
 });
 
 // checks for valid theme obj

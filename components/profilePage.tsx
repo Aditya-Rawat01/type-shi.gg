@@ -3,6 +3,14 @@ import { charSetsAtom } from "@/app/store/atoms/charSets";
 import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import { modeAtom } from "@/app/store/atoms/mode";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Topbar from "@/components/topbar";
 import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
 import { URI } from "@/lib/URI";
@@ -21,14 +29,16 @@ import BestStats from "./bestStats";
 import LastTenTests from "./LastTenTests";
 import ChangeInLastTenTests from "./ChangeInLastTenTests";
 import PerformaceInTenTests from "./PerformaceInTenTests";
-
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 const ZeroValues = {
   mode: "Placeholder",
   mode2: 0,
   accuracy: 0,
   rawWpm: 0,
   avgWpm: 0,
-  isPb:false,
+  isPb: false,
   charSets: [0, 0, 0, 0],
 };
 
@@ -36,8 +46,8 @@ type cumulativeInterval = {
   wpm: number;
   rawWpm: number;
   interval: number;
-  errors: number
-  problematicKeys: string[] 
+  errors: number;
+  problematicKeys: string[];
 }[];
 export type results = {
   charSets: number[];
@@ -56,14 +66,14 @@ export default function ProfilePage({
 }: {
   sessionCookie: cookieType;
 }) {
+  const router = useRouter();
   const [cookie, setCookie] = useAtom(userCookie);
   const [animation, setAnimation] = useAtom(animationOnProfileAtom);
   const [bodyToBeParsed, setBodyToBeParsed] = useState<TestPayload | null>(
     null
   );
-  const [completedTestBeforeSignedIn, setCompletedTestBeforeSignIn] = useState<
-    boolean
-  >(false);
+  const [completedTestBeforeSignedIn, setCompletedTestBeforeSignIn] =
+    useState<boolean>(false);
   //test completed before sign in useEffects
   useEffect(() => {
     const value = localStorage.getItem("token") ? true : false;
@@ -130,68 +140,83 @@ export default function ProfilePage({
   const accuracyVal = parseFloat(accuracy.toFixed(2));
   const rawWpmVal = parseFloat(rawWpm.toFixed(2));
   const avgWpmVal = parseFloat(avgWpm.toFixed(2));
+  async function handleLogout() {
+    toast.info("Logging out!");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/");
+        },
+      },
+    });
+    toast.info("Logged out! >:(");
+  }
   return (
-    <div className="w-full min-h-screen relative bg-yellow-300 text-black flex flex-col gap-10 items-center">
+    <div className="w-full min-h-screen relative bg-[var(--background)] text-[var(--text)] flex flex-col gap-10 items-center">
       <LoadingUserConfig isMounted={animation} />
       <Topbar />
-          {completedTestBeforeSignedIn && (
-            <div className="flex flex-col absolute z-[100] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl text-fuchsia-700 bg-gray-400 w-[80%] sm:w-[60%] xl:w-[40%] h-[50%]">
-              <p className="w-full text-xl flex justify-center p-3">
-                Last Signed out test
+      <div className="w-full sm:w-4/5 h-fit flex gap-1 justify-end">
+        <p className="hover:text-[var(--backgroundSecondary)] hover:cursor-pointer">
+          Logout
+        </p>
+        <LogOut />
+      </div>
+      
+        <Dialog open={completedTestBeforeSignedIn} onOpenChange={setCompletedTestBeforeSignIn}>
+          <DialogContent className="w-1/2 text-[var(--text)]">
+            <DialogTitle>Last Signed out Test</DialogTitle>
+            <DialogDescription>Would you like to save it?</DialogDescription>
+
+            {isPb && <p className="text-xl">New Record!</p>}
+            <div className="bg-[var(--backgroundSecondary)] text-[var(--background)] w-full h-20 flex flex-col items-center justify-center gap-3 rounded-xl">
+              <p>Test type</p>
+              <p>
+                {mode} {mode2}
               </p>
-              <p className="w-full flex justify-center">
-                Would you like to save it?
-              </p>
-              <p className="w-full h-1 bg-gray-600"></p>
-              <div className="bg-red-300 w-full h-20 flex flex-col items-center justify-center gap-3">
-                {isPb && <p>New Record!</p>}
-                <p>Test type</p>
-                <p>
-                  {mode} {mode2}
-                </p>
+            </div>
+            <div className=" w-full h-20 flex items-center justify-around">
+              <div>
+                <p>{rawWpmVal}</p>
+                <p>Raw Wpm</p>
               </div>
-              <div className=" w-full h-20 flex items-center justify-around">
-                <div>
-                  <p>{rawWpmVal}</p>
-                  <p>Raw Wpm</p>
-                </div>
-                <div>
-                  <p>{avgWpmVal}</p>
-                  <p>Avg Wpm</p>
-                </div>
-              </div>
-              <div className=" w-full h-20 flex items-center justify-around">
-                <div>
-                  <p>{accuracyVal + "%"}</p>
-                  <p>Accuracy</p>
-                </div>
-                <div>
-                  <p>{charArrayRepresentation}</p>
-                  <p>Characters</p>
-                </div>
-              </div>
-              <div className="flex justify-around items-center h-fit mt-3">
-                <button
-                  className="h-12 w-2/5 flex items-center justify-center bg-red-300 rounded-lg cursor-pointer"
-                  onClick={() => handleClick(false)}
-                >
-                  Discard
-                </button>
-                <button
-                  className="h-12 w-2/5 flex items-center justify-center bg-red-300 rounded-lg cursor-pointer"
-                  onClick={() => handleClick(true)}
-                >
-                  Save
-                </button>
+              <div>
+                <p>{avgWpmVal}</p>
+                <p>Avg Wpm</p>
               </div>
             </div>
-          )}
+            <div className=" w-full h-20 flex items-center justify-around">
+              <div>
+                <p>{accuracyVal + "%"}</p>
+                <p>Accuracy</p>
+              </div>
+              <div>
+                <p>{charArrayRepresentation}</p>
+                <p>Characters</p>
+              </div>
+            </div>
+            <div className="flex justify-around text-[var(--background)] items-center h-fit mt-3">
+              <button
+                className="h-12 w-2/5 flex items-center justify-center bg-[var(--destructive)]/80 hover:bg-[var(--background)] hover:text-[var(--text)] hover:outline hover:outline-[var(--destructive)] rounded-lg cursor-pointer"
+                onClick={() => handleClick(false)}
+              >
+                Discard
+              </button>
+              <button
+                className="h-12 w-2/5 flex items-center justify-center bg-[var(--backgroundSecondary)] hover:text-[var(--backgroundSecondary)] hover:bg-[var(--background)] hover:outline hover:outline-[var(--backgroundSecondary)] rounded-lg cursor-pointer"
+                onClick={() => handleClick(true)}
+              >
+                Save
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       
-      <BestStats/>
-      <ChangeInLastTenTests/>
-      <LastTenTests/>
-      <PerformaceInTenTests/>
-      <HistoryTable/>
+
+      <BestStats />
+      <ChangeInLastTenTests />
+      <LastTenTests />
+      <PerformaceInTenTests />
+      <HistoryTable />
     </div>
   );
 }

@@ -114,25 +114,25 @@ export function SignupForm({
                   </span>
                 </div>
               </div>
-              <Button
+              <button
                 type="submit"
-                className="w-full cursor-pointer"
+                className="w-full p-2 rounded-xl transition-all duration-300  hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)] cursor-pointer bg-[var(--background)] text-[var(--text)]"
                 disabled={isLoading}
               >
                 {!isLoading ? "Signup" : "Signing in..."}
-              </Button>
+                </button>
             </div>
           </form>
           <div className="col-start-1 flex flex-col gap-6 pb-8">
             <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-              <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              <span className="relative z-10 px-2 bg-white text-muted-foreground">
                 Or continue with
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4 px-5">
               <Button
                 variant="outline"
-                className="w-full cursor-pointer"
+                className="w-full cursor-pointer text-[var(--text)]  hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)]"
                 onClick={signInWithGithub}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -145,7 +145,7 @@ export function SignupForm({
               </Button>
               <Button
                 variant="outline"
-                className="w-full cursor-pointer"
+                className="w-full cursor-pointer text-[var(--text)]  hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)]"
                 onClick={signInWithGoogle}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -173,10 +173,7 @@ export function SignupForm({
           </div>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </div>
+     
     </div>
   );
 }

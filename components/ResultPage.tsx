@@ -34,6 +34,7 @@ import { motion } from "motion/react";
 import { Skeleton } from "./ui/skeleton";
 import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 import LineChart from "./LineChart";
+import { Arrow, TooltipArrow } from "@radix-ui/react-tooltip";
 export default function ResultPage({
   setShowResultPage,
   charArray,
@@ -106,6 +107,13 @@ export default function ResultPage({
       if (accuracy < 36 || !rawWpm || !avgWpm) {
         toast.error("Invalid test!");
         return;
+      }
+      if (!keyPressDuration.current || !keySpaceDuration) {
+        return
+      }
+      if (rawWpm<=10 || avgWpm<=10) {
+        toast.error("Invalid test! Speed too slow >:(");
+        return
       }
       const body = {
         charSets: charArray, // correct, incorrect, missed, extra
@@ -231,11 +239,11 @@ export default function ResultPage({
   }
   return (
     <div
-      className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-start pt-12 gap-3 bg-red-300"
+      className="w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-start pt-12 gap-3 bg-[var(--background)] text-[var(--text)]"
       ref={captureRef}
     >
       <div className="w-full flex flex-col gap-1">
-        <div className="wpms w-full flex h-20 bg-green-500 items-center text-md sm:text-2xl justify-around text-lg">
+        <div className="wpms w-full flex h-20 items-center text-md sm:text-2xl justify-around text-lg">
           <div>
             <Tooltip>
               <TooltipTrigger>
@@ -272,37 +280,36 @@ export default function ResultPage({
             <p>Accuracy</p>
           </div>
         </div>
-        <div className="bg-red-600 text-2xl flex justify-center w-full mt-0">
+        <div className="text-2xl flex justify-center w-full mt-0">
+          
+        </div>
+      </div>
+      <div className="graph h-80 w-4/5 flex flex-col">
+        <div className="text-xl pl-10 relative flex items-center justify-around">
+          
+            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-52 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
+              Repeated Test
+            </p>
+          <div>
+          <p>{titleText[0]} {titleText[1]}</p>
           <Tooltip>
             <TooltipTrigger>{charArrayRepresentation}</TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="p-2 text-lg">
+            <TooltipContent side="bottom" className="text-lg bg-[var(--backgroundSecondary)] text-[var(--background)]">
+              <p>
                 Correct / Incorrect / Missed / Extra
               </p>
             </TooltipContent>
           </Tooltip>
-        </div>
-      </div>
-      <div className="graph h-80 bg-orange-400 w-4/5 flex flex-col">
-        <div className="text-xl pl-10 relative">
-          <p>{titleText[0]}</p>
-          <p>{titleText[1]}</p>
-          {shadowRepeatedRef.current ? (
-            <p className="absolute top-2 right-10 rounded-2xl bg-red-700 px-3 py-2 text-white">
-              Repeated Test
-            </p>
-          ) : null}
-          {isAfk ? (
-            <p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-2xl bg-violet-700 px-3 py-2 text-white">
+          </div>
+            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-56 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
               Afk detected (ㆆ_ㆆ)
             </p>
-          ) : null}
           {/* // if is afk only then this will be shown */}
         </div>
         <LineChart cumulativeInterval={cumulativeInterval} />
       </div>
 
-      <div className="flex items-center justify-center gap-10 h-20 w-full bg-blue-500">
+      <div className="flex items-center justify-center gap-10 h-20 w-full">
         <Tooltip>
           <TooltipTrigger>
             <RotateCcw

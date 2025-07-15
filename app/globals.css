@@ -136,15 +136,35 @@ html::-webkit-scrollbar-track {
   background: transparent;
 }
 html::-webkit-scrollbar-thumb {
-  background: #ff4d4d;
+  background: var(--backgroundSecondary);
   border-radius: 4px;
 }
 html::-webkit-scrollbar-thumb:hover {
-  background: #e53939;
+  background: var(--backgroundSecondary);
 }
 
 html {
   scrollbar-width: thin;
-  scrollbar-color: #ff4d4d transparent;
+  scrollbar-color: var(--backgroundSecondary) transparent;
   overflow-x:hidden
+}
+
+[data-sonner-toast] {
+  background-color: var(--backgroundSecondary) !important;
+  color: var(--background) !important;
+  border: 0px !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: var(--muted-foreground) !important;
+}
+
+[data-sonner-toast] [data-button] {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+[data-sonner-toast] [data-cancel] {
+  background-color: var(--muted) !important;
+  color: var(--muted-foreground) !important;
 }

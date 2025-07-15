@@ -4,12 +4,10 @@ import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisib
 import { localStorageConfig } from "@/lib/localStorageConfig";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Settings2Icon } from "lucide-react";
-import { useState } from "react";
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
 export default function SelectionPanel() {
   const [selection, setSelection] = useAtom(modeAtom); // from cookies or localstorage mode or time for now.
   const visibility = useAtomValue(selectionPanelVisibleAtom)
-  const [showPanel, setShowPanel] = useState(false);
   const time = [15,30,60,120]
   const words = [10,25,50,100]
 
@@ -44,25 +42,26 @@ export default function SelectionPanel() {
   }
 
   return (
-    <div id="focusStaysActive" tabIndex={0} className={`flex justify-center h-fit flex-col items-center gap-10 p-3 cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
-      <div className="bg-yellow-400 w-full h-fit p-5 flex items-center rounded-full justify-center sm:hidden">
+    <div id="focusStaysActive" tabIndex={0} className={`flex text-[var(--text)] justify-center h-fit flex-col items-center gap-10 p-3 cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
+      <div className="w-full h-fit p-5 flex items-center rounded-full justify-center bg-black/20 sm:hidden">
         <p className="relative left-5">Test Settings</p>
-        <Settings2Icon
-          onClick={() => setShowPanel((prev) => !prev)}
+        
+        <Dialog>
+          <DialogTrigger>
+            <Settings2Icon
           className="relative left-14"
-        />
-        <div
-          className={`floating div absolute rounded-xl w-[90%] h-[95%] top-1/2 -translate-y-1/2 bg-yellow-400 flex-col items-center justify-center gap-5 z-50 ${
-            showPanel ? "flex" : "hidden"
-          }`}
-        >
+          /></DialogTrigger>
+          <DialogContent className="w-[90%]">
+          <DialogTitle>Test Settings</DialogTitle>
+            <DialogHeader>
+              <div className="flex flex-col items-center gap-3">
           <p
             onClick={() =>
               setSelectionFn({
                 choice: "punctuation",
               })
             }
-            className={`transition-colors duration-200 ease-out ${
+            className={`transition-colors duration-200 ease-out bg-black/20 rounded-sm p-3 w-full ${
               selection.punctuation && "text-white"
             }`}
           >
@@ -71,7 +70,7 @@ export default function SelectionPanel() {
 
           <p
             onClick={() => setSelectionFn({ choice: "numbers" })}
-            className={`transition-colors duration-200 ease-out ${
+            className={`transition-colors duration-200 ease-out bg-black/20 rounded-sm p-3 w-full ${
               selection.numbers && "text-white"
             }`}
           >
@@ -80,7 +79,7 @@ export default function SelectionPanel() {
           <br />
           <p
             onClick={() => setSelectionFn({ choice: "time" })}
-            className={`hover:text-white ${
+            className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
               selection.mode === "time" && "text-white"
             }`}
           >
@@ -89,7 +88,7 @@ export default function SelectionPanel() {
           
           <p
             onClick={() => setSelectionFn({ choice: "words" })}
-            className={`hover:text-white ${
+            className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
               selection.mode === "words" && "text-white"
             }`}
           >
@@ -97,7 +96,7 @@ export default function SelectionPanel() {
           </p>
           <br />
           <div
-            className={`transition-opacity duration-700 ease-in ${
+            className={`transition-opacity duration-700 ease-in w-full ${
               selection.mode == "time" ? "flex flex-col gap-4" : "hidden"
             }`}
           >
@@ -106,7 +105,7 @@ export default function SelectionPanel() {
                 <p
                 key={index}
               onClick={() => changeValues(index)}
-              className={`hover:text-white ${
+              className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
                 selection.time === index && "text-white"
               }`}
             >
@@ -117,7 +116,7 @@ export default function SelectionPanel() {
             
           </div>
           <div
-            className={`transition-opacity duration-700 ease-in ${
+            className={`transition-opacity duration-700 ease-in w-full ${
               selection.mode == "words" ? "flex flex-col gap-4" : "hidden"
             }`}
           >
@@ -126,7 +125,7 @@ export default function SelectionPanel() {
                     <p
                     key={index}
               onClick={() => changeValues(index)}
-              className={`hover:text-white ${
+              className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
                 selection.words === index && "text-white"
               }`}
             >
@@ -135,22 +134,18 @@ export default function SelectionPanel() {
                 )
             })}
           </div>
-
-          <button
-            className="w-[95%] h-10 bg-white rounded-lg"
-            onClick={() => setShowPanel(false)}
-          >
-            Go
-          </button>
         </div>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
-      <div className="bg-yellow-400 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
+      <div className="bg-black/20 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
         <p
           onClick={() => {
             setSelectionFn({ choice: "punctuation" });
           }}
-          className={`transition-colors duration-200 ease-out ${
-            selection.punctuation && "text-white"
+          className={`transition-colors duration-200 ease-out hover:text-[var(--backgroundSecondary)] ${
+            selection.punctuation && "text-[var(--backgroundSecondary)]"
           }`}
         >
           punctuation
@@ -159,8 +154,8 @@ export default function SelectionPanel() {
           onClick={() => {
             setSelectionFn({ choice: "numbers" });
           }}
-          className={`transition-colors duration-200 ease-out ${
-            selection.numbers && "text-white"
+          className={`transition-colors duration-200 ease-out hover:text-[var(--backgroundSecondary)] ${
+            selection.numbers && "text-[var(--backgroundSecondary)]"
           }`}
         >
           numbers
@@ -168,16 +163,16 @@ export default function SelectionPanel() {
         <p>|</p>
         <p
           onClick={() => setSelectionFn({ choice: "time" })}
-          className={`hover:text-white ${
-            selection.mode === "time" && "text-white"
+          className={`hover:text-[var(--backgroundSecondary)] ${
+            selection.mode === "time" && "text-[var(--backgroundSecondary)]"
           }`}
         >
           time
         </p>
         <p
           onClick={() => setSelectionFn({ choice: "words" })}
-          className={`hover:text-white ${
-            selection.mode === "words" && "text-white"
+          className={`hover:text-[var(--backgroundSecondary)] ${
+            selection.mode === "words" && "text-[var(--backgroundSecondary)]"
           }`}
         >
           words
@@ -194,8 +189,8 @@ export default function SelectionPanel() {
                 <p
                     key={index}
               onClick={() => changeValues(index)}
-              className={`hover:text-white ${
-                selection.time === index && "text-white"
+              className={`hover:text-[var(--backgroundSecondary)] ${
+                selection.time === index && "text-[var(--backgroundSecondary)]"
               }`}
             >
               {index}
@@ -213,8 +208,8 @@ export default function SelectionPanel() {
                 <p
                     key={index}
               onClick={() => changeValues(index)}
-              className={`hover:text-white ${
-                selection.words === index && "text-white"
+              className={`hover:text-[var(--backgroundSecondary)] ${
+                selection.words === index && "text-[var(--backgroundSecondary)]"
               }`}
             >
               {index}

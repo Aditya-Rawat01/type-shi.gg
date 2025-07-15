@@ -1,3 +1,4 @@
+import { themeAtom } from "@/app/store/atoms/theme";
 import {
   Chart as ChartJS,
   // controllers & elements
@@ -12,6 +13,7 @@ import {
   Legend,
   Title,
 } from "chart.js";
+import { useAtom, useAtomValue } from "jotai";
 import { Chart } from "react-chartjs-2";
 
 type Mixed = "scatter" | "line";
@@ -34,6 +36,7 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
     errors: number;
     problematicKeys:string[]
 }[]}) {
+  const theme = useAtomValue(themeAtom)
   const wpmData = cumulativeInterval.map((s) => ({ x: s.interval, y: s.wpm }));
   const rawData = cumulativeInterval.map((s) => ({
     x: s.interval,
@@ -53,7 +56,7 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               label: "Raw WPM",
               type: "line",
               data: rawData,
-              borderColor: "rgba(54,162,235,1)",
+              borderColor: theme.backgroundSecondary,
               borderWidth: 2,
               borderDash: [6, 4],
               pointStyle: "triangle",
@@ -65,7 +68,7 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               label: "Avg WPM",
               type: "line",
               data: wpmData,
-              borderColor: "rgba(134,12,35,1)",
+              borderColor: theme.surfaceSecondary,
               borderWidth: 2,
               tension: 0.3,
               yAxisID: "y",
@@ -76,7 +79,7 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               type: "scatter",
               data: errorPts,
               pointRadius: 5,
-              pointBackgroundColor: "rgba(255,99,132,1)",
+              pointBackgroundColor: "bg-[var(--backgroundSecondary)]",
               yAxisID: "y2",
               clip: false,
             },

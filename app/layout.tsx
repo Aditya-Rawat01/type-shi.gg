@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Montserrat, Roboto } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import JotaiProvider from "@/lib/JotaiContextProvider";
+import { ThemeCSSVariables } from "@/components/ThemeCSSVariables";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         className={`${roboto.className} antialiased scrollbar-custom`}
       >
       <JotaiProvider> {/* Use the Jotai provider */}
+        <ThemeCSSVariables/>
           {children}
         </JotaiProvider>
         <Toaster/>

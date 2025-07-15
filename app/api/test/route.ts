@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
       avgWpm <= 0
     ) {
       if (avgWpm >= 0 && (!keySpaceDuration || keySpaceDuration.length < 1)) {
+        console.log({keySpaceDuration, len:keySpaceDuration.length})
         return NextResponse.json(
           {
             msg: "WPM reported with no corresponding keystroke data. 🤖",
@@ -274,7 +275,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const completeMode = mode + " " + mode2;
-    await prisma.test.create({
+    prisma.test.create({
       data: {
         charSets,
         mode: completeMode,
@@ -286,6 +287,7 @@ export async function POST(req: NextRequest) {
         userId: sessionCookie.user.id,
       },
     });
+    // was thinking of limiting the max no of tests a user can have in db but that will just make this more slow.
     if (isPb) {
       console.log("did it come here");
       // if user set isPb to true when their pb was indeed not true then they will loose their top test score. (Intentional)!

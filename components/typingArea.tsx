@@ -34,7 +34,6 @@ import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 import LanguageSelector from "./languageSelector";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
-import { themeAtom } from "@/app/store/atoms/theme";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -128,24 +127,7 @@ export default function TypingArea({
   const currentWordRef = useRef(0); // not setting this to zero, lets see what happens
   const afkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setAfkMode = useSetAtom(afkAtom);
-  const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(
-    selectionPanelVisibleAtom
-  );
-  const [themeColor,setThemeColor] = useAtom(themeAtom)
-
-  const themeColorsAtBuildTime = {            // tailwind doesnt understand the dynamic values easily. // mapping because said in documentation
-    surface:themeColor.surface,
-    background:themeColor.background,
-    backgroundSecondary:themeColor.backgroundSecondary,
-    surfaceSecondary:themeColor.surfaceSecondary,
-    miscellaneous:themeColor.miscellaneous,
-    text:themeColor.text
-  }
-
-
-
-
-
+  const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom);
   const framesRef = useRef<{
     correct: number;
     incorrect: number;
@@ -490,6 +472,8 @@ export default function TypingArea({
         currentWordRef.current = 0;
         setPointerIndex(0);
         setIsTestActive(false);
+        SetFocus(true)
+        setBlinking(true)
         containerRef.current?.focus();
         //setRefreshed(false)
       },
@@ -1154,19 +1138,19 @@ export default function TypingArea({
       //here is the thing
       key={selection.mode + selection.numbers + selection.punctuation + selection.time + selection.words + isRefreshed}
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { delay: 0.1 } }}
-      transition={{
-        ease: "easeIn",
-        type: "spring",
-        damping: 50, // ↓ damping → bouncier
-        stiffness: 20, // ↑ stiffness → faster
-        mass: 1.5,
-        duration: 0.7,
-      }}
+      animate={{ opacity: 1, transition:{delay:0.2, ease:"circInOut"} }}
+      // transition={{
+      //   ease: "easeIn",
+      //   type: "spring",
+      //   damping: 50, // ↓ damping → bouncier
+      //   stiffness: 20, // ↑ stiffness → faster
+      //   mass: 1.5,
+      //   duration: 0.7,
+      // }}
     >
       <div
         ref={containerRef}
-        className={`h-fit w-full p-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden`}
+        className={`w-full px-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden bg-transparent text-[var(--text)]`}
         onBlur={handleContainerBlur}
         tabIndex={0}
         onKeyDown={handleKeyDown}
@@ -1176,15 +1160,8 @@ export default function TypingArea({
           !selectionPanelVisible ? setSelectionPanelVisible(true) : null;
         }}
       >
-        <div
-          className={`p-3 w-fit h-fit  gap-3 top-2 absolute bg-yellow-400 rounded-2xl z-20 ${
-            capsKey ? "flex" : "hidden"
-          }`}
-        >
-          <Lock />
-          <p>Caps Lock On</p>
-        </div>
-        <div className={`h-fit w-fit p-1 flex items-center justify-center text-3xl`}>
+        
+        <div className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl`}>
           {selection.mode === "time" ? (
             <p>{(selection.time - timer).toString()}</p>
           ) : (
@@ -1196,13 +1173,21 @@ export default function TypingArea({
           )}
         </div>
         <div
-          className={` w-full flex items-end justify-center relative gap-3 h-fit border border-red-400 rounded-2xl`}
+          className={` w-full flex items-end justify-center h-fit rounded-2xl text-lg mt-4`}
         >        
 
-          <RepeatedTestIndicator repeatTest={true}/>
 
-          <div className="flex gap-2 p-2 rounded-xl">
+          <div className="flex items-center rounded-xl">
+          <RepeatedTestIndicator repeatTest={repeatTest}/>
             <LanguageSelector />
+            <div
+          className={`w-48 p-2 h-fit bg-[var(--backgroundSecondary)] rounded-2xl z-20 flex gap-2 justify-center items-end ${
+            capsKey ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <LockMemo />
+          <p>Caps Lock On</p>
+        </div>
           </div>
         </div>
         {/* will show the total words typed or the time passing */}
@@ -1213,13 +1198,13 @@ export default function TypingArea({
           <div
             className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
               !focus ? "opacity-100" : "opacity-0 pointer-events-none"
-            } origin-center flex transition-all duration-300 ease-out items-center justify-center text-gray-500 z-10`}
+            } origin-center flex transition-all duration-300 ease-out items-center justify-center text-[var(--text)] z-10`}
           >
-            Click here to focus ^_^
+            Click here or Press any key to focus ^_^
           </div>
 
           <div
-            className={`h-full w-full px-2 overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-0.5 leading-14 text-[33px] transition-all ease-out duration-[400ms]`}
+            className={`h-full w-full px-5 text-justify overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-2 leading-14 text-[36px] transition-all ease-out duration-[400ms]`}
           >
             {wordGroups.map((word, wordIndex) => {
               let charOffset = 0;
@@ -1242,9 +1227,9 @@ export default function TypingArea({
                         key={`char-${globalIndex}`}
                         className={`${CHAR_SPAN_CLASS} ${
                           status === "pending"
-                            ? "text-gray-400"
+                            ? "text-[var(--text)]/85"
                             : status === "correct"
-                            ? "text-green-400"
+                            ? "text-green-500"
                             : status === "missed"
                             ? char !== " "
                               ? "text-gray-400 border-b-2  border-red-500"
@@ -1265,7 +1250,7 @@ export default function TypingArea({
           <div
             ref={cursorElementRef}
             id="cursor"
-            className={` absolute top-0 left-0 w-0.5 bg-amber-500
+            className={` absolute top-0 left-0 w-0.5 bg-[var(--backgroundSecondary)]
             
                     ${
                       blinking
@@ -1297,7 +1282,7 @@ const RefreshIcon = memo(
     console.log("here");
     return (
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger className="mt-10">
           <RefreshCw
             className={`cursor-pointer transition-all ease-out duration-[400ms]`}
             onClick={() => {
@@ -1317,11 +1302,14 @@ const RefreshIcon = memo(
 
 const RepeatedTestIndicator = memo(({repeatTest}:{repeatTest:boolean})=>(
   <div
-            className={`flex gap-2 p-2 rounded-xl transition-opacity duration-200 ease-out ${
+            className={`flex gap-2 p-3 w-48 items-end justify-end rounded-xl transition-opacity duration-200 ease-out ${
               repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
-            } absolute mr-80`}
+            }`}
           >
             <RotateCcw />
-            <p className="text-red-500">Repeated</p>
+            <p className="text-[var(--backgroundSecondary)]">Repeated</p>
           </div>
 ))
+const LockMemo = memo(()=>{
+  return <Lock/>
+})

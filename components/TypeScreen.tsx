@@ -14,6 +14,7 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { careerStatsAtom, careerStatsType } from "@/app/store/atoms/bestCareerStats";
+import { PaintbrushVertical } from "lucide-react";
 export default function TypeScreen({
   sessionCookie,
 }: {
@@ -60,7 +61,7 @@ export default function TypeScreen({
   // then pass the setState to typing area and the result page and when the pointerIndex will be equal to the words.length or the time is up
   // then setResultPage to be true among with that have an atom for the results it will carry with it.
   return (
-    <div className="w-screen h-screen bg-[#343639] relative">
+    <div className="w-screen h-screen bg-[var(--background)] relative">
       <AnimatePresence mode="wait">
         {!showResultPage ? (
           <motion.div
@@ -109,6 +110,10 @@ export default function TypeScreen({
           </motion.div>
         )}
       </AnimatePresence>
+      <div className="bg-black/5 h-10 w-screen absolute bottom-0 px-20 flex items-center gap-2 justify-center">
+        <PaintbrushVertical/>
+        Themes
+      </div>
     </div>
   );
 }
@@ -133,7 +138,7 @@ export function LoadingUserConfig({ isMounted }: { isMounted: boolean }) {
   }, [charIndex]);
   return (
     <div
-      className={`w-screen h-screen bg-[#343639] fixed left-0 top-0 z-[100] flex flex-col gap-3 items-center justify-center text-yellow-400 text-3xl ${
+      className={`w-screen h-screen bg-[var(--background)]  fixed left-0 top-0 z-[100] flex flex-col gap-3 items-center justify-center text-3xl ${
         !isMounted ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
@@ -142,7 +147,7 @@ export function LoadingUserConfig({ isMounted }: { isMounted: boolean }) {
           return (
             <span
               className={`transition-all duration-200 ${
-                valIndex <= charIndex ? `text-yellow-300` : `text-gray-500`
+                valIndex <= charIndex ? `text-[var(--backgroundSecondary)]` : `text-[var(--text)]`
               }`}
               key={valIndex}
             >
