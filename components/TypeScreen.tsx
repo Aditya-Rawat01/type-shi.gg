@@ -14,7 +14,7 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { careerStatsAtom, careerStatsType } from "@/app/store/atoms/bestCareerStats";
-import { PaintbrushVertical } from "lucide-react";
+
 export default function TypeScreen({
   sessionCookie,
 }: {
@@ -110,10 +110,6 @@ export default function TypeScreen({
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="bg-black/5 h-10 w-screen absolute bottom-0 px-20 flex items-center gap-2 justify-center">
-        <PaintbrushVertical/>
-        Themes
-      </div>
     </div>
   );
 }

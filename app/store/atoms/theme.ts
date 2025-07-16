@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import tinycolor from 'tinycolor2';
-import { localStorageConfig } from "@/lib/localStorageConfig";
+import { themeStorageConfig } from "@/lib/localStorageConfig";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
@@ -8,8 +8,8 @@ import { atomWithStorage } from "jotai/utils";
 export interface defaultTheme {
   background: string;
   backgroundSecondary: string;
-  surface: string;
-  surfaceSecondary: string;
+  primary: string;
+  secondary: string;
   text: string;
   destructive: string;
 }
@@ -18,14 +18,14 @@ export interface defaultTheme {
 const appDefaultConfig: defaultTheme = {
   background: "#FFF287",
   backgroundSecondary: "#C83F12",
-  surface: "#93E5AB",
-  surfaceSecondary: "#4E878C",
+  primary: "#00ff44",
+  secondary: "#99a1af",
   text: "#3B060A",
-  destructive: "#000000",
+  destructive: "#DC3C22",
 };
 
 const rawConfigAtom = atomWithStorage<defaultTheme>(
-  localStorageConfig, // key for localStorage
+  themeStorageConfig, // key for localStorage
   appDefaultConfig
 );
 
@@ -39,8 +39,8 @@ const zColorString = z.string().refine(
 const themeSchema = z.object({
   background: zColorString,
   backgroundSecondary: zColorString,
-  surface: zColorString,
-  surfaceSecondary: zColorString,
+  primary: zColorString,
+  secondary: zColorString,
   text: zColorString,
   destructive: zColorString,
 });

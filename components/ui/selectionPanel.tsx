@@ -11,7 +11,7 @@ export default function SelectionPanel() {
   const time = [15,30,60,120]
   const words = [10,25,50,100]
 
-  function setSelectionFn({
+  function changeChoice({
     choice,
   }: {
     choice: "words" | "time" | "numbers" | "punctuation";
@@ -57,7 +57,7 @@ export default function SelectionPanel() {
               <div className="flex flex-col items-center gap-3">
           <p
             onClick={() =>
-              setSelectionFn({
+              changeChoice({
                 choice: "punctuation",
               })
             }
@@ -69,7 +69,7 @@ export default function SelectionPanel() {
           </p>
 
           <p
-            onClick={() => setSelectionFn({ choice: "numbers" })}
+            onClick={() => changeChoice({ choice: "numbers" })}
             className={`transition-colors duration-200 ease-out bg-black/20 rounded-sm p-3 w-full ${
               selection.numbers && "text-white"
             }`}
@@ -78,7 +78,7 @@ export default function SelectionPanel() {
           </p>
           <br />
           <p
-            onClick={() => setSelectionFn({ choice: "time" })}
+            onClick={() => changeChoice({ choice: "time" })}
             className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
               selection.mode === "time" && "text-white"
             }`}
@@ -87,7 +87,7 @@ export default function SelectionPanel() {
           </p>
           
           <p
-            onClick={() => setSelectionFn({ choice: "words" })}
+            onClick={() => changeChoice({ choice: "words" })}
             className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
               selection.mode === "words" && "text-white"
             }`}
@@ -142,7 +142,7 @@ export default function SelectionPanel() {
       <div className="bg-black/20 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
         <p
           onClick={() => {
-            setSelectionFn({ choice: "punctuation" });
+            changeChoice({ choice: "punctuation" });
           }}
           className={`transition-colors duration-200 ease-out hover:text-[var(--backgroundSecondary)] ${
             selection.punctuation && "text-[var(--backgroundSecondary)]"
@@ -152,7 +152,7 @@ export default function SelectionPanel() {
         </p>
         <p
           onClick={() => {
-            setSelectionFn({ choice: "numbers" });
+            changeChoice({ choice: "numbers" });
           }}
           className={`transition-colors duration-200 ease-out hover:text-[var(--backgroundSecondary)] ${
             selection.numbers && "text-[var(--backgroundSecondary)]"
@@ -162,7 +162,7 @@ export default function SelectionPanel() {
         </p>
         <p>|</p>
         <p
-          onClick={() => setSelectionFn({ choice: "time" })}
+          onClick={() => changeChoice({ choice: "time" })}
           className={`hover:text-[var(--backgroundSecondary)] ${
             selection.mode === "time" && "text-[var(--backgroundSecondary)]"
           }`}
@@ -170,7 +170,7 @@ export default function SelectionPanel() {
           time
         </p>
         <p
-          onClick={() => setSelectionFn({ choice: "words" })}
+          onClick={() => changeChoice({ choice: "words" })}
           className={`hover:text-[var(--backgroundSecondary)] ${
             selection.mode === "words" && "text-[var(--backgroundSecondary)]"
           }`}

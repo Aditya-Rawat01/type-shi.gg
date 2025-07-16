@@ -9,8 +9,8 @@ export function ThemeCSSVariables() {
       {`:root {
         --background: ${theme.background};
         --text: ${theme.text};
-        --surface: ${theme.surface};
-        --surfaceSecondary: ${theme.surfaceSecondary};
+        --primary: ${theme.primary};
+        --secondary: ${theme.secondary};
         --backgroundSecondary:${theme.backgroundSecondary};
         --destructive:${theme.destructive};
       }`}

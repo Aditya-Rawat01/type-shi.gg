@@ -12,6 +12,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Dispatch,
   RefObject,
   SetStateAction,
@@ -237,6 +243,7 @@ export default function ResultPage({
     }
 
   }
+  console.log(modalVisible)
   return (
     <div
       className="w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-start pt-12 gap-3 bg-[var(--background)] text-[var(--text)]"
@@ -284,25 +291,25 @@ export default function ResultPage({
           
         </div>
       </div>
-      <div className="graph h-80 w-4/5 flex flex-col">
-        <div className="text-xl pl-10 relative flex items-center justify-around">
+      <div className="graph h-80 sm:w-4/5 w-[90%] flex flex-col">
+        <div className="text-xl relative flex items-center justify-around">
           
-            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-52 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
-              Repeated Test
+            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] text-base  w-52 px-1 sm:px-0 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
+              Repeated
             </p>
           <div>
           <p>{titleText[0]} {titleText[1]}</p>
           <Tooltip>
             <TooltipTrigger>{charArrayRepresentation}</TooltipTrigger>
-            <TooltipContent side="bottom" className="text-lg bg-[var(--backgroundSecondary)] text-[var(--background)]">
+            <TooltipContent side="bottom" className="text-lg bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit">
               <p>
                 Correct / Incorrect / Missed / Extra
               </p>
             </TooltipContent>
           </Tooltip>
           </div>
-            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-56 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
-              Afk detected (ㆆ_ㆆ)
+            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-52 text-base px-1 sm:px-0 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
+              Afk detected
             </p>
           {/* // if is afk only then this will be shown */}
         </div>
@@ -364,16 +371,14 @@ export default function ResultPage({
           to save the result
         </p>
       )}
-      <div
-        className={`min-h-40 bg-red-600 w-4/5 flex-col gap-3 p-1 justify-center text-justify text-white ${
-          modalVisible ? "flex" : "hidden"
-        }`}
-      >
-        {generatingReport ? (
+      <Dialog open={modalVisible} onOpenChange={setModalVisible}>
+          <DialogContent className="sm:w-1/2 text-[var(--text)] p-2 sm:p-5">
+            <DialogTitle>AI Report</DialogTitle>
+           {generatingReport ? (
           <>
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-3/4" />
+            <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
+            <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
+            <Skeleton className="h-3 w-3/4 bg-[var(--backgroundSecondary)]" />
           </>
         ) : (
           <>
@@ -395,7 +400,8 @@ export default function ResultPage({
             )}
           </>
         )}
-      </div>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }

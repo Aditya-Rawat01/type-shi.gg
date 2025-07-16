@@ -1,1 +1,2 @@
-export const localStorageConfig = 'defaultConfigs'
+export const localStorageConfig = 'choiceConfigs'
+export const themeStorageConfig = 'themeConfigs'

@@ -34,6 +34,7 @@ import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 import LanguageSelector from "./languageSelector";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import { selectionPanelVisibleAtom } from "@/app/store/atoms/selectionPanelVisibility";
+import Theme from "./Theme";
 const CHAR_SPAN_CLASS = "char-element";
 export default function TypingArea({
   setShowResultPage,
@@ -1229,12 +1230,12 @@ export default function TypingArea({
                           status === "pending"
                             ? "text-[var(--text)]/85"
                             : status === "correct"
-                            ? "text-green-500"
+                            ? "text-[var(--primary)]"
                             : status === "missed"
                             ? char !== " "
-                              ? "text-gray-400 border-b-2  border-red-500"
+                              ? "text-gray-400 border-b-2  border-[var(--destructive)]"
                               : null
-                            : "text-red-500 border-b-2  border-red-500" // incorrect and extra
+                            : "text-[var(--destructive)] border-b-2  border-[var(--destructive)]" // incorrect and extra
                         }`}
                       >
                         {value.char}
@@ -1264,6 +1265,7 @@ export default function TypingArea({
         )}
         <RefreshIcon setIsRefreshed={setIsRefreshed} />
       </div>
+      <Theme/>
     </motion.div>
   );
 }
