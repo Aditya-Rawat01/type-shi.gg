@@ -1233,7 +1233,7 @@ export default function TypingArea({
                             ? "text-[var(--primary)]"
                             : status === "missed"
                             ? char !== " "
-                              ? "text-gray-400 border-b-2  border-[var(--destructive)]"
+                              ? "text-[var(--secondary)] border-b-2  border-[var(--secondary)]"
                               : null
                             : "text-[var(--destructive)] border-b-2  border-[var(--destructive)]" // incorrect and extra
                         }`}

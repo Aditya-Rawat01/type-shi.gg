@@ -13,7 +13,7 @@ import {
   Legend,
   Title,
 } from "chart.js";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { Chart } from "react-chartjs-2";
 
 type Mixed = "scatter" | "line";
@@ -29,14 +29,18 @@ ChartJS.register(
   Title
 );
 
-export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
+export default function LineChart({
+  cumulativeInterval,
+}: {
+  cumulativeInterval: {
     wpm: number;
     rawWpm: number;
     interval: number;
     errors: number;
-    problematicKeys:string[]
-}[]}) {
-  const theme = useAtomValue(themeAtom)
+    problematicKeys: string[];
+  }[];
+}) {
+  const theme = useAtomValue(themeAtom);
   const wpmData = cumulativeInterval.map((s) => ({ x: s.interval, y: s.wpm }));
   const rawData = cumulativeInterval.map((s) => ({
     x: s.interval,
@@ -44,8 +48,9 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
   }));
   const errorPts = cumulativeInterval.map((s) => ({
     x: s.interval,
-    y: s.errors === 0 ? NaN : s.errors,
+    y: s.errors,
   }));
+
   return (
     <div className="w-full h-3/4">
       <Chart<Mixed, (number | { x: number; y: number })[], number>
@@ -56,13 +61,13 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               label: "Raw WPM",
               type: "line",
               data: rawData,
-              borderColor: theme.backgroundSecondary,
+              borderColor: theme.secondary,
               borderWidth: 2,
-              borderDash: [6, 4],
-              pointStyle: "triangle",
-              tension: 0.3,
+              tension: 0.4,
               yAxisID: "y",
               clip: false,
+              backgroundColor: theme.secondary
+              
             },
             {
               label: "Avg WPM",
@@ -73,13 +78,22 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               tension: 0.3,
               yAxisID: "y",
               clip: false,
+              fill:false,
+              backgroundColor:theme.primary
             },
             {
               label: "Errors",
               type: "scatter",
               data: errorPts,
-              pointRadius: 5,
+              pointStyle: "crossRot",
+              fill:false,
+              pointBorderColor: theme.destructive,
+              pointBorderWidth: 2,
               pointBackgroundColor: theme.destructive,
+              pointRadius: (ctx) => {
+                const val = ctx.raw as { x: number; y: number };
+                return val.y === 0 ? 0 : 7;
+              },
               yAxisID: "y2",
               clip: false,
             },
@@ -88,7 +102,6 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
         options={{
           responsive: true,
           maintainAspectRatio: false,
-
           interaction: {
             mode: "x",
             intersect: false,
@@ -97,8 +110,14 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
             tooltip: {
               mode: "x",
               intersect: false,
+              
             },
-            legend: { position: "top" },
+            legend: { 
+              position: "top",
+              labels: {
+                color: theme.text
+              }
+            },
           },
 
           scales: {
@@ -111,20 +130,21 @@ export default function LineChart({cumulativeInterval}:{cumulativeInterval:{
               ticks: {
                 stepSize: cumulativeInterval.length <= 30 ? 1 : undefined,
                 precision: 0,
+                color: theme.text 
               },
-              grid: { drawOnChartArea: false },
             },
             y: {
               beginAtZero: true,
-              ticks: { stepSize: 20 },
-              title: { display: true, text: "WPM" },
+              ticks: { stepSize: 20, color: theme.text },
+              title: { display: true, text: "WPM", color: theme.text },
             },
             y2: {
               position: "right",
               beginAtZero: true,
               grid: { drawOnChartArea: false },
-              ticks: { stepSize: 1 },
-              title: { display: true, text: "Errors" },
+              suggestedMax: 5,
+              ticks: { stepSize: 1, color: theme.text  },
+              title: { display: true, text: "Errors", color: theme.text  },
             },
           },
         }}

@@ -3,9 +3,10 @@ import { useAtomValue } from "jotai";
 import { memo } from "react";
 import { results } from "./profilePage";
 import ChangeLineChart from "./ChangeLineChart";
+import { LastYearResult, lastYearResultAtom } from "@/app/store/atoms/lastYearTest";
 
 const ChangeInLastTenTests = memo(()=>{
-    const results = useAtomValue(resultsAtom)
+    const results = useAtomValue(lastYearResultAtom)
     const {avgWpmArr, rawWpmArr, accuracyArr } = calculateGraphValues(results)
     return (
         <div className="sm:w-4/5 h-[500px] flex flex-col itmes-center justify-around">
@@ -17,7 +18,7 @@ const ChangeInLastTenTests = memo(()=>{
 
 export default ChangeInLastTenTests
 
-function calculateGraphValues(results:results) {
+function calculateGraphValues(results:LastYearResult) {
     const avgWpmArr = results.map((data)=>data.avgWpm)
     const rawWpmArr = results.map((data)=>data.rawWpm)
     const accuracyArr = results.map((data)=>data.accuracy)

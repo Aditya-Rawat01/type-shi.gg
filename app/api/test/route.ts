@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const completeMode = mode + " " + mode2;
-    prisma.test.create({
+    await prisma.test.create({
       data: {
         charSets,
         mode: completeMode,

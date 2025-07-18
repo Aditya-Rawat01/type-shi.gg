@@ -18,7 +18,7 @@ export default function Topbar() {
   }
   
   return (
-    <div className="w-full h-28 flex items-center justify-between sm:px-20 py-3 bg-[var(--backgroundSecondary)] text-[var(--background)]">
+    <div className="w-full h-28 flex items-center justify-between sm:px-20 py-3 text-[var(--backgroundSecondary)] relative">
       <p className="cursor-pointer p-1 text-4xl" onClick={()=>router.push("/")}>type-shi.gg</p>
       {!cookie ? (
         <p
@@ -30,6 +30,7 @@ export default function Topbar() {
       ) : (
         <div className="cursor-pointer" onClick={()=>router.push("/me")}>{account}</div> 
       )}
+      <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[var(--text)]"></div>
     </div>
   );
 }

@@ -16,12 +16,12 @@ export interface defaultTheme {
 
 // just default values.
 const appDefaultConfig: defaultTheme = {
-  background: "#FFF287",
-  backgroundSecondary: "#C83F12",
-  primary: "#00ff44",
-  secondary: "#99a1af",
-  text: "#3B060A",
-  destructive: "#DC3C22",
+  background: "#437057",
+  backgroundSecondary: "#97B067",
+  primary: "#72FE26",
+  secondary: "#2F5249",
+  text: "#E3DE61",
+  destructive: "#722323",
 };
 
 const rawConfigAtom = atomWithStorage<defaultTheme>(

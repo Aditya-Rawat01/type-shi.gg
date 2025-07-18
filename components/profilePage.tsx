@@ -32,6 +32,7 @@ import PerformaceInTenTests from "./PerformaceInTenTests";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import About from "./About";
 const ZeroValues = {
   mode: "Placeholder",
   mode2: 0,
@@ -161,7 +162,7 @@ export default function ProfilePage({
         </p>
         <LogOut />
       </div>
-      
+        <About/>
         <Dialog open={completedTestBeforeSignedIn} onOpenChange={setCompletedTestBeforeSignIn}>
           <DialogContent className="w-1/2 text-[var(--text)]">
             <DialogTitle>Last Signed out Test</DialogTitle>
