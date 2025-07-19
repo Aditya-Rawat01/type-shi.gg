@@ -41,10 +41,14 @@ const PerformaceInTenTests = memo(() => {
   const bestRawWpmInTenTests = summary.bestRaw.toFixed(2);
   const bestAccuracyInTenTests = summary.bestAcc.toFixed(2);
   const bestAvgWpmInTenTests = summary.bestAvg.toFixed(2);
+  const topRawWpmTestType = topRawWpm.test.split(/(\d+)/);
+  const topAvgWpmTestType = topAvgWpm.test.split(/(\d+)/);
+  const topAccuracyTestType = topAccuracy.test.split(/(\d+)/);
+
   return (
-    <div className=" sm:w-4/5 h-[300px] p-2 bg-green-400 text-2xl grid grid-rows-3 gap-6">
+    <div className=" sm:w-4/5 h-[300px] p-2 text-2xl grid grid-rows-3 gap-6  outline-2 outline-[var(--backgroundSecondary)] rounded-xl">
       <div
-        className="grid grid-cols-3 gap-4 items-center justify-items-center bg-pink-400">
+        className="grid grid-cols-3 gap-4 items-center justify-items-center">
         <div className="flex flex-col items-center">
           <p>{avgRaw}</p>
           <p className="text-sm">Avg Raw WPM</p>
@@ -59,7 +63,7 @@ const PerformaceInTenTests = memo(() => {
         </div>
       </div>
 
-      <div className=" grid grid-cols-3 gap-4 items-center justify-items-center bg-pink-400">
+      <div className=" grid grid-cols-3 gap-4 items-center justify-items-center">
         <div className="flex flex-col items-center">
           <p>{bestRawWpmInTenTests}</p>
           <p className="text-sm">
@@ -87,21 +91,21 @@ const PerformaceInTenTests = memo(() => {
       </div>
 
       <div
-        className=" grid grid-cols-3 gap-4 items-center justify-items-center bg-pink-400">
+        className=" grid grid-cols-3 gap-4 items-center justify-items-center">
         <div className="flex flex-col items-center">
           <p>{topRawWpm.value}</p>
           <p className="text-sm">Highest Raw WPM</p>
-          <p className="text-xs">{topRawWpm.test}</p>
+          <p className="text-xs">{topRawWpmTestType[0] + " " + topRawWpmTestType[1]}</p>
         </div>
         <div className="flex flex-col items-center">
           <p>{topAvgWpm.value}</p>
           <p className="text-sm">Highest Avg WPM</p>
-          <p className="text-xs">{topAvgWpm.test}</p>
+          <p className="text-xs">{topAvgWpmTestType[0] + " " + topAvgWpmTestType[1]}</p>
         </div>
         <div className="flex flex-col items-center">
           <p>{topAccuracy.value} %</p>
           <p className="text-sm">Highest Accuracy</p>
-          <p className="text-xs">{topAccuracy.test}</p>
+          <p className="text-xs">{topAccuracyTestType[0] + " " + topAccuracyTestType[1]}</p>
         </div>
       </div>
     </div>

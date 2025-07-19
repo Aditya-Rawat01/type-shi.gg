@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-
+import hard from "@/public/typeshi2.png"
+import Image from "next/image";
 export function SignupForm({
   className,
   ...props
@@ -58,7 +59,7 @@ export function SignupForm({
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
                 <p className="text-balance text-muted-foreground">
-                  Sign up for your Acme Inc account
+                  Sign up for your type-shi account
                 </p>
               </div>
               <div className="grid gap-2">
@@ -82,15 +83,6 @@ export function SignupForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
                 <div className="w-full h-full relative">
                   <Input
                     className="pr-8"
@@ -165,8 +157,8 @@ export function SignupForm({
             </div>
           </div>
           <div className="relative hidden bg-muted md:block  col-start-2 row-start-1 row-span-2">
-            <img
-              src="/placeholder.svg"
+            <Image
+              src={hard}
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />

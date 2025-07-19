@@ -51,7 +51,7 @@ export default function Theme() {
               return (
                 <div key={index} className="flex flex-col items-center justify-center gap-3 w-full h-full">
                   <div
-                    className="theme h-10 w-28 rounded-lg outline outline-[var(--backgroundSecondary)] flex overflow-hidden cursor-pointer"
+                    className="theme h-10 w-28 rounded-lg border border-[var(--backgroundSecondary)] flex overflow-hidden cursor-pointer"
                     onClick={() => handleThemeChange(themesAvailable[index])}
                   >
                     <div

@@ -11,7 +11,8 @@ import { signIn } from "@/serverActions/authHandler";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-
+import hard from "@/public/typeshi.png"
+import Image from "next/image";
 export function LoginForm({
   className,
   ...props
@@ -71,15 +72,6 @@ async function signInWithGithub() {
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
                 <div className="w-full h-full relative">
                   <Input
                     className="pr-8"
@@ -150,8 +142,8 @@ async function signInWithGithub() {
               </div>
             </div>
           <div className="relative hidden bg-muted md:block col-start-2 row-start-1 row-span-2">
-            <img
-              src="/placeholder.svg"
+            <Image
+              src={hard}
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />

@@ -5,18 +5,18 @@ import { results } from "./profilePage";
 import ChangeLineChart from "./ChangeLineChart";
 import { LastYearResult, lastYearResultAtom } from "@/app/store/atoms/lastYearTest";
 
-const ChangeInLastTenTests = memo(()=>{
+const ChangeInLastYearTests = memo(()=>{
     const results = useAtomValue(lastYearResultAtom)
     const {avgWpmArr, rawWpmArr, accuracyArr } = calculateGraphValues(results)
     return (
         <div className="sm:w-4/5 h-[500px] flex flex-col itmes-center justify-around">
-            <p>Last 10 Tests</p>
+            <p>Last Year Tests</p>
             <ChangeLineChart rawWpm={rawWpmArr} accuracy={accuracyArr} avgWpm={avgWpmArr}/>
         </div>
     )
 })
 
-export default ChangeInLastTenTests
+export default ChangeInLastYearTests
 
 function calculateGraphValues(results:LastYearResult) {
     const avgWpmArr = results.map((data)=>data.avgWpm)

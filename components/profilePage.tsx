@@ -27,12 +27,12 @@ import { Prisma } from "@/lib/generated/prisma";
 import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 import BestStats from "./bestStats";
 import LastTenTests from "./LastTenTests";
-import ChangeInLastTenTests from "./ChangeInLastTenTests";
 import PerformaceInTenTests from "./PerformaceInTenTests";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import About from "./About";
+import ChangeInLastYearTests from "./ChangeInLastYearTests";
 const ZeroValues = {
   mode: "Placeholder",
   mode2: 0,
@@ -157,7 +157,7 @@ export default function ProfilePage({
       <LoadingUserConfig isMounted={animation} />
       <Topbar />
       <div className="w-full sm:w-4/5 h-fit flex gap-1 justify-end">
-        <p className="hover:text-[var(--backgroundSecondary)] hover:cursor-pointer">
+        <p className="hover:text-[var(--backgroundSecondary)] hover:cursor-pointer" onClick={handleLogout}>
           Logout
         </p>
         <LogOut />
@@ -214,7 +214,7 @@ export default function ProfilePage({
       
 
       <BestStats />
-      <ChangeInLastTenTests />
+      <ChangeInLastYearTests />
       <LastTenTests />
       <PerformaceInTenTests />
       <HistoryTable />

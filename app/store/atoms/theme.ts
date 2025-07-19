@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import tinycolor from 'tinycolor2';
+import { z } from "zod";
+import tinycolor from "tinycolor2";
 import { themeStorageConfig } from "@/lib/localStorageConfig";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -16,12 +16,12 @@ export interface defaultTheme {
 
 // just default values.
 const appDefaultConfig: defaultTheme = {
-  background: "#437057",
-  backgroundSecondary: "#97B067",
-  primary: "#72FE26",
-  secondary: "#2F5249",
-  text: "#E3DE61",
-  destructive: "#722323",
+  background: "#FFF287",
+  backgroundSecondary: "#C83F12",
+  primary: "#00ff44",
+  secondary: "#99a1af",
+  text: "#3B060A",
+  destructive: "#DC3C22",
 };
 
 const rawConfigAtom = atomWithStorage<defaultTheme>(
@@ -31,10 +31,7 @@ const rawConfigAtom = atomWithStorage<defaultTheme>(
 
 // to check the validity of the localStorage key. basically to know if that has been tampered.
 
-
-const zColorString = z.string().refine(
-  (value) => tinycolor(value).isValid()
-);
+const zColorString = z.string().refine((value) => tinycolor(value).isValid());
 
 const themeSchema = z.object({
   background: zColorString,

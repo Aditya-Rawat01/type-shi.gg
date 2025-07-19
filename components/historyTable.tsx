@@ -84,8 +84,8 @@ const HistoryTable = memo(() => {
   const MemoisedFlameGraph = memo(LineChart); // to stop flickering while opening the chart
   return (
     <>
-      <Table className="w-full sm:w-4/5 bg-amber-300">
-        <TableCaption>type-shi.gg</TableCaption>
+      <Table className="w-full sm:w-4/5 outline outline-[var(--backgroundSecondary)] mt-3 hover:overflow-hidden h-fit overflow-hidden mb-3 rounded-md">
+      
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] text-center">Raw Wpm</TableHead>
@@ -154,7 +154,7 @@ const HistoryTable = memo(() => {
                           </Tooltip>
                           <DialogClose asChild>
                             <DialogContent className=" fixed inset-0 z-50 flex items-center justify-center bg-black/40 w-screen h-screen rounded-none translate-x-0 translate-y-0">
-                              <div className="bg-white sm:w-2/3 h-1/2 flex flex-col gap-5 justify-center rounded-2xl">
+                              <div className="bg-[var(--background)] text-[var(--text)] sm:w-2/3 h-1/2 flex flex-col gap-5 justify-center rounded-2xl">
                                 <DialogTitle>Flame Graph</DialogTitle>
                                 <MemoisedFlameGraph
                                   cumulativeInterval={test.flameGraph}
@@ -203,11 +203,11 @@ const HistoryTable = memo(() => {
           )}
         </TableBody>
         <TableFooter>
-          <TableRow>
+          <TableRow className="bg-[var(--backgroundSecondary)]">
             {reccurringResults.length > 5 && cursorId && (
               <TableCell colSpan={8}>
                 <Button
-                  className={`h-[36px] w-[107.14px] cursor-pointer`}
+                  className={`h-[36px] w-[107.14px] text-[var(--text)] bg-[var(--background)] hover:bg-[var(--background)] outline-2 shadow-lg outline-[var(--background)]/40 p-2 rounded-lg cursor-pointer`}
                   disabled={isFetching}
                   onClick={handleRefresh}
                 >

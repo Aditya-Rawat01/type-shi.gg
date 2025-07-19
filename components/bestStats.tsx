@@ -39,9 +39,9 @@ const BestStats = memo(() => {
   // write here that personal bests are dependen on the speed only not on the languages.
   return (
     <div className="sm:w-4/5 flex gap-6 h-32 justify-between">
-      <div className="w-[50%] rounded-lg flex flex-col items-center gap-3">
+      <div className="w-[50%] flex flex-col items-center gap-3  bg-[var(--text)] text-[var(--background)] rounded-xl">
         <p className="text-2xl">Time</p>
-        <div className="w-full flex justify-around">
+        <div className="w-full flex justify-around ">
           {timeArr.map((time) => (
             <Tooltip key={time}>
               <TooltipTrigger>
@@ -49,7 +49,7 @@ const BestStats = memo(() => {
                 <p>{bestCareerStats["time" + time].avgWpm.toFixed(2)} wpm</p>
                 <p>{bestCareerStats["time" + time].accuracy.toFixed(2)} %</p>
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent side="bottom">
                 <p className="text-base">
                   raw: {bestCareerStats["time" + time].rawWpm.toFixed(2)}
                 </p>
@@ -65,7 +65,7 @@ const BestStats = memo(() => {
           ))}
         </div>
       </div>
-      <div className="w-[50%] rounded-lg flex flex-col items-center gap-3">
+      <div className="w-[50%] flex flex-col items-center gap-3 bg-[var(--text)] text-[var(--background)] rounded-xl">
         <p className="text-2xl">Words</p>
         <div className="w-full flex justify-around">
           {wordsArr.map((words) => (
@@ -75,7 +75,7 @@ const BestStats = memo(() => {
                 <p>{bestCareerStats["words" + words].avgWpm.toFixed(2)} wpm</p>
                 <p>{bestCareerStats["words" + words].accuracy.toFixed(2)} %</p>
               </TooltipTrigger>
-              <TooltipContent side="top">
+              <TooltipContent side="bottom">
                 <p className="text-base">
                   raw: {bestCareerStats["words" + words].rawWpm.toFixed(2)}
                 </p>
