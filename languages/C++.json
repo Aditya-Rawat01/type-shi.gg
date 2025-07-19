@@ -122,10 +122,10 @@
     "transform",
     "accumulate",
     "remove",
-    "begin()",
-    "end()",
-    "rbegin()",
-    "rend()",
+    "begin",
+    "end",
+    "rbegin",
+    "rend",
     "const_iterator",
     "unique_ptr",
     "shared_ptr",
@@ -141,8 +141,8 @@
     "exception",
     "runtime_error",
     "logic_error",
-    "vector::size()",
-    "vector::push_back()",
-    "string::length()"
+    "vector::size",
+    "vector::push_back",
+    "string::length"
   ]
 }

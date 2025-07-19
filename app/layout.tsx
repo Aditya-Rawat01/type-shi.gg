@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import JotaiProvider from "@/lib/JotaiContextProvider";
 import { ThemeCSSVariables } from "@/components/ThemeCSSVariables";
+import { getInitialThemeScript } from "@/lib/theme-Script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,12 @@ export default function RootLayout({
 }>) {
   return (
     
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html:getInitialThemeScript()
+        }}/>
+      </head>
       <body
         className={`${roboto.className} antialiased scrollbar-custom`}
       >
