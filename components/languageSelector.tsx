@@ -41,7 +41,7 @@ const LanguageSelector=memo(()=>{
           <span className="w-full" key={index}>
             {index===0 && <span className="block p-4 w-full">----Languages----</span>}
             {index===12 && <span className="block p-4 w-full">----Coding Languages----</span>}
-            <button className="w-full p-3 text-lg hover:bg-[var(--backgroundSecondary)] bg-black/10 rounded-xl cursor-pointer" onClick={(e)=>changeLanguage(language,e)}>{language}</button>
+            <button className="w-full p-3 text-lg hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)] bg-black/10 rounded-xl cursor-pointer" onClick={(e)=>changeLanguage(language,e)}>{language}</button>
           </span>
         ))}
       </SheetDescription>

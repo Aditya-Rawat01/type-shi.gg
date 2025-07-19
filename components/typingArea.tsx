@@ -1162,7 +1162,7 @@ export default function TypingArea({
         }}
       >
         
-        <div className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl`}>
+        <div className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl text-[var(--backgroundSecondary)]`}>
           {selection.mode === "time" ? (
             <p>{(selection.time - timer).toString()}</p>
           ) : (
