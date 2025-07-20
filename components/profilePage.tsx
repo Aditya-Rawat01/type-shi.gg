@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Topbar from "@/components/topbar";
-import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
+import { cookieType, initialCookieState, userCookie } from "@/app/store/atoms/userCookie";
 import { URI } from "@/lib/URI";
 import { TestPayload } from "@/lib/zodSchema";
 import axios from "axios";
@@ -138,6 +138,7 @@ export default function ProfilePage({
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          setCookie(initialCookieState)
           router.push("/");
         },
       },

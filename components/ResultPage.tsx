@@ -36,11 +36,9 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { userCookie } from "@/app/store/atoms/userCookie";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
 import { Skeleton } from "./ui/skeleton";
 import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 import LineChart from "./LineChart";
-import { Arrow, TooltipArrow } from "@radix-ui/react-tooltip";
 export default function ResultPage({
   setShowResultPage,
   charArray,
@@ -81,11 +79,11 @@ export default function ResultPage({
   const [report, setReport] = useState<string[] | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   useEffect(() => {
-    if (isAfk && cookie) {
+    if (isAfk) {
       toast.warning("Invalid test, Test will not be stored.");
       return;
     }
-    if (repeatedTest && cookie) {
+    if (repeatedTest && cookie.session.id) {
       toast.warning("Repeated test, Test will not be stored.");
       return;
     }
@@ -144,7 +142,7 @@ export default function ResultPage({
       if (weightedTestMean > weightedStatsMean) {
         body.isPb = true;
       }
-      if (!cookie) {
+      if (!cookie.session.id) {
         try {
           console.log(body);
           const data = await axios.post(`${URI}/api/tempTest`, body);
@@ -215,8 +213,8 @@ export default function ResultPage({
       }
     }, 100);
   async function handleGenerateReport() {
-    if (!cookie || isAfk || accuracy < 36 || !rawWpm || !avgWpm) {
-      !cookie && toast.warning("Signin to generate report!");
+    if (!cookie.session.id || isAfk || accuracy < 36 || !rawWpm || !avgWpm) {
+      !cookie.session.id && toast.warning("Signin to generate report!");
       isAfk && toast.warning("Afk Test, cannot generate result!");
       accuracy < 36 && toast.warning("Cannot generate for less accuracy");
       !rawWpm && toast.warning("Raw Wpm Missing");
@@ -364,7 +362,7 @@ export default function ResultPage({
           </TooltipContent>
         </Tooltip>
       </div>
-      {!cookie && (
+      {!cookie.session.id && (
         <p>
           {" "}
           <span

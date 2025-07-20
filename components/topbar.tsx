@@ -8,20 +8,20 @@ export default function Topbar() {
   const router = useRouter();
   const cookie = useAtomValue(userCookie);
   let account = "";
-  if (!cookie) {
+  if (!cookie.session.id) {
     account = "Sign up/in";
-  } else if (cookie?.user.name) {
-    account = cookie?.user.name;
-  } else if (cookie?.user.email) {
-    account = cookie?.user.name;
+  } else if (cookie?.user.name && cookie?.user.name!='') {
+    account = cookie.user.name;
+  } else if (cookie?.user.email && cookie?.user.email!='') {
+    account = cookie.user.email;
   } else {
-    account = "placeholder";
+    account = "User";
   }
   
   return (
     <div className="w-full h-20 sm:h-28 flex justify-between items-center px-3 sm:px-20 py-3 text-[var(--backgroundSecondary)] relative">
       <p className="cursor-pointer p-1 text-3xl sm:text-4xl" onClick={()=>router.push("/")}>type-shi.gg</p>
-      {!cookie ? (
+      {!cookie.session.id ? (
         <p
           className="underline cursor-pointer"
           onClick={() => router.push("/login")}

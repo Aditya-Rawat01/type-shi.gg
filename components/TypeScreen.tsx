@@ -6,7 +6,6 @@ import SelectionPanel from "./ui/selectionPanel";
 import "../app/page.css";
 import ResultPage from "./ResultPage";
 import { motion, AnimatePresence } from "motion/react";
-import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
 import { useAtom, useSetAtom } from "jotai";
 import Topbar from "./topbar";
 import { charSetsAtom } from "@/app/store/atoms/charSets";
@@ -14,6 +13,7 @@ import axios from "axios";
 import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { careerStatsAtom, careerStatsType } from "@/app/store/atoms/bestCareerStats";
+import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
 
 export default function TypeScreen({
   sessionCookie,

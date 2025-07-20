@@ -27,14 +27,14 @@ const About = memo(() => {
   );
   const cookie = useAtomValue(userCookie);
   let account = "";
-  if (!cookie) {
+  if (!cookie.session.id) {
     account = "Sign up/in";
-  } else if (cookie?.user.name) {
+  } else if (cookie?.user.name && cookie?.user.name!='') {
     account = cookie?.user.name;
-  } else if (cookie?.user.email) {
-    account = cookie?.user.name;
+  } else if (cookie?.user.email && cookie?.user.email!='') {
+    account = cookie.user.email;
   } else {
-    account = "placeholder";
+    account = "User";
   }
 
   useEffect(() => {

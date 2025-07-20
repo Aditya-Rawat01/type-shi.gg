@@ -620,6 +620,19 @@ export default function TypingArea({
     "F10",
     "F11",
     "F12",
+    "AudioVolumeDown",
+    "AudioVolumeUp",
+    "AudioVolumeMute",
+    "MediaTrackPrevious",
+    "MediaTrackNext",
+    "MediaPlayPause",
+    "NumLock",
+    "AltGraph",
+    "+",
+    "-",
+    "|",
+    "/",
+    "*",
     "ArrowLeft",
     "ArrowRight",
     "ArrowUp",
@@ -1151,7 +1164,7 @@ export default function TypingArea({
     if (next && next.id === selectionPanelId) {
       return;
     }
-
+    console.log("this is interesting")
     // Otherwise, if focus is moving to something else (or nowhere), deactivate the UI.
     SetFocus(false);
   };
@@ -1184,7 +1197,8 @@ export default function TypingArea({
     >
       <div
         ref={containerRef}
-        className={`w-full px-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden bg-transparent text-[var(--text)]`}
+          id="focusStaysActive"
+        className={`w-full px-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden text-[var(--text)]`}
         onBlur={handleContainerBlur}
         tabIndex={-1}
         onClick={ClickToFocus} // moved from line 457 to here
@@ -1224,7 +1238,7 @@ export default function TypingArea({
             <LanguageSelector />
             <div
               className={`absolute top-2 right-1 w-fit text-sm  sm:w-48 py-2 custom-breakpoint px-[6px] h-fit border border-[var(--backgroundSecondary)] text-[var(--backgroundSecondary)] rounded-2xl z-20 flex gap-1 justify-center items-center sm:items-end ${
-                capsKey ? "opacity-100" : "opacity-0"
+                !capsKey ? "hidden" : "block"
               }`}
             >
               <LockMemo />
@@ -1235,7 +1249,7 @@ export default function TypingArea({
         {/* will show the total words typed or the time passing */}
         <div
           ref={textFlowAreaRef}
-          className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 mb-5  w-[85%]"
+          className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 mb-5 w-[85%]"
         >
           <div
             className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
@@ -1352,7 +1366,7 @@ const RepeatedTestIndicator = memo(
   ({ repeatTest }: { repeatTest: boolean }) => (
     <div
       className={`flex gap-2 p-3 w-40 sm:w-48 items-end justify-end rounded-xl transition-opacity duration-200 ease-out ${
-        repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
+        !repeatTest ? "hidden" : "block pointer-events-none"
       }`}
     >
       <RotateCcw />
