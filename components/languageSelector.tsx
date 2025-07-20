@@ -29,7 +29,7 @@ const LanguageSelector=memo(()=>{
   }, [mode.language]);
     return (
     <Sheet open={open} onOpenChange={setOpen}>
-  <SheetTrigger className="cursor-pointer flex gap-2 p-3 w-48 items-end justify-center">
+  <SheetTrigger className="cursor-pointer flex gap-2 p-3 w-40 sm:w-48 items-end justify-center">
     <p><LanguagesIcon /></p>
     <p>{visibleLang}</p>
     </SheetTrigger>

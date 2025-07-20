@@ -168,3 +168,10 @@ html {
   background-color: var(--muted) !important;
   color: var(--muted-foreground) !important;
 }
+@media screen and (min-width: 500px) {
+  .custom-breakpoint {
+    top:0;
+    position: relative;
+    padding : 2, 3;
+  }
+}

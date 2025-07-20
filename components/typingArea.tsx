@@ -128,7 +128,9 @@ export default function TypingArea({
   const currentWordRef = useRef(0); // not setting this to zero, lets see what happens
   const afkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setAfkMode = useSetAtom(afkAtom);
-  const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(selectionPanelVisibleAtom);
+  const [selectionPanelVisible, setSelectionPanelVisible] = useAtom(
+    selectionPanelVisibleAtom
+  );
   const framesRef = useRef<{
     correct: number;
     incorrect: number;
@@ -144,47 +146,52 @@ export default function TypingArea({
     errors: 0,
     correctKeyErrors: [],
   });
-  useEffect(()=>{
-    function windowKeyDown(e:globalThis.KeyboardEvent) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    function windowKeyDown(e: globalThis.KeyboardEvent) {
       if (focus) {
-        e.preventDefault()
-        e.stopPropagation()
-        return
+        e.preventDefault();
+        e.stopPropagation();
+        return;
       }
-      const key = e.key
-      const specialkeysWithoutCapsLock = specialKeys.reduce<string[]>((acc, curr)=>{ 
-        if (curr!="CapsLock") {
-          acc.push(curr)
-        }
-        return acc
-      },[])
+      const key = e.key;
+      const specialkeysWithoutCapsLock = specialKeys.reduce<string[]>(
+        (acc, curr) => {
+          if (curr != "CapsLock") {
+            acc.push(curr);
+          }
+          return acc;
+        },
+        []
+      );
       if (specialkeysWithoutCapsLock.includes(key)) {
-        return
+        return;
       }
       const isActive = e.getModifierState("CapsLock");
-      if (key==="CapsLock") {
-         setCapsKey(isActive)
+      if (key === "CapsLock") {
+        setCapsKey(isActive);
       } else {
-        SetFocus(true)
-        setBlinking(true)
-        containerRef.current?.focus();
+        SetFocus(true);
+        setBlinking(true);
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
         if (focusTimeoutRef.current) {
-      clearTimeout(focusTimeoutRef.current);
-    }
+          clearTimeout(focusTimeoutRef.current);
+        }
         focusTimeoutRef.current = setTimeout(() => {
-      SetFocus(false);
-    }, 10000); 
+          SetFocus(false);
+        }, 10000);
       }
-
     }
-    window.addEventListener('keydown',windowKeyDown)
-    return ()=>{
-    // one smol problem is that now every time focus changed , previous listener is removed and new one is added.
-    // as the useEffect will not remember the focus state if not put in the deps array, so this is ok as it doesnt
-    // culminate many listeners together.
-    window.removeEventListener('keydown',windowKeyDown)
-    }
-  },[focus])
+    window.addEventListener("keydown", windowKeyDown);
+    return () => {
+      // one smol problem is that now every time focus changed , previous listener is removed and new one is added.
+      // as the useEffect will not remember the focus state if not put in the deps array, so this is ok as it doesnt
+      // culminate many listeners together.
+      window.removeEventListener("keydown", windowKeyDown);
+    };
+  }, [focus]);
   useEffect(() => {
     wordsRef.current = words; // to keep ref in syn for request animation frame
   }, [words]);
@@ -249,7 +256,7 @@ export default function TypingArea({
     // as soon as the page mounts (code duplication here,  will be applied/run only once)
     focusTimeoutRef.current = setTimeout(() => {
       SetFocus(false);
-    }, 10000); 
+    }, 10000);
 
     return () => {
       if (blinkTimeoutRef.current) {
@@ -450,8 +457,8 @@ export default function TypingArea({
           wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
           // so this line contains no words just an empty array which returns empty strings.
           testWordlength: selection.words,
-          numbers:selection.numbers,
-          punctuation:selection.punctuation
+          numbers: selection.numbers,
+          punctuation: selection.punctuation,
         });
 
         if (typeof response === "string") {
@@ -473,9 +480,11 @@ export default function TypingArea({
         currentWordRef.current = 0;
         setPointerIndex(0);
         setIsTestActive(false);
-        SetFocus(true)
-        setBlinking(true)
-        containerRef.current?.focus();
+        SetFocus(true);
+        setBlinking(true);
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
         //setRefreshed(false)
       },
       isRefreshed ? 80 : 400
@@ -502,12 +511,20 @@ export default function TypingArea({
         case "incorrect":
           framesRef.current.incorrect++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char===" "?"spacekey":wordsRef.current[i].char);
+          framesRef.current.correctKeyErrors.push(
+            wordsRef.current[i].char === " "
+              ? "spacekey"
+              : wordsRef.current[i].char
+          );
           break;
         case "missed":
           framesRef.current.missed++;
           framesRef.current.errors++;
-          framesRef.current.correctKeyErrors.push(wordsRef.current[i].char===" "?"spacekey":wordsRef.current[i].char);
+          framesRef.current.correctKeyErrors.push(
+            wordsRef.current[i].char === " "
+              ? "spacekey"
+              : wordsRef.current[i].char
+          );
           break;
         default:
           framesRef.current.extra++;
@@ -1053,8 +1070,8 @@ export default function TypingArea({
       testWordlength: null,
       wordList: wordListFromBackend,
       seed: hash.hash,
-      numbers:selection.numbers,
-      punctuation:selection.punctuation
+      numbers: selection.numbers,
+      punctuation: selection.punctuation,
     });
     if (typeof response === "string") {
       toast.error("Something went wrong.");
@@ -1074,42 +1091,42 @@ export default function TypingArea({
     setShadowTest((prev) => [...prev, ...newRef]);
   }
   // // Add this state to your component
-    // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
-    //     // Add this useEffect to your component
-    // useEffect(() => {
-    //     // Don't run the simulation if it's not enabled or the test is over
-    //     if (!isSimulating || pointerIndex >= words.length) {
-    //         return;
-    //     }
+  // const [isSimulating, setIsSimulating] = useState(true); // Set to true to start
+  //     // Add this useEffect to your component
+  // useEffect(() => {
+  //     // Don't run the simulation if it's not enabled or the test is over
+  //     if (!isSimulating || pointerIndex >= words.length) {
+  //         return;
+  //     }
 
-    //     const intervalId = setInterval(() => {
-    //       if (pointerIndex===words.length-1) {
-    //         calculateResult("w")
-    //         return
-    //       }
-    //         // Correct, immutable state update for the words array
-    //         setWords(prevWords => {
-    //             // Create a new array to avoid direct mutation
-    //             const newWords = [...prevWords];
-    //             // Ensure the character at the pointer exists before trying to update it
-    //             if (newWords[pointerIndex]) {
-    //                 // Create a new object for the character being changed
-    //                 newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
-    //             }
-    //             return newWords;
-    //         });
+  //     const intervalId = setInterval(() => {
+  //       if (pointerIndex===words.length-1) {
+  //         calculateResult("w")
+  //         return
+  //       }
+  //         // Correct, immutable state update for the words array
+  //         setWords(prevWords => {
+  //             // Create a new array to avoid direct mutation
+  //             const newWords = [...prevWords];
+  //             // Ensure the character at the pointer exists before trying to update it
+  //             if (newWords[pointerIndex]) {
+  //                 // Create a new object for the character being changed
+  //                 newWords[pointerIndex] = { ...newWords[pointerIndex], status: 'correct' };
+  //             }
+  //             return newWords;
+  //         });
 
-    //         // Correct state update for the pointer
-    //         setPointerIndex(prevIndex => prevIndex + 1);
+  //         // Correct state update for the pointer
+  //         setPointerIndex(prevIndex => prevIndex + 1);
 
-    //     }, 10); // Changed to 200ms for a more visible typing speed
+  //     }, 10); // Changed to 200ms for a more visible typing speed
 
-    //     // Cleanup function: This is crucial!
-    //     // It runs when the component unmounts or when dependencies change.
-    //     return () => {
-    //         clearInterval(intervalId);
-    //     };
-    // }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
+  //     // Cleanup function: This is crucial!
+  //     // It runs when the component unmounts or when dependencies change.
+  //     return () => {
+  //         clearInterval(intervalId);
+  //     };
+  // }, [isSimulating, pointerIndex, words.length]); // Rerun effect if these change
   function ClickToFocus() {
     if (focusTimeoutRef.current) {
       clearTimeout(focusTimeoutRef.current);
@@ -1118,17 +1135,26 @@ export default function TypingArea({
       setBlinking(false);
       SetFocus(false);
     }, 10000); // set this to 10000
-
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
     SetFocus(true);
     setBlinking(true);
   }
 
   const handleContainerBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const next = e.relatedTarget as HTMLElement | null; // the element that’s about to get focus
-    const selectionPanelId = "focusStaysActive"
-     if (!e.currentTarget.contains(next) && (next === null || next.id !== selectionPanelId)) {
-    SetFocus(false); 
-  }};
+    if (next === inputRef.current) {
+      return;
+    }
+    const selectionPanelId = "focusStaysActive";
+    if (next && next.id === selectionPanelId) {
+      return;
+    }
+
+    // Otherwise, if focus is moving to something else (or nowhere), deactivate the UI.
+    SetFocus(false);
+  };
 
   return (
     <motion.div
@@ -1137,9 +1163,16 @@ export default function TypingArea({
         default: { opacity: 1 },
       }}
       //here is the thing
-      key={selection.mode + selection.numbers + selection.punctuation + selection.time + selection.words + isRefreshed}
+      key={
+        selection.mode +
+        selection.numbers +
+        selection.punctuation +
+        selection.time +
+        selection.words +
+        isRefreshed
+      }
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition:{delay:0.2, ease:"circInOut"} }}
+      animate={{ opacity: 1, transition: { delay: 0.2, ease: "circInOut" } }}
       // transition={{
       //   ease: "easeIn",
       //   type: "spring",
@@ -1153,16 +1186,26 @@ export default function TypingArea({
         ref={containerRef}
         className={`w-full px-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden bg-transparent text-[var(--text)]`}
         onBlur={handleContainerBlur}
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
+        tabIndex={-1}
         onClick={ClickToFocus} // moved from line 457 to here
         onMouseMove={() => {
           !selectionPanelVisible ? setSelectionPanelVisible(true) : null;
         }}
       >
-        
-        <div className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl text-[var(--backgroundSecondary)]`}>
+        <input
+          ref={inputRef}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+          className="hidden-input absolute top-[-9999px] left-[-9999px]"
+          aria-hidden="true" // Hide from screen readers as it's a proxy
+        />
+        <div
+          className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl text-[var(--backgroundSecondary)]`}
+        >
           {selection.mode === "time" ? (
             <p>{(selection.time - timer).toString()}</p>
           ) : (
@@ -1175,20 +1218,18 @@ export default function TypingArea({
         </div>
         <div
           className={` w-full flex items-end justify-center h-fit rounded-2xl text-lg mt-4`}
-        >        
-
-
+        >
           <div className="flex items-center rounded-xl">
-          <RepeatedTestIndicator repeatTest={repeatTest}/>
+            <RepeatedTestIndicator repeatTest={repeatTest} />
             <LanguageSelector />
             <div
-          className={`w-48 p-2 h-fit bg-[var(--backgroundSecondary)] rounded-2xl z-20 flex gap-2 justify-center items-end ${
-            capsKey ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <LockMemo />
-          <p>Caps Lock On</p>
-        </div>
+              className={`absolute top-2 right-1 w-fit text-sm  sm:w-48 py-2 custom-breakpoint px-[6px] h-fit border border-[var(--backgroundSecondary)] text-[var(--backgroundSecondary)] rounded-2xl z-20 flex gap-1 justify-center items-center sm:items-end ${
+                capsKey ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <LockMemo />
+              <p>Caps Lock On</p>
+            </div>
           </div>
         </div>
         {/* will show the total words typed or the time passing */}
@@ -1207,7 +1248,7 @@ export default function TypingArea({
           <div
             className={`h-full w-full px-5 text-justify overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-2 leading-14 text-[36px] transition-all ease-out duration-[400ms]`}
           >
-            {wordGroups.map((word, wordIndex) => {
+            {wordGroups.length>0 ? wordGroups.map((word, wordIndex) => {
               let charOffset = 0;
               for (let i = 0; i < wordIndex; i++) {
                 charOffset += wordGroups[i].length;
@@ -1244,7 +1285,13 @@ export default function TypingArea({
                   })}
                 </span>
               );
-            })}
+            })
+            :
+            <div className="w-full h-full flex items-center justify-center gap-3">
+                <p>Loading</p>
+                <span className="loader2 text-[var(--backgroundSecondary)]"></span>
+            </div>
+          }
           </div>
         </div>
         {words.length > 0 && (
@@ -1265,7 +1312,8 @@ export default function TypingArea({
         )}
         <RefreshIcon setIsRefreshed={setIsRefreshed} />
       </div>
-      <Theme/>
+
+      <Theme />
     </motion.div>
   );
 }
@@ -1300,18 +1348,18 @@ const RefreshIcon = memo(
   }
 );
 
-
-
-const RepeatedTestIndicator = memo(({repeatTest}:{repeatTest:boolean})=>(
-  <div
-            className={`flex gap-2 p-3 w-48 items-end justify-end rounded-xl transition-opacity duration-200 ease-out ${
-              repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-          >
-            <RotateCcw />
-            <p className="text-[var(--backgroundSecondary)]">Repeated</p>
-          </div>
-))
-const LockMemo = memo(()=>{
-  return <Lock/>
-})
+const RepeatedTestIndicator = memo(
+  ({ repeatTest }: { repeatTest: boolean }) => (
+    <div
+      className={`flex gap-2 p-3 w-40 sm:w-48 items-end justify-end rounded-xl transition-opacity duration-200 ease-out ${
+        repeatTest ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
+      <RotateCcw />
+      <p className="text-[var(--backgroundSecondary)]">Repeated</p>
+    </div>
+  )
+);
+const LockMemo = memo(() => {
+  return <Lock />;
+});

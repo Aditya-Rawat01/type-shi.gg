@@ -37,8 +37,9 @@ Summary: [Explain the verdict using the final average WPM and total errors as ev
 Improvements: [Give 1-2 highly specific and actionable commands for what to practice. If there are problematic keys, create a direct exercise for them.]
 `;
 
-function buildPrompt(stats: object): string {
-  return `Here are the user's stats:\n${JSON.stringify(stats, null, 2)}\n\nGenerate insightful feedback.`;
+function buildPrompt({stats, rawWpm:finalRawWpm, avgWpm:finalAvgWpm, accuracy:finalAccuracy}
+  :{stats: object, rawWpm:number, avgWpm:number, accuracy:number}): string {
+  return `Here are the user's stats:\n${JSON.stringify({stats,finalAvgWpm,finalRawWpm, finalAccuracy}, null, 2)}\n\nGenerate insightful feedback.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -51,11 +52,16 @@ export async function POST(req: NextRequest) {
               }, {status:401})
           }
 
-          const {flameGraph} = await req.json();
+          const {flameGraph, rawWpm, avgWpm, accuracy} = await req.json();
           const stats = zodGraph.safeParse(flameGraph)
           if (!stats.success) {
             return NextResponse.json({
               "msg":stats.error
+            }, {status:401})
+          }
+          if (typeof rawWpm!='number' || typeof avgWpm!='number' || typeof accuracy!='number') {
+            return NextResponse.json({
+              "msg":"Invalid entries, Some of the fields are not of desired type"
             }, {status:401})
           }
     // give the type declaration so that it understand what type the data is.
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
     model: "llama3-8b-8192",
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: buildPrompt(stats) },
+      { role: "user", content: buildPrompt({stats, rawWpm, accuracy, avgWpm}) },
     ],
   });
   console.log(chatCompletion)

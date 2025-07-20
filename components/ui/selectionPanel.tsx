@@ -43,7 +43,7 @@ export default function SelectionPanel() {
 
   return (
     <div id="focusStaysActive" tabIndex={0} className={`flex text-[var(--text)] justify-center h-fit flex-col items-center gap-10 p-3 cursor-pointer ${visibility?"opacity-100":"opacity-0 pointer-events-none"} transition-opacity duration-300 ease-in `}>
-      <div className="w-full h-fit p-5 flex items-center rounded-full justify-center bg-black/20 sm:hidden">
+      <div className="w-full h-fit p-5 flex items-center rounded-full justify-center bg-black/10 sm:hidden">
         <p className="relative left-5">Test Settings</p>
         
         <Dialog>
@@ -51,7 +51,7 @@ export default function SelectionPanel() {
             <Settings2Icon
           className="relative left-14"
           /></DialogTrigger>
-          <DialogContent className="w-[90%]">
+          <DialogContent className="w-[90%] text-[var(--text)]">
           <DialogTitle>Test Settings</DialogTitle>
             <DialogHeader>
               <div className="flex flex-col items-center gap-3">
@@ -76,7 +76,7 @@ export default function SelectionPanel() {
           >
             numbers
           </p>
-          <br />
+          <div className="w-5/6 h-[3px] bg-[var(--text)] rounded-xl"></div>
           <p
             onClick={() => changeChoice({ choice: "time" })}
             className={`hover:text-white bg-black/20 rounded-sm p-3 w-full ${
@@ -94,7 +94,7 @@ export default function SelectionPanel() {
           >
             words
           </p>
-          <br />
+          <div className="w-5/6 h-[2px] bg-[var(--text)] rounded-xl"></div>
           <div
             className={`transition-opacity duration-700 ease-in w-full ${
               selection.mode == "time" ? "flex flex-col gap-4" : "hidden"
@@ -139,7 +139,7 @@ export default function SelectionPanel() {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="bg-black/20 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
+      <div className="bg-black/10 w-[600px] h-fit p-3 rounded-full hidden sm:flex items-center justify-center gap-5">
         <p
           onClick={() => {
             changeChoice({ choice: "punctuation" });

@@ -83,15 +83,16 @@ const HistoryTable = memo(() => {
   }
   const MemoisedFlameGraph = memo(LineChart); // to stop flickering while opening the chart
   return (
-    <>
-      <Table className="w-full sm:w-4/5 outline outline-[var(--backgroundSecondary)] mt-3 hover:overflow-hidden h-fit overflow-hidden mb-3 rounded-md">
+    <div className="w-full h-fit">
+      <div className="text-3xl">History</div>
+      <Table className="w-5/6 sm:w-4/5 outline outline-[var(--backgroundSecondary)] mt-3 hover:overflow-y-hidden h-fit overflow-y-hidden overflow-x-scroll mb-3 rounded-md">
       
         <TableHeader>
-          <TableRow>
+          <TableRow className="">
             <TableHead className="w-[100px] text-center">Raw Wpm</TableHead>
             <TableHead className="w-[100px] text-center">Avg Wpm</TableHead>
             <TableHead className="w-[100px] text-center">Accuracy</TableHead>
-            <TableHead className="w-[100px] text-center">
+            <TableHead className="w-[100px] text-center hidden sm:table-cell">
               <Tooltip>
                 <TooltipTrigger>
                   <p>CharSets</p>
@@ -103,9 +104,9 @@ const HistoryTable = memo(() => {
                 </TooltipContent>
               </Tooltip>
             </TableHead>
-            <TableHead className="w-[100px] text-center">Mode</TableHead>
-            <TableHead className="w-[100px] text-center">Details</TableHead>
-            <TableHead className="w-[100px] text-center">Date</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell">Mode</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell">Details</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell">Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -115,7 +116,7 @@ const HistoryTable = memo(() => {
                 <TableCell>{test.rawWpm}</TableCell>
                 <TableCell>{test.avgWpm}</TableCell>
                 <TableCell>{test.accuracy + "%"}</TableCell>
-                <TableCell>
+                <TableCell className=" hidden sm:table-cell">
                   {test.charSets[0] +
                     "/" +
                     test.charSets[1] +
@@ -124,8 +125,8 @@ const HistoryTable = memo(() => {
                     "/" +
                     test.charSets[3]}
                 </TableCell>
-                <TableCell className="">{test.mode}</TableCell>
-                <TableCell>
+                <TableCell className=" hidden sm:table-cell">{test.mode}</TableCell>
+                <TableCell className=" hidden sm:table-cell">
                   {
                     <div className="flex gap-3 justify-center">
                       <Tooltip>
@@ -186,7 +187,7 @@ const HistoryTable = memo(() => {
                     </div>
                   }
                 </TableCell>
-                <TableCell className="">
+                <TableCell className=" hidden sm:table-cell">
                   {
                     <>
                       <p>{new Date(test.createdAt).toLocaleTimeString()}</p>
@@ -222,7 +223,7 @@ const HistoryTable = memo(() => {
           </TableRow>
         </TableFooter>
       </Table>
-    </>
+    </div>
   );
 });
 

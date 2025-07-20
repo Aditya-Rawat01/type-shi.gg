@@ -221,6 +221,8 @@ export default function ResultPage({
       accuracy < 36 && toast.warning("Cannot generate for less accuracy");
       !rawWpm && toast.warning("Raw Wpm Missing");
       !avgWpm && toast.warning("Avg Wpm Missing!");
+      rawWpm < 20 && toast.warning("Cannot generate for low raw wpm");
+      avgWpm < 20 && toast.warning("Cannot generate for low avg wpm");
       return;
     }
     if (!report) {
@@ -229,6 +231,9 @@ export default function ResultPage({
       try {
         const res = await axios.post(`${URI}/api/generate-report`, {
           flameGraph: cumulativeInterval,
+          rawWpm,
+          avgWpm,
+          accuracy
         });
         const lines: string = res.data.result;
         setReport(lines.split("\n\n"));
@@ -246,7 +251,7 @@ export default function ResultPage({
   console.log(modalVisible)
   return (
     <div
-      className="w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-start pt-12 gap-3 bg-[var(--background)] text-[var(--text)]"
+      className="w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-start pt-6 sm:pt-12 gap-3 bg-[var(--background)] text-[var(--text)]"
       ref={captureRef}
     >
       <div className="w-full flex flex-col gap-1">
@@ -292,9 +297,9 @@ export default function ResultPage({
         </div>
       </div>
       <div className="graph h-80 sm:w-4/5 w-[90%] flex flex-col">
-        <div className="text-xl relative flex items-center justify-around">
+        <div className="text-xl relative flex items-center justify-around pt-6 sm:pt-0">
           
-            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] text-base  w-52 px-1 sm:px-0 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
+            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] text-base w-fit sm:w-52 px-3 sm:px-0 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
               Repeated
             </p>
           <div>
@@ -308,7 +313,7 @@ export default function ResultPage({
             </TooltipContent>
           </Tooltip>
           </div>
-            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-52 text-base px-1 sm:px-0 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
+            <p className={`absolute sm:relative left-1/2 -translate-x-1/2 -top-5 sm:top-0 sm:left-auto sm:-translate-x-0 rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit sm:w-52 text-base px-3 sm:px-0 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
               Afk detected
             </p>
           {/* // if is afk only then this will be shown */}
@@ -372,8 +377,8 @@ export default function ResultPage({
         </p>
       )}
       <Dialog open={modalVisible} onOpenChange={setModalVisible}>
-          <DialogContent className="sm:w-1/2 text-[var(--text)] p-2 sm:p-5">
-            <DialogTitle>AI Report</DialogTitle>
+          <DialogContent className="sm:w-1/2 text-[var(--text)] p-2 sm:p-5 flex flex-col gap-2">
+            <DialogTitle className="text-2xl mb-5 text-[var(--backgroundSecondary)]">AI Report</DialogTitle>
            {generatingReport ? (
           <>
             <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />

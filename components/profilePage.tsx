@@ -1,14 +1,8 @@
 "use client";
-import { charSetsAtom } from "@/app/store/atoms/charSets";
-import { cumulativeIntervalAtom } from "@/app/store/atoms/cumulativeIntervals";
-import { hashAtom } from "@/app/store/atoms/generatedHash";
-import { modeAtom } from "@/app/store/atoms/mode";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import Topbar from "@/components/topbar";
@@ -17,14 +11,12 @@ import { URI } from "@/lib/URI";
 import { TestPayload } from "@/lib/zodSchema";
 import axios from "axios";
 import { decodeJwt } from "jose";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingUserConfig } from "./TypeScreen";
 import { animationOnProfileAtom } from "@/app/store/atoms/animationOnProfile";
 import HistoryTable from "./historyTable";
-import { Prisma } from "@/lib/generated/prisma";
-import { careerStatsAtom } from "@/app/store/atoms/bestCareerStats";
 import BestStats from "./bestStats";
 import LastTenTests from "./LastTenTests";
 import PerformaceInTenTests from "./PerformaceInTenTests";
@@ -164,7 +156,7 @@ export default function ProfilePage({
       </div>
         <About/>
         <Dialog open={completedTestBeforeSignedIn} onOpenChange={setCompletedTestBeforeSignIn}>
-          <DialogContent className="w-1/2 text-[var(--text)]">
+          <DialogContent className="w-full sm:w-1/2 text-[var(--text)]">
             <DialogTitle>Last Signed out Test</DialogTitle>
             <DialogDescription>Would you like to save it?</DialogDescription>
 

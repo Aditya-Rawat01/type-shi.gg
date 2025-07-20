@@ -11,7 +11,7 @@ const LastTenTests = memo(()=>{
     const graphData = calculateTopProblematicKeys(results)
     console.log({graphData})
     return (
-        <div className="sm:w-4/5 h-[500px] flex flex-col items-center justify-around">
+        <div className="w-5/6 sm:w-4/5 h-[500px] flex flex-col items-center justify-around">
             <p>Top 10 Problematic Keys (Last 10 tests)</p>
             <BarGraph graphData={graphData}/>
         </div>

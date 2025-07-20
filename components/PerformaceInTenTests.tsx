@@ -46,7 +46,7 @@ const PerformaceInTenTests = memo(() => {
   const topAccuracyTestType = topAccuracy.test.split(/(\d+)/);
 
   return (
-    <div className=" sm:w-4/5 h-[300px] p-2 text-2xl grid grid-rows-3 gap-6  outline-2 outline-[var(--backgroundSecondary)] rounded-xl">
+    <div className="hidden sm:w-4/5 h-[300px] p-2 sm:text-2xl sm:grid grid-rows-3 gap-6  outline-2 outline-[var(--backgroundSecondary)] rounded-xl">
       <div
         className="grid grid-cols-3 gap-4 items-center justify-items-center">
         <div className="flex flex-col items-center">

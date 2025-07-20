@@ -50,6 +50,14 @@ const BarGraph = memo(
     const options: ChartOptions<"bar"> = {
       responsive: true,
       plugins: {
+         tooltip: {
+      backgroundColor: theme.background, // Or your secondary background
+      titleColor: theme.primary, // Color for the tooltip's title
+      bodyColor: theme.text, // Color for the tooltip's body text
+      borderColor: theme.secondary, // Color of the border
+      borderWidth: 1,
+      displayColors: false, // Hides the little color box next to the text
+    },
         legend: {
           labels: {
             color: theme.text,

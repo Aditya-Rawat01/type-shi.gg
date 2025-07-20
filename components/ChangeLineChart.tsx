@@ -37,7 +37,6 @@ export default function ChangeLineChart({
   const labels: number[] = rawWpm.map((index, num) => {
     return num + 1;
   });
-  console.log(labels);
   let maxRawWpm = rawWpm[0] || 0;
   rawWpm.forEach((index) => {
     if (index > maxRawWpm) {
@@ -49,7 +48,7 @@ export default function ChangeLineChart({
     datasets: [
       {
         label: "Raw WPM",
-        data: rawWpm.reverse(),
+        data: rawWpm,
         borderColor: theme.secondary,
         backgroundColor: theme.secondary,
         tension: 0.25,
@@ -59,7 +58,7 @@ export default function ChangeLineChart({
       },
       {
         label: "Avg WPM",
-        data: avgWpm.reverse(),
+        data: avgWpm,
         borderColor: theme.primary,
         backgroundColor: theme.primary,
         tension: 0.25,
@@ -69,7 +68,7 @@ export default function ChangeLineChart({
       },
       {
         label: "Accuracy (%)",
-        data: accuracy.reverse(),
+        data: accuracy,
         borderColor: theme.text,
         backgroundColor: theme.text,
         tension: 0.25,

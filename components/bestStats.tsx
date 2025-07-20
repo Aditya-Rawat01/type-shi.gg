@@ -38,8 +38,8 @@ const BestStats = memo(() => {
   const wordsArr = [10, 25, 50, 100];
   // write here that personal bests are dependen on the speed only not on the languages.
   return (
-    <div className="sm:w-4/5 flex gap-6 h-32 justify-between">
-      <div className="w-[50%] flex flex-col items-center gap-3  bg-[var(--text)] text-[var(--background)] rounded-xl">
+    <div className="w-full sm:w-4/5 flex flex-col items-center lg:flex-row gap-6 h-fit sm:h-52 justify-between">
+      <div className="w-[98%] pb-3 lg:w-[50%] text-sm lg:text-base flex flex-col items-center gap-3  bg-[var(--text)] text-[var(--background)] rounded-xl">
         <p className="text-2xl">Time</p>
         <div className="w-full flex justify-around ">
           {timeArr.map((time) => (
@@ -65,7 +65,7 @@ const BestStats = memo(() => {
           ))}
         </div>
       </div>
-      <div className="w-[50%] flex flex-col items-center gap-3 bg-[var(--text)] text-[var(--background)] rounded-xl">
+      <div className="w-[98%] lg:w-[50%] pb-3 flex flex-col text-sm sm:text-base items-center gap-3 bg-[var(--text)] text-[var(--background)] rounded-xl">
         <p className="text-2xl">Words</p>
         <div className="w-full flex justify-around">
           {wordsArr.map((words) => (
