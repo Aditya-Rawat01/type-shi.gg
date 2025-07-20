@@ -1,7 +1,6 @@
 import test, { TestPayload } from "@/lib/zodSchema";
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from 'jose';
-import { findMeanAndDeviation } from "../test/route";
 import seedrandom from "seedrandom";
 import C from "@/languages/C.json"
 import CPP from "@/languages/C++.json"
@@ -23,6 +22,7 @@ import Spanish from "@/languages/Spanish.json"
 import Spanish1k from "@/languages/Spanish1k.json"
 import Typescript from "@/languages/Typescript.json"
 import { createHash } from "crypto";
+import { findMeanAndDeviation } from "@/lib/findMeanAndDeviation";
 export async function POST(req:NextRequest) {
     const body:TestPayload = await req.json()
     const result = test.safeParse(body)
