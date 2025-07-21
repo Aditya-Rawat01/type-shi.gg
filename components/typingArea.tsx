@@ -748,7 +748,8 @@ export default function TypingArea({
     // if (!timeRef) {
     //   //timeRef =
     // }
-    const key = e.key;
+    const key = e.key==="Unidentified"?(e.nativeEvent as unknown as InputEvent).data:e.key;
+
     if (isTestActive && !e.repeat && !currentkeysPressed.current[key]) {
       currentkeysPressed.current[key] = performance.now(); // this handles the key pressing time
     }
@@ -1207,7 +1208,6 @@ export default function TypingArea({
         <input
           ref={inputRef}
           onKeyDown={handleKeyDown}
-          onInput={()=>console.log("input occured")}
           onKeyUp={handleKeyUp}
           autoComplete="off"
           autoCorrect="off"
