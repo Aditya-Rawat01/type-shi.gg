@@ -1252,7 +1252,7 @@ export default function TypingArea({
           className="text-flow-area flex flex-wrap gap-x-0.5 leading-14 text-[33px] relative h-40 mb-5 w-[85%]"
         >
           <div
-            className={`absolute bottom-0 w-full h-full backdrop-blur-xs ${
+            className={`absolute top-0 w-full h-[110%] backdrop-blur-xs ${
               !focus ? "opacity-100" : "opacity-0 pointer-events-none"
             } origin-center flex transition-all duration-300 ease-out items-center justify-center text-[var(--text)] z-10`}
           >

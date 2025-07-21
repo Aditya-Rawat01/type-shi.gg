@@ -214,7 +214,7 @@ export default function ResultPage({
     }, 100);
   async function handleGenerateReport() {
     if (!cookie.session.id || isAfk || accuracy < 36 || !rawWpm || !avgWpm) {
-      !cookie.session.id && toast.warning("Signin to generate report!");
+      !cookie.session.id && toast.warning("Sign in to generate report!");
       isAfk && toast.warning("Afk Test, cannot generate result!");
       accuracy < 36 && toast.warning("Cannot generate for less accuracy");
       !rawWpm && toast.warning("Raw Wpm Missing");
