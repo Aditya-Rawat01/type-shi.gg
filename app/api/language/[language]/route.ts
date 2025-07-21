@@ -1,4 +1,3 @@
-// to get different languages url: http://localhost:3000/language/English
 import { NextRequest, NextResponse } from "next/server";
 import C from "@/languages/C.json"
 import CPP from "@/languages/C++.json"
