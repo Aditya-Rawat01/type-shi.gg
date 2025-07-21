@@ -1185,7 +1185,7 @@ export default function TypingArea({
         isRefreshed
       }
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { delay: 0.2, ease: "circInOut" } }}
+      animate={{ opacity: 1, transition: { ease: "circInOut" } }}
       // transition={{
       //   ease: "easeIn",
       //   type: "spring",
