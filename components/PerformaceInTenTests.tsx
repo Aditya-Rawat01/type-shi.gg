@@ -7,9 +7,9 @@ import { useAtomValue } from "jotai";
 import { memo } from "react";
 
 const PerformaceInTenTests = memo(() => {
-  let results = useAtomValue(resultsAtom);
-  let bestStats = useAtomValue(careerStatsAtom);
-  let {
+  const results = useAtomValue(resultsAtom);
+  const bestStats = useAtomValue(careerStatsAtom);
+  const {
     rawWpm: topRawWpm,
     avgWpm: topAvgWpm,
     accuracy: topAccuracy,

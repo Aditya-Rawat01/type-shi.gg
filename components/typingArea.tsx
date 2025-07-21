@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import "../app/page.css";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { LanguagesIcon, Lock, RefreshCw, RotateCcw } from "lucide-react";
+import {  Lock, RefreshCw, RotateCcw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import {
@@ -713,7 +713,7 @@ export default function TypingArea({
     }
     const charArray = [0, 0, 0, 0]; // correct, incorrect, missed, extra
     for (let i = 0; i < words.length; i++) {
-      let currentindex = words[i];
+      const currentindex = words[i];
       if (currentindex.status === "pending" && selection.mode === "time") {
         break;
       }
@@ -940,7 +940,7 @@ export default function TypingArea({
         : null;
     } else {
       let errors = 0;
-      let diffKeys: { correctKey: string; incorrectKey: string }[] = [];
+      const diffKeys: { correctKey: string; incorrectKey: string }[] = [];
       const data = [...words];
       if (key === data[pointerIndex].char) {
         data[pointerIndex].status = "correct";
