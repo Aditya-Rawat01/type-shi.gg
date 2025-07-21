@@ -3,11 +3,6 @@ import Groq from "groq-sdk"
 import { auth } from "@/lib/auth";
 import test, { flameGraph as zodGraph } from "@/lib/zodSchema";
 
-
-const client = new Groq({
-  apiKey: process.env.GROQ_API_KEY!,
-});
-
 const SYSTEM_PROMPT = `
 You are an expert typing coach. Your persona is direct, encouraging, and focused.
 
@@ -43,6 +38,15 @@ function buildPrompt({stats, rawWpm:finalRawWpm, avgWpm:finalAvgWpm, accuracy:fi
 }
 
 export async function POST(req: NextRequest) {
+  if (!process.env.GROQ_API_KEY) {
+    return NextResponse.json(
+      { msg: "Missing GROQ API Key" },
+      { status: 500 }
+    );
+  }
+  const client = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+  });
   const sessionCookie = await auth.api.getSession({
               headers:req.headers
           })
