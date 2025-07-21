@@ -18,6 +18,7 @@ import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import "../app/page.css";
+import "../components/components.css"
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {  Lock, RefreshCw, RotateCcw } from "lucide-react";
@@ -91,9 +92,8 @@ export default function TypingArea({
   //index tells us the current first character of second line
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
-  const [isRefreshed, setIsRefreshed] = useState<number>(0);
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  //const [refresh, setRefreshed] = useState(false);
+  const [refresh, setRefreshed] = useState(false);
   const [capsKey, setCapsKey] = useState(false);
   const isMounted = useRef(false);
   const wordsTypedInSec = useRef(0);
@@ -237,8 +237,6 @@ export default function TypingArea({
     ArrayOnIntervals.current = [];
     wordsTypedInSec.current = 0;
     testStartTiming.current = performance.now();
-    console.log(testStartTiming.current);
-    console.log("the test starts now");
     intervalForSec.current = requestAnimationFrame(
       callBackRequestAnimationFrame
     );
@@ -403,14 +401,15 @@ export default function TypingArea({
       setSelectionPanelVisible(true);
     }
     if (repeatTest) {
-      console.log("dhould not be here");
       const newRef = shadowTest.map((prev) => ({ ...prev }));
       setWords(newRef);
       //setRestartSameTest(false) // redundant tho.  , keep it true so that repeated flag could be shown.
       return;
     }
     if (!shouldFetchLang) {
-      setIsRefreshed(performance.now()); // so that the below useEffect run and generate the words array. running that function here means increment in dep array.
+      //setIsRefreshed(performance.now());  // redundant and can cause the erro it seems
+      // as the below useEffect is running without change in shouldFetchLang as well
+      // so that the below useEffect run and generate the words array. running that function here means increment in dep array.
       // is refreshed is not in the dep array so this value exists for this closure only
       return;
     }
@@ -485,11 +484,16 @@ export default function TypingArea({
         if (inputRef.current) {
           inputRef.current.focus()
         }
-        //setRefreshed(false)
+        setRefreshed(false)
       },
-      isRefreshed ? 80 : 400
+      refresh ? 80 : 400
     );
-  }, [selection, isRefreshed, wordListFromBackend]);
+    return () => {
+      if (refreshTimeout.current) {
+        clearTimeout(refreshTimeout.current);
+      }
+    };
+  }, [selection, refresh, wordListFromBackend]);
 
   function callBackRequestAnimationFrame() {
     const currentTime = performance.now();
@@ -529,7 +533,6 @@ export default function TypingArea({
         default:
           framesRef.current.extra++;
           framesRef.current.errors++;
-          console.log(i);
           framesRef.current.correctKeyErrors.push("spacekey");
       }
     }
@@ -736,7 +739,6 @@ export default function TypingArea({
         }
       }
     }
-    console.log(ArrayOnIntervals);
     setCumulativeIntervaltom(ArrayOnIntervals.current);
     setCharArray(charArray);
     setShowResultPage(true);
@@ -1091,15 +1093,12 @@ export default function TypingArea({
       return;
     }
     numberOfGenerations.current++;
-    console.log({ words, newArr: response.characters });
     setWords((prev) => [...prev, ...response.characters]);
-    console.log(shadowTest);
     setHash({
       GeneratedAmt: hash.GeneratedAmt + 1,
       originalSeed: hash.originalSeed,
       hash: response.generatedHash,
     });
-    console.log({ amt: hash.GeneratedAmt + 1 });
     const newRef = response.characters.map((prev) => ({ ...prev }));
     setShadowTest((prev) => [...prev, ...newRef]);
   }
@@ -1164,7 +1163,6 @@ export default function TypingArea({
     if (next && next.id === selectionPanelId) {
       return;
     }
-    console.log("this is interesting")
     // Otherwise, if focus is moving to something else (or nowhere), deactivate the UI.
     SetFocus(false);
   };
@@ -1182,10 +1180,10 @@ export default function TypingArea({
         selection.punctuation +
         selection.time +
         selection.words +
-        isRefreshed
+        refresh
       }
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { ease: "circInOut" } }}
+      animate={{ opacity: 1, transition: { delay:0.2, ease: "circInOut" } }}
       // transition={{
       //   ease: "easeIn",
       //   type: "spring",
@@ -1209,6 +1207,7 @@ export default function TypingArea({
         <input
           ref={inputRef}
           onKeyDown={handleKeyDown}
+          onInput={()=>console.log("input occured")}
           onKeyUp={handleKeyUp}
           autoComplete="off"
           autoCorrect="off"
@@ -1303,7 +1302,7 @@ export default function TypingArea({
             :
             <div className="w-full h-full flex items-center justify-center gap-3">
                 <p>Loading</p>
-                <span className="loader2 text-[var(--backgroundSecondary)]"></span>
+                <div className="loader2 text-[var(--backgroundSecondary)]"></div>
             </div>
           }
           </div>
@@ -1324,7 +1323,7 @@ export default function TypingArea({
             style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
           />
         )}
-        <RefreshIcon setIsRefreshed={setIsRefreshed} />
+        <RefreshIcon setRefresh={setRefreshed} />
       </div>
 
       <Theme />
@@ -1339,18 +1338,17 @@ function ResultLoadingPlaceholder() {
 //memoizing icons to reduce their re-renders
 const RefreshIcon = memo(
   ({
-    setIsRefreshed,
+    setRefresh,
   }: {
-    setIsRefreshed: Dispatch<SetStateAction<number>>;
+    setRefresh: Dispatch<SetStateAction<boolean>>;
   }) => {
-    console.log("here");
     return (
       <Tooltip>
         <TooltipTrigger className="mt-10">
           <RefreshCw
             className={`cursor-pointer transition-all ease-out duration-[400ms]`}
             onClick={() => {
-              setIsRefreshed(Date.now());
+              setRefresh(true);
             }}
           />
         </TooltipTrigger>

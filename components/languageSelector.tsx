@@ -1,5 +1,5 @@
 import { useAtom, useSetAtom } from "jotai";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "./ui/sheet";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { memo, MouseEvent, useEffect, useState } from "react";
 import { LanguagesIcon } from "lucide-react";
@@ -10,7 +10,6 @@ type languageType = "English" | "English1k" | "C" | "C++" | "French" | "French1k
 
 const LanguageSelector=memo(()=>{
     const [mode, setMode] = useAtom(modeAtom)
-    const [open, setOpen] = useState(false)
     const setChangeLanguage = useSetAtom(shouldFetchLanguageAtom)
     const [visibleLang, setVisibleLang] = useState(mode.language);
     const languages:languageType[] = ['English', 'English1k', 'French' ,'French1k','Italian','Italian1k' ,'Portuguese','Portuguese1k','Russian','Russian1k','Spanish','Spanish1k','C','C++','Java','Javascript','Php','Ruby','Typescript'];
@@ -18,7 +17,6 @@ const LanguageSelector=memo(()=>{
         e.stopPropagation()
         mode.language!==lang?setMode((prev)=>({...prev, language:lang })):null
         mode.language!==lang?setChangeLanguage(true):null 
-        //setOpen(false)
     }
     useEffect(() => {
     const timeout = setTimeout(() => {
@@ -28,7 +26,7 @@ const LanguageSelector=memo(()=>{
     return () => clearTimeout(timeout); // cleanup on rapid changes
   }, [mode.language]);
     return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet>
   <SheetTrigger className="cursor-pointer flex gap-2 p-3 w-40 sm:w-48 items-end justify-center">
     <p><LanguagesIcon /></p>
     <p>{visibleLang}</p>
@@ -41,7 +39,7 @@ const LanguageSelector=memo(()=>{
           <span className="w-full" key={index}>
             {index===0 && <span className="block p-4 w-full">----Languages----</span>}
             {index===12 && <span className="block p-4 w-full">----Coding Languages----</span>}
-            <button className="w-full p-3 text-lg hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)] bg-black/10 rounded-xl cursor-pointer" onClick={(e)=>changeLanguage(language,e)}>{language}</button>
+            <SheetClose asChild><button className="w-full p-3 text-lg hover:bg-[var(--backgroundSecondary)] hover:text-[var(--background)] bg-black/10 rounded-xl cursor-pointer" onClick={(e)=>changeLanguage(language,e)}>{language}</button></SheetClose>
           </span>
         ))}
       </SheetDescription>
