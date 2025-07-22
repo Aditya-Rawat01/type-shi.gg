@@ -98,7 +98,7 @@ const About = memo(() => {
       </div>
       <div className="flex flex-col">
       <p>{account}</p>
-      <p>Joined on: 12 may 2025</p>
+      <p>Joined on: {new Date(cookie.user.createdAt).toLocaleString() || "a good day"}</p>
       </div>
       </div>
       <GithubFlameGraph data={data}/>

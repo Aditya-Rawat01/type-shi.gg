@@ -85,14 +85,14 @@ const HistoryTable = memo(() => {
   return (
     <div className="w-full h-fit">
       <div className="text-3xl">History</div>
-      <Table className="w-5/6 sm:w-4/5 outline outline-[var(--backgroundSecondary)] mt-3 hover:overflow-y-hidden h-fit overflow-y-hidden overflow-x-scroll mb-3 rounded-md">
+      <Table className="w-5/6 sm:w-4/5 outline outline-[var(--secondary)] mt-3 hover:overflow-y-hidden h-fit overflow-y-hidden overflow-x-scroll mb-3 rounded-md bg-white/10">
       
-        <TableHeader>
+        <TableHeader className="">
           <TableRow className="">
-            <TableHead className="w-[100px] text-center">Raw Wpm</TableHead>
-            <TableHead className="w-[100px] text-center">Avg Wpm</TableHead>
-            <TableHead className="w-[100px] text-center">Accuracy</TableHead>
-            <TableHead className="w-[100px] text-center hidden sm:table-cell">
+            <TableHead className="w-[100px] text-center text-var(--text)">Raw Wpm</TableHead>
+            <TableHead className="w-[100px] text-center text-var(--text)">Avg Wpm</TableHead>
+            <TableHead className="w-[100px] text-center text-var(--text)">Accuracy</TableHead>
+            <TableHead className="w-[100px] text-center text-var(--text) hidden sm:table-cell">
               <Tooltip>
                 <TooltipTrigger>
                   <p>CharSets</p>
@@ -104,9 +104,9 @@ const HistoryTable = memo(() => {
                 </TooltipContent>
               </Tooltip>
             </TableHead>
-            <TableHead className="w-[100px] text-center hidden sm:table-cell">Mode</TableHead>
-            <TableHead className="w-[100px] text-center hidden sm:table-cell">Details</TableHead>
-            <TableHead className="w-[100px] text-center hidden sm:table-cell">Date</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell text-var(--text)">Mode</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell text-var(--text)">Details</TableHead>
+            <TableHead className="w-[100px] text-center hidden sm:table-cell text-var(--text)">Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

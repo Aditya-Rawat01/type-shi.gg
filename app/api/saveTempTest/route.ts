@@ -23,8 +23,6 @@ export async function POST(req: NextRequest) {
     );
   }
   const secret = new TextEncoder().encode(process.env.JWTSECRETKEY as string);
-  console.log(process.env.JWTSECRETKEY);
-  console.log(token);
   try {
     const { payload }: { payload: TestPayload } = await jwtVerify(
       token,
@@ -98,7 +96,6 @@ export async function POST(req: NextRequest) {
         const body = Object.fromEntries(
           MODES.map((m) => [m, emptyStats()])
         ) as Record<(typeof MODES)[number], typeof stats>;
-
         await prisma.bestStats.upsert({
           // two req in one
           where: {
@@ -106,8 +103,8 @@ export async function POST(req: NextRequest) {
           },
           create: {
             userId: sessionCookie.user.id,
-            [storedMode]: stats,
             ...body,
+            [storedMode]: stats,
           }, // if none, create
           update: { [storedMode]: stats },
         });

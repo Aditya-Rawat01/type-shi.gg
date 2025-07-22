@@ -74,7 +74,6 @@ export async function POST(req: NextRequest) {
       avgWpm <= 0
     ) {
       if (avgWpm >= 0 && (!keySpaceDuration || keySpaceDuration.length < 1)) {
-        console.log({keySpaceDuration, len:keySpaceDuration.length})
         return NextResponse.json(
           {
             msg: "WPM reported with no corresponding keystroke data. 🤖",
@@ -281,7 +280,6 @@ export async function POST(req: NextRequest) {
     });
     // was thinking of limiting the max no of tests a user can have in db but that will just make this more slow.
     if (isPb) {
-      console.log("did it come here");
       // if user set isPb to true when their pb was indeed not true then they will loose their top test score. (Intentional)!
       const stats = {
         rawWpm: Number(rawWpm.toFixed(2)),
@@ -322,8 +320,8 @@ export async function POST(req: NextRequest) {
           },
           create: {
             userId: sessionCookie.user.id,
-            [storedMode]: stats,
             ...body,
+            [storedMode]: stats,
           }, // if none, create
           update: { [storedMode]: stats },
         });

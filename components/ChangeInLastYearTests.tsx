@@ -9,7 +9,7 @@ const ChangeInLastYearTests = memo(()=>{
     const results = useAtomValue(lastYearResultAtom)
     const {avgWpmArr, rawWpmArr, accuracyArr } = calculateGraphValues(results)
     return (
-        <div className="w-5/6 sm:w-4/5 h-[500px] flex flex-col items-center justify-around">
+        <div className="w-5/6 sm:w-4/5 h-[500px] flex flex-col items-center justify-center gap-10 bg-white/10 rounded-2xl   outline outline-[var(--secondary)]">
             <p>Last Year Tests</p>
             <ChangeLineChart rawWpm={rawWpmArr} accuracy={accuracyArr} avgWpm={avgWpmArr}/>
         </div>

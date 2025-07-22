@@ -27,11 +27,11 @@ const LanguageSelector=memo(()=>{
   }, [mode.language]);
     return (
     <Sheet>
-  <SheetTrigger className="cursor-pointer flex gap-2 p-3 w-40 sm:w-48 items-end justify-center">
+  <SheetTrigger id="SheetFocusActive" className="cursor-pointer flex gap-2 p-3 w-40 sm:w-48 items-end justify-center">
     <p><LanguagesIcon /></p>
     <p>{visibleLang}</p>
     </SheetTrigger>
-  <SheetContent>
+  <SheetContent id="SheetFocusActive">
     <SheetHeader className="px-3 py-3 overflow-auto">
       <VisuallyHidden><SheetTitle>Languages</SheetTitle></VisuallyHidden>
       <SheetDescription className="text-[var(--text)] w-full flex flex-col gap-2">

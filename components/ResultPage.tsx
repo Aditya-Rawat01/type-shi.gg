@@ -140,6 +140,7 @@ export default function ResultPage({
       };
       //direct frontend values cannot be trusted. Find a middle ground. if user switches this as false then the pb will not be stored. thats it.
       if (weightedTestMean > weightedStatsMean) {
+        console.log("pb ought to be true mee lord!")
         body.isPb = true;
       }
       if (!cookie.session.id) {

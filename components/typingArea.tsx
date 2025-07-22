@@ -18,10 +18,10 @@ import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import "../app/page.css";
-import "../components/components.css"
+import "../components/components.css";
 import { modeAtom } from "@/app/store/atoms/mode";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import {  Lock, RefreshCw, RotateCcw } from "lucide-react";
+import { Lock, RefreshCw, RotateCcw } from "lucide-react";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import {
@@ -92,10 +92,8 @@ export default function TypingArea({
   //index tells us the current first character of second line
   const textFlowAreaRef = useRef<HTMLDivElement>(null); // for the container
   const cursorAnimationRef = useRef<number | null>(0);
-  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refresh, setRefreshed] = useState(false);
   const [capsKey, setCapsKey] = useState(false);
-  const isMounted = useRef(false);
   const wordsTypedInSec = useRef(0);
   const [showResultLoading, setShowResultLoading] = useState(false);
   const correctCharsRef = useRef(0);
@@ -436,65 +434,82 @@ export default function TypingArea({
     getWords();
   }, [selection.language, shouldFetchLang]);
   // responsible to set the states when the backend sends the language on mounting
-  useEffect(() => {
-    // refresh tes runs again
-    if (!isMounted.current) {
-      isMounted.current = true;
+  const generateAndSetNewTest = useCallback(() => {
+    const response = generateTest({
+      mode: selection.mode,
+      wordList: wordListFromBackend,
+      testWordlength: selection.words,
+      numbers: selection.numbers,
+      punctuation: selection.punctuation,
+    });
+
+    if (typeof response === "string") {
+      toast.error(response);
       return;
     }
-    if (refreshTimeout.current) {
-      clearTimeout(refreshTimeout.current);
+    setWords(response.characters);
+    setHash({
+      hash: response.generatedHash,
+      GeneratedAmt: 1,
+      originalSeed: response.originalSeed!,
+    });
+    const newRef = response.characters.map((prev) => ({ ...prev }));
+    setShadowTest(newRef);
+    setFirstVisibleCharIndex(0);
+    secondLineTopRef.current = null;
+    setRepeatTest(false);
+    numberOfGenerations.current = 1;
+    currentWordRef.current = 0;
+    setPointerIndex(0);
+    setIsTestActive(false);
+    SetFocus(true);
+    
+    setBlinking(true);
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-    if (wordListFromBackend.length == 0) {
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current)
+    }
+    focusTimeoutRef.current = setTimeout(() => {
+      SetFocus(false);
+    }, 10000);
+}, [selection, wordListFromBackend, setWords, setHash, setShadowTest, setRepeatTest]);
+
+
+  // This effect ONLY handles changes to the test settings (mode, words, language, etc.)
+useEffect(() => {
+    if (wordListFromBackend.length === 0) {
       return;
     }
-    //setRefreshed(true)
-    refreshTimeout.current = setTimeout(
-      () => {
-        const response = generateTest({
-          mode: selection.mode,
-          wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
-          // so this line contains no words just an empty array which returns empty strings.
-          testWordlength: selection.words,
-          numbers: selection.numbers,
-          punctuation: selection.punctuation,
-        });
+    
+    const timeout = setTimeout(() => {
+      generateAndSetNewTest();
+    }, 200); // Debounce-like delay for settings changes
 
-        if (typeof response === "string") {
-          toast.error(response);
-          return;
-        }
-        setWords(response.characters);
-        setHash({
-          hash: response.generatedHash,
-          GeneratedAmt: 1,
-          originalSeed: response.originalSeed!,
-        }); //this is the only place where original seed should be updated.
-        const newRef = response.characters.map((prev) => ({ ...prev })); // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
-        setShadowTest(newRef);
-        setFirstVisibleCharIndex(0);
-        secondLineTopRef.current = null;
-        setRepeatTest(false);
-        numberOfGenerations.current = 1;
-        currentWordRef.current = 0;
-        setPointerIndex(0);
-        setIsTestActive(false);
-        SetFocus(true);
-        setBlinking(true);
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
-        setRefreshed(false)
-      },
-      refresh ? 80 : 400
-    );
-    return () => {
-      if (refreshTimeout.current) {
-        clearTimeout(refreshTimeout.current);
-      }
-    };
-  }, [selection, refresh, wordListFromBackend]);
+    return () => clearTimeout(timeout);
+}, [selection, wordListFromBackend, generateAndSetNewTest]);
 
+
+// This effect ONLY handles the manual refresh button click
+useEffect(() => {
+    // If the refresh button wasn't clicked, do nothing.
+    if (!refresh) {
+      return;
+    }
+    
+    if (wordListFromBackend.length === 0) {
+      setRefreshed(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+        generateAndSetNewTest();
+        setRefreshed(false);
+    }, 80);
+
+    return () => clearTimeout(timeout);
+}, [refresh, generateAndSetNewTest, wordListFromBackend]);
   function callBackRequestAnimationFrame() {
     const currentTime = performance.now();
     const elapsedMilliseconds = currentTime - testStartTiming.current;
@@ -748,7 +763,7 @@ export default function TypingArea({
     // if (!timeRef) {
     //   //timeRef =
     // }
-    const key = e.key==="Unidentified"?(e.nativeEvent as unknown as InputEvent).data:e.key;
+    const key = e.key;
 
     if (isTestActive && !e.repeat && !currentkeysPressed.current[key]) {
       currentkeysPressed.current[key] = performance.now(); // this handles the key pressing time
@@ -1161,13 +1176,13 @@ export default function TypingArea({
       return;
     }
     const selectionPanelId = "focusStaysActive";
-    if (next && next.id === selectionPanelId) {
+    const languageSelectorId = "SheetFocusActive"
+    if (next && (next.id === selectionPanelId || next.id === languageSelectorId)) {
       return;
     }
     // Otherwise, if focus is moving to something else (or nowhere), deactivate the UI.
     SetFocus(false);
   };
-
   return (
     <motion.div
       variants={{
@@ -1184,7 +1199,7 @@ export default function TypingArea({
         refresh
       }
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1, transition: { delay:0.2, ease: "circInOut" } }}
+      animate={{ opacity: 1, transition: { delay: 0.2, ease: "circInOut" } }}
       // transition={{
       //   ease: "easeIn",
       //   type: "spring",
@@ -1196,7 +1211,7 @@ export default function TypingArea({
     >
       <div
         ref={containerRef}
-          id="focusStaysActive"
+        id="focusStaysActive"
         className={`w-full px-5 relative focus:outline-none flex flex-col items-center justify-center overflow-hidden text-[var(--text)]`}
         onBlur={handleContainerBlur}
         tabIndex={-1}
@@ -1214,7 +1229,7 @@ export default function TypingArea({
           autoCapitalize="off"
           spellCheck="false"
           className="hidden-input absolute top-[-9999px] left-[-9999px]"
-          aria-hidden="true" // Hide from screen readers as it's a proxy
+          aria-hidden="true"
         />
         <div
           className={`h-fit w-fit p-1 mt-1 flex items-center justify-center text-4xl text-[var(--backgroundSecondary)]`}
@@ -1261,50 +1276,51 @@ export default function TypingArea({
           <div
             className={`h-full w-full px-5 text-justify overflow-y-hidden overflow-x-hidden flex flex-wrap gap-x-2 leading-14 text-[36px] transition-all ease-out duration-[400ms]`}
           >
-            {wordGroups.length>0 ? wordGroups.map((word, wordIndex) => {
-              let charOffset = 0;
-              for (let i = 0; i < wordIndex; i++) {
-                charOffset += wordGroups[i].length;
-              }
+            {wordGroups.length > 0 ? (
+              wordGroups.map((word, wordIndex) => {
+                let charOffset = 0;
+                for (let i = 0; i < wordIndex; i++) {
+                  charOffset += wordGroups[i].length;
+                }
 
-              return (
-                <span
-                  key={`word-${wordIndex}`}
-                  className="inline-block whitespace-pre"
-                >
-                  {word.map((value, charIndex) => {
-                    const localIndex = charOffset + charIndex;
-                    const globalIndex = firstVisibleCharIndex + localIndex;
-                    const status = value.status;
-                    const char = value.char;
-                    return (
-                      <span
-                        key={`char-${globalIndex}`}
-                        className={`${CHAR_SPAN_CLASS} ${
-                          status === "pending"
-                            ? "text-[var(--text)]/85"
-                            : status === "correct"
-                            ? "text-[var(--primary)]"
-                            : status === "missed"
-                            ? char !== " "
-                              ? "text-[var(--secondary)] border-b-2  border-[var(--secondary)]"
-                              : null
-                            : "text-[var(--destructive)] border-b-2  border-[var(--destructive)]" // incorrect and extra
-                        }`}
-                      >
-                        {value.char}
-                      </span>
-                    );
-                  })}
-                </span>
-              );
-            })
-            :
-            <div className="w-full h-full flex items-center justify-center gap-3">
+                return (
+                  <span
+                    key={`word-${wordIndex}`}
+                    className="inline-block whitespace-pre"
+                  >
+                    {word.map((value, charIndex) => {
+                      const localIndex = charOffset + charIndex;
+                      const globalIndex = firstVisibleCharIndex + localIndex;
+                      const status = value.status;
+                      const char = value.char;
+                      return (
+                        <span
+                          key={`char-${globalIndex}`}
+                          className={`${CHAR_SPAN_CLASS} ${
+                            status === "pending"
+                              ? "text-[var(--text)]/85"
+                              : status === "correct"
+                              ? "text-[var(--primary)]"
+                              : status === "missed"
+                              ? char !== " "
+                                ? "text-[var(--secondary)] border-b-2  border-[var(--secondary)]"
+                                : null
+                              : "text-[var(--destructive)] border-b-2  border-[var(--destructive)]" // incorrect and extra
+                          }`}
+                        >
+                          {value.char}
+                        </span>
+                      );
+                    })}
+                  </span>
+                );
+              })
+            ) : (
+              <div className="w-full h-full flex items-center justify-center gap-3">
                 <p>Loading</p>
                 <div className="loader2 text-[var(--backgroundSecondary)]"></div>
-            </div>
-          }
+              </div>
+            )}
           </div>
         </div>
         {words.length > 0 && (
@@ -1337,11 +1353,7 @@ function ResultLoadingPlaceholder() {
 
 //memoizing icons to reduce their re-renders
 const RefreshIcon = memo(
-  ({
-    setRefresh,
-  }: {
-    setRefresh: Dispatch<SetStateAction<boolean>>;
-  }) => {
+  ({ setRefresh }: { setRefresh: Dispatch<SetStateAction<boolean>> }) => {
     return (
       <Tooltip>
         <TooltipTrigger className="mt-10">

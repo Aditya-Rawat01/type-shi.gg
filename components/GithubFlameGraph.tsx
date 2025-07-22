@@ -22,7 +22,7 @@ const GithubFlameGraph = memo(
     const themeColors = useAtomValue(themeAtom);
 
     const lightest = tinycolor(themeColors.primary).toHexString();
-    const darkest = tinycolor(themeColors.primary).darken(80).toHexString();
+    const darkest = tinycolor(themeColors.primary).darken(29).toHexString();
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -37,7 +37,7 @@ const GithubFlameGraph = memo(
         className="w-full xl:w-[1100px] flex flex-col items-center justify-center"
       >
         Last 365 days
-        <div className="w-full flex items-center justify-center h-fit border-2 border-[var(--secondary)] p-3 rounded-lg overflow-x-scroll sm:overflow-hidden">
+        <div className="w-full flex items-center justify-center h-fit border-2 border-[var(--secondary)] p-3 rounded-lg overflow-x-scroll sm:overflow-hidden bg-white/10">
           <ActivityCalendar
             renderBlock={(block, activity) => (
               <TooltipProvider delayDuration={100}>
