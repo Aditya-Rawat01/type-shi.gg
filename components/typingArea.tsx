@@ -77,6 +77,8 @@ export default function TypingArea({
   const [shouldFetchLang, setShouldFetchLang] = useAtom(
     shouldFetchLanguageAtom
   );
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMounted = useRef(false);
   const [hash, setHash] = useAtom(hashAtom);
   const [pointerIndex, setPointerIndex] = useState(0);
   const cursorElementRef = useRef<HTMLDivElement>(null);
@@ -401,6 +403,9 @@ export default function TypingArea({
     if (repeatTest) {
       const newRef = shadowTest.map((prev) => ({ ...prev }));
       setWords(newRef);
+      if (inputRef.current) {
+          inputRef.current.focus()
+        }
       //setRestartSameTest(false) // redundant tho.  , keep it true so that repeated flag could be shown.
       return;
     }
@@ -433,83 +438,65 @@ export default function TypingArea({
     }
     getWords();
   }, [selection.language, shouldFetchLang]);
-  // responsible to set the states when the backend sends the language on mounting
-  const generateAndSetNewTest = useCallback(() => {
-    const response = generateTest({
-      mode: selection.mode,
-      wordList: wordListFromBackend,
-      testWordlength: selection.words,
-      numbers: selection.numbers,
-      punctuation: selection.punctuation,
-    });
-
-    if (typeof response === "string") {
-      toast.error(response);
-      return;
-    }
-    setWords(response.characters);
-    setHash({
-      hash: response.generatedHash,
-      GeneratedAmt: 1,
-      originalSeed: response.originalSeed!,
-    });
-    const newRef = response.characters.map((prev) => ({ ...prev }));
-    setShadowTest(newRef);
-    setFirstVisibleCharIndex(0);
-    secondLineTopRef.current = null;
-    setRepeatTest(false);
-    numberOfGenerations.current = 1;
-    currentWordRef.current = 0;
-    setPointerIndex(0);
-    setIsTestActive(false);
-    SetFocus(true);
-    
-    setBlinking(true);
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    if (focusTimeoutRef.current) {
-      clearTimeout(focusTimeoutRef.current)
-    }
-    focusTimeoutRef.current = setTimeout(() => {
-      SetFocus(false);
-    }, 10000);
-}, [selection, wordListFromBackend, setWords, setHash, setShadowTest, setRepeatTest]);
-
-
-  // This effect ONLY handles changes to the test settings (mode, words, language, etc.)
 useEffect(() => {
-    if (wordListFromBackend.length === 0) {
+    // refresh tes runs again
+    if (!isMounted.current) {
+      isMounted.current = true;
       return;
     }
-    
-    const timeout = setTimeout(() => {
-      generateAndSetNewTest();
-    }, 200); // Debounce-like delay for settings changes
-
-    return () => clearTimeout(timeout);
-}, [selection, wordListFromBackend, generateAndSetNewTest]);
-
-
-// This effect ONLY handles the manual refresh button click
-useEffect(() => {
-    // If the refresh button wasn't clicked, do nothing.
-    if (!refresh) {
+    if (refreshTimeout.current) {
+      clearTimeout(refreshTimeout.current);
+    }
+    if (wordListFromBackend.length == 0) {
       return;
     }
-    
-    if (wordListFromBackend.length === 0) {
-      setRefreshed(false);
-      return;
-    }
+    //setRefreshed(true)
+    refreshTimeout.current = setTimeout(
+      () => {
+        console.log("this should have been fixed imo")
+        const response = generateTest({
+          mode: selection.mode,
+          wordList: wordListFromBackend, // this is the culprit, the first useEffect is just setting the wordList to the backend sent list
+          // so this line contains no words just an empty array which returns empty strings.
+          testWordlength: selection.words,
+          numbers: selection.numbers,
+          punctuation: selection.punctuation,
+        });
 
-    const timeout = setTimeout(() => {
-        generateAndSetNewTest();
-        setRefreshed(false);
-    }, 80);
+        if (typeof response === "string") {
+          toast.error(response);
+          return;
+        }
+        setWords(response.characters);
+        setHash({
+          hash: response.generatedHash,
+          GeneratedAmt: 1,
+          originalSeed: response.originalSeed!,
+        }); //this is the only place where original seed should be updated.
+        const newRef = response.characters.map((prev) => ({ ...prev })); // to create a new reference to obj otherwise both shadowtest and words will contain same reference so if words update then shadowtest too.
+        setShadowTest(newRef);
+        setFirstVisibleCharIndex(0);
+        secondLineTopRef.current = null;
+        setRepeatTest(false);
+        numberOfGenerations.current = 1;
+        currentWordRef.current = 0;
+        setPointerIndex(0);
+        setIsTestActive(false);
+        SetFocus(true);
+        setBlinking(true);
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
+      },
+      200
+    );
+    return () => {
+      if (refreshTimeout.current) {
+        clearTimeout(refreshTimeout.current);
+      }
+    };
+  }, [selection, refresh, wordListFromBackend]);
 
-    return () => clearTimeout(timeout);
-}, [refresh, generateAndSetNewTest, wordListFromBackend]);
   function callBackRequestAnimationFrame() {
     const currentTime = performance.now();
     const elapsedMilliseconds = currentTime - testStartTiming.current;
@@ -1360,7 +1347,7 @@ const RefreshIcon = memo(
           <RefreshCw
             className={`cursor-pointer transition-all ease-out duration-[400ms]`}
             onClick={() => {
-              setRefresh(true);
+              setRefresh((prev)=>!prev);
             }}
           />
         </TooltipTrigger>
