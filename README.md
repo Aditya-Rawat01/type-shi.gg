@@ -16,3 +16,12 @@ also change them in the projects as well.
 observations:
 single user can have multiple accounts (by credential/github/google)
 
+Future Enhancements:
+Deployment on aws ec2.
+Doesnt work on mobile virtual keyboards. So maybe change the event handling completely.
+if buying domain then correct the google and github callback urls.
+
+and maybe the code: authclient.ts and .env url  and uri.ts as well.
+
+make a docker image as well.
+
