@@ -439,10 +439,8 @@ export default function TypingArea({
     getWords();
   }, [selection.language, shouldFetchLang]);
 useEffect(() => {
-    // refresh tes runs again
-    if (!isMounted.current) {
-      isMounted.current = true;
-      return;
+    if (repeatTest) {
+      return
     }
     if (refreshTimeout.current) {
       clearTimeout(refreshTimeout.current);
@@ -495,7 +493,7 @@ useEffect(() => {
         clearTimeout(refreshTimeout.current);
       }
     };
-  }, [selection, refresh, wordListFromBackend]);
+  }, [selection, refresh, wordListFromBackend, repeatTest]);
 
   function callBackRequestAnimationFrame() {
     const currentTime = performance.now();
@@ -671,7 +669,7 @@ useEffect(() => {
     return <ResultLoadingPlaceholder />;
   }
   //const timeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  
   function calculateResult(key: string) {
     //setShowResultLoading(true)
     const hasRemaining =
@@ -1326,7 +1324,7 @@ useEffect(() => {
             style={{ transform: "translateX(0px)" }} // Initial position is handled by transform
           />
         )}
-        <RefreshIcon setRefresh={setRefreshed} />
+        <RefreshIcon setRefresh={setRefreshed} setRepeatTest={setRepeatTest}/>
       </div>
 
       <Theme />
@@ -1340,7 +1338,7 @@ function ResultLoadingPlaceholder() {
 
 //memoizing icons to reduce their re-renders
 const RefreshIcon = memo(
-  ({ setRefresh }: { setRefresh: Dispatch<SetStateAction<boolean>> }) => {
+  ({ setRefresh, setRepeatTest }: { setRefresh: Dispatch<SetStateAction<boolean>>, setRepeatTest: Dispatch<SetStateAction<boolean>> }) => {
     return (
       <Tooltip>
         <TooltipTrigger className="mt-10">
@@ -1348,6 +1346,7 @@ const RefreshIcon = memo(
             className={`cursor-pointer transition-all ease-out duration-[400ms]`}
             onClick={() => {
               setRefresh((prev)=>!prev);
+              setRepeatTest(false)
             }}
           />
         </TooltipTrigger>
