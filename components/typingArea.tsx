@@ -1014,7 +1014,6 @@ useEffect(() => {
       setWords(data);
       if (pointerIndex > 0) {
         if (words[pointerIndex - 1].char == " " && key == " ") {
-          currentWordRef.current++;
           return;
         } else if (words[pointerIndex - 1].status != "extra" || key == " ") {
           setPointerIndex(pointerIndex + charsSkipped);

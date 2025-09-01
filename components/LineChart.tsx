@@ -92,7 +92,8 @@ export default function LineChart({
               pointBackgroundColor: theme.destructive,
               pointRadius: (ctx) => {
                 const val = ctx.raw as { x: number; y: number };
-                return val.y === 0 ? 0 : 7;
+                console.log({val})
+                return val==undefined ? 0 : 7;
               },
               yAxisID: "y2",
               clip: false,
