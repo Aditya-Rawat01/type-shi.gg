@@ -113,11 +113,11 @@ export default function ResultPage({
         return;
       }
       if (!keyPressDuration.current || !keySpaceDuration) {
-        return
+        return;
       }
-      if (rawWpm<=10 || avgWpm<=10) {
+      if (rawWpm <= 10 || avgWpm <= 10) {
         toast.error("Invalid test! Speed too slow >:(");
-        return
+        return;
       }
       const body = {
         charSets: charArray, // correct, incorrect, missed, extra
@@ -140,7 +140,7 @@ export default function ResultPage({
       };
       //direct frontend values cannot be trusted. Find a middle ground. if user switches this as false then the pb will not be stored. thats it.
       if (weightedTestMean > weightedStatsMean) {
-        console.log("pb ought to be true mee lord!")
+        console.log("pb ought to be true mee lord!");
         body.isPb = true;
       }
       if (!cookie.session.id) {
@@ -226,28 +226,31 @@ export default function ResultPage({
     }
     if (!report) {
       setModalVisible(true);
-      setGeneratingReport(true);
-      try {
-        const res = await axios.post(`${URI}/api/generate-report`, {
-          flameGraph: cumulativeInterval,
-          rawWpm,
-          avgWpm,
-          accuracy
-        });
-        const lines: string = res.data.result;
-        setReport(lines.split("\n\n"));
-      } catch (error) {
-        (error as { status: number }).status === 429
-          ? toast.error("Free tier got exhausted. ┗( T﹏T )┛")
-          : toast.error("Cookie not Valid. ಠ_ಠ");
+      if (!generatingReport) {
+        setGeneratingReport(true);
+        try {
+          const res = await axios.post(`${URI}/api/generate-report`, {
+            flameGraph: cumulativeInterval,
+            rawWpm,
+            avgWpm,
+            accuracy,
+          });
+          const lines: string = res.data.result;
+          console.log(lines);
+          setReport(lines.split("\n"));
+        } catch (error) {
+          (error as { status: number }).status === 429
+            ? toast.error("Free tier got exhausted. ┗( T﹏T )┛")
+            : toast.error("Cookie not Valid. ಠ_ಠ");
+        }
       }
+
       setGeneratingReport(false);
     } else {
-      setModalVisible((prev)=>!prev)
+      setModalVisible((prev) => !prev);
     }
-
   }
-  console.log(modalVisible)
+  console.log(modalVisible);
   return (
     <div
       className="w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-start pt-6 sm:pt-12 gap-3 bg-[var(--background)] text-[var(--text)]"
@@ -291,30 +294,38 @@ export default function ResultPage({
             <p>Accuracy</p>
           </div>
         </div>
-        <div className="text-2xl flex justify-center w-full mt-0">
-          
-        </div>
+        <div className="text-2xl flex justify-center w-full mt-0"></div>
       </div>
       <div className="graph h-80 sm:w-4/5 w-[90%] flex flex-col">
         <div className="text-xl relative flex items-center justify-around pt-6 sm:pt-0">
-          
-            <p className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] text-base w-fit sm:w-52 px-3 sm:px-0 py-2 ${shadowRepeatedRef.current?"opacity-100":"opacity-0"}`}>
-              Repeated
-            </p>
+          <p
+            className={`rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] text-base w-fit sm:w-52 px-3 sm:px-0 py-2 ${
+              shadowRepeatedRef.current ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            Repeated
+          </p>
           <div>
-          <p>{titleText[0]} {titleText[1]}</p>
-          <Tooltip>
-            <TooltipTrigger>{charArrayRepresentation}</TooltipTrigger>
-            <TooltipContent side="bottom" className="text-lg bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit">
-              <p>
-                Correct / Incorrect / Missed / Extra
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          </div>
-            <p className={`absolute sm:relative left-1/2 -translate-x-1/2 -top-5 sm:top-0 sm:left-auto sm:-translate-x-0 rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit sm:w-52 text-base px-3 sm:px-0 py-2 ${isAfk?"opacity-100":"opacity-0"}`}>
-              Afk detected
+            <p>
+              {titleText[0]} {titleText[1]}
             </p>
+            <Tooltip>
+              <TooltipTrigger>{charArrayRepresentation}</TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="text-lg bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit"
+              >
+                <p>Correct / Incorrect / Missed / Extra</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <p
+            className={`absolute sm:relative left-1/2 -translate-x-1/2 -top-5 sm:top-0 sm:left-auto sm:-translate-x-0 rounded-2xl bg-[var(--backgroundSecondary)] text-[var(--background)] w-fit sm:w-52 text-base px-3 sm:px-0 py-2 ${
+              isAfk ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            Afk detected
+          </p>
           {/* // if is afk only then this will be shown */}
         </div>
         <LineChart cumulativeInterval={cumulativeInterval} />
@@ -376,36 +387,40 @@ export default function ResultPage({
         </p>
       )}
       <Dialog open={modalVisible} onOpenChange={setModalVisible}>
-          <DialogContent className="sm:w-1/2 text-[var(--text)] p-2 sm:p-5 flex flex-col gap-2">
-            <DialogTitle className="text-2xl mb-5 text-[var(--backgroundSecondary)]">AI Report</DialogTitle>
-           {generatingReport ? (
-          <>
-            <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
-            <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
-            <Skeleton className="h-3 w-3/4 bg-[var(--backgroundSecondary)]" />
-          </>
-        ) : (
-          <>
-            {report ? (
-              <>
-                {report.map((line, index) => {
-                  return (
-                    <p
-                      key={index}
-                      className={`${index === 0 && "font-semibold"}`}
-                    >
-                      {line}
-                    </p>
-                  );
-                })}
-              </>
-            ) : (
-              <p className="font-bold">Error Occurred!</p>
-            )}
-          </>
-        )}
-          </DialogContent>
-        </Dialog>
+        <DialogContent className="sm:w-1/2 text-[var(--text)] p-2 sm:p-5 flex flex-col gap-2">
+          <DialogTitle className="text-2xl mb-5 text-[var(--backgroundSecondary)]">
+            AI Report
+          </DialogTitle>
+          {generatingReport ? (
+            <>
+              <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
+              <Skeleton className="h-3 w-full bg-[var(--backgroundSecondary)]" />
+              <Skeleton className="h-3 w-3/4 bg-[var(--backgroundSecondary)]" />
+            </>
+          ) : (
+            <>
+              {report ? (
+                <>
+                  {report.map((line, index) => {
+                    return (
+                      <p
+                        key={index}
+                        className={`${
+                          index === 0 && "font-semibold flex justify-center"
+                        } text-left`}
+                      >
+                        {line}
+                      </p>
+                    );
+                  })}
+                </>
+              ) : (
+                <p className="font-bold">Error Occurred!</p>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -6,9 +6,9 @@ import test, { flameGraph as zodGraph } from "@/lib/zodSchema";
 const SYSTEM_PROMPT = `
 You are an expert typing coach. Your persona is direct, encouraging, and focused.
 
-**CRITICAL RULE: You are speaking DIRECTLY to the student. Use "you" and "your". NEVER use third-person phrases like "the test taker" or "the user".**
-*   **Good Example:** "Your accuracy was impressive."
-*   **Bad Example:** "The test taker's accuracy was impressive."
+**CRITICAL AND MOST IMPORTANT!!! RULE: You are speaking ***DIRECTLY*** to the student. Use "you" and "your". ***NEVER*** use third-person phrases like "the test taker" or "the user".**
+*   ***Good Example:*** "Your accuracy was impressive."
+*   ***Bad Example:*** "The test taker's accuracy was impressive."
 
 **Your Analysis Goal:**
 Focus entirely on the final, overall results (final average WPM, total errors, and total problematic keys). Do not mention specific interval numbers or trends (e.g., "in interval 3" or "in the last few seconds"). Your feedback should reflect the complete performance, not the journey.
@@ -25,10 +25,11 @@ Focus entirely on the final, overall results (final average WPM, total errors, a
 3.  Be concise and impactful.
 
 ---
+Note: *Important!* Avoid any "*" or "**" in your replies!
 **STRUCTURED OUTPUT:**
-Note: Avoid any "*" in your replies!
-Verdict: [Few punchy words summarizing the key takeaway. Start with "You..."]
-Summary: [Explain the verdict using the final average WPM and total errors as evidence. Relate speed to the tiers above.]
+Note: **Follow the exact output structure Important!**
+Verdict: [Few punchy words summarizing the key takeaway. Start with "You..."]\n
+Summary: [Explain the verdict using the final average WPM and total errors as evidence. Relate speed to the tiers above.]\n
 Improvements: [Give 1-2 highly specific and actionable commands for what to practice. If there are problematic keys, create a direct exercise for them.]
 `;
 
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     // allow only one summary per test.
     try {
       const chatCompletion = await client.chat.completions.create({
-    model: "llama3-8b-8192",
+    model: "llama-3.1-8b-instant",
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: buildPrompt({stats, rawWpm, accuracy, avgWpm}) },
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
     result: chatCompletion.choices[0].message.content,
   });
     } catch (error) {
+     console.log(error)
       return NextResponse.json({
         "msg":"Free tier got exhausted"
       },{status:429})
