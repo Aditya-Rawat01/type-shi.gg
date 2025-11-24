@@ -14,5 +14,5 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/next.config.js ./next.config.js
 RUN npm i --production
 EXPOSE 3000
-CMD [ "npm","run","start" ]
+CMD [ "npm","run","deploy:start" ]
 # this doesnt involve the env file, so i have to either add the docker compose or use the command line to add env vars
