@@ -41,7 +41,7 @@ export default function Theme() {
           <PaintbrushVertical />
           <p>Themes</p>
         </DrawerTrigger>
-        <DrawerContent className="h-[400px] text-[var(--text)]">
+        <DrawerContent className="h-[500px] text-[var(--text)]">
           <DrawerHeader>
             <DrawerTitle className="text-[var(--text)]">Themes</DrawerTitle>
           </DrawerHeader>
