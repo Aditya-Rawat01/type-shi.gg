@@ -4,7 +4,6 @@ import { memo, useEffect, useMemo, useState } from "react";
 import GithubFlameGraph from "./GithubFlameGraph";
 import { addDays, eachDayOfInterval, format, isEqual, parseISO, subDays } from "date-fns";
 import axios from "axios";
-import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import {
   LastYearResult,
@@ -41,7 +40,7 @@ const About = memo(() => {
     async function getLastYearResults() {
       try {
         const { data: backendData }: { data: { data: LastYearResult } } =
-          await axios.get(`${URI}/api/get-lastYearResults`);
+          await axios.get(`/api/get-lastYearResults`);
         backendData.data.forEach((test) => {
           const dateKey = format(new Date(test.createdAt), "yyyy-MM-dd");
           record[dateKey] = (record[dateKey] || 0) + 1;

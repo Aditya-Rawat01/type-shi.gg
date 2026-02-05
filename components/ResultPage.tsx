@@ -33,7 +33,6 @@ import { afkAtom } from "@/app/store/atoms/afkModeAtom";
 import { toast } from "sonner";
 import { hashAtom } from "@/app/store/atoms/generatedHash";
 import axios from "axios";
-import { URI } from "@/lib/URI";
 import { userCookie } from "@/app/store/atoms/userCookie";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
@@ -146,7 +145,7 @@ export default function ResultPage({
       if (!cookie.session.id) {
         try {
           console.log(body);
-          const data = await axios.post(`${URI}/api/tempTest`, body);
+          const data = await axios.post(`/api/tempTest`, body);
           const stringifiedVersion: string = data.data.token;
           localStorage.setItem("token", stringifiedVersion);
         } catch (error) {
@@ -157,7 +156,7 @@ export default function ResultPage({
         return;
       }
       try {
-        const res = await axios.post(`${URI}/api/test`, body);
+        const res = await axios.post(`/api/test`, body);
         toast.success(res.data.msg);
       } catch (error) {
         (error as { status: number }).status === 429
@@ -229,7 +228,7 @@ export default function ResultPage({
       if (!generatingReport) {
         setGeneratingReport(true);
         try {
-          const res = await axios.post(`${URI}/api/generate-report`, {
+          const res = await axios.post(`/api/generate-report`, {
             flameGraph: cumulativeInterval,
             rawWpm,
             avgWpm,

@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import Topbar from "@/components/topbar";
 import { cookieType, initialCookieState, userCookie } from "@/app/store/atoms/userCookie";
-import { URI } from "@/lib/URI";
 import { TestPayload } from "@/lib/zodSchema";
 import axios from "axios";
 import { decodeJwt } from "jose";
@@ -123,7 +122,7 @@ export default function ProfilePage({
       token: localStorage.getItem("token"),
     };
     try {
-      const res = await axios.post(`${URI}/api/saveTempTest`, body);
+      const res = await axios.post(`/api/saveTempTest`, body);
       toast.success(res.data.msg);
     } catch (error) {
       toast.warning("some fields are missing/tampered");

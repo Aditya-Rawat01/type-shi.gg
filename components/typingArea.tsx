@@ -14,7 +14,6 @@ import {
 } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
-import { URI } from "@/lib/URI";
 import generateTest from "@/lib/seed-Generation";
 import { toast } from "sonner";
 import "../app/page.css";
@@ -423,7 +422,7 @@ export default function TypingArea({
       // on mount run only for first time, then selection.language dekh ke run kro.
       try {
         const res = await axios.get(
-          `${URI}/api/language/${selection.language}`
+          `/api/language/${selection.language}`
         );
         setwordListFromBackend(res.data.msg.words);
         if (wordListFromBackend.length !== 0) {

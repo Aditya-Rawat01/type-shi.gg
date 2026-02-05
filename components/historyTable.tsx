@@ -11,7 +11,6 @@ import {
 import { results } from "./profilePage";
 import { memo, useEffect, useState } from "react";
 import axios from "axios";
-import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import "./components.css";
@@ -46,7 +45,7 @@ const HistoryTable = memo(() => {
       try {
         const query = cursorId ? `?cursorId=${cursorId}` : "";
         const res: { data: { data: results } } = await axios.get(
-          `${URI}/api/getResults${query}`,
+          `$/api/getResults${query}`,
           {
             params: {
               cursorId: cursorId,

@@ -10,7 +10,6 @@ import { useAtom, useSetAtom } from "jotai";
 import Topbar from "./topbar";
 import { charSetsAtom } from "@/app/store/atoms/charSets";
 import axios from "axios";
-import { URI } from "@/lib/URI";
 import { toast } from "sonner";
 import { careerStatsAtom, careerStatsType } from "@/app/store/atoms/bestCareerStats";
 import { cookieType, userCookie } from "@/app/store/atoms/userCookie";
@@ -33,7 +32,7 @@ export default function TypeScreen({
     // get the best stats.
     async function getStats() {
       try {
-        const res=await axios.get(`${URI}/api/get-stats`)
+        const res=await axios.get(`/api/get-stats`)
         const wrapper:{msg:careerStatsType}|{msg:{}} = res.data
         const data = wrapper.msg
         data && Object.keys(data).length != 0

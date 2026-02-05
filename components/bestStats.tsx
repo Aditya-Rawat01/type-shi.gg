@@ -2,7 +2,6 @@ import {
   careerStatsAtom,
   careerStatsType,
 } from "@/app/store/atoms/bestCareerStats";
-import { URI } from "@/lib/URI";
 import axios from "axios";
 import { useAtom } from "jotai";
 import { memo, useEffect } from "react";
@@ -15,7 +14,7 @@ const BestStats = memo(() => {
   useEffect(() => {
     async function fetchBestStats() {
       try {
-        const res = await axios.get(`${URI}/api/get-stats`);
+        const res = await axios.get(`/api/get-stats`);
         const wrapper: { msg: careerStatsType } | { msg: {} } = res.data;
         const data = wrapper.msg;
         console.log({ data });
